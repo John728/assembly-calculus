@@ -9,13 +9,21 @@ from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch
 # -----------------------
 GRID_ROWS = 5
 GRID_COLS = 5
-RADIUS = 0.35
-SPACING = 2.0
+
+# Visual sizing to match nodes_three_panels styling
+CIRCLE_DIAMETER_PX = 95  # circles drawn with 25 px diameter
+LABEL_FONT_SIZE = 3
+ARROW_COLOR = "#DB5050"
+ARROW_LINEWIDTH = 2
+ARROW_HEAD_SCALE = 5
+GLOBAL_MARGIN_FACTOR = 3  # how many radii to pad axes by
+
+SPACING = 1
 
 P = 0.01        # probability of arrow from any A-node to any B-node
-SEED = None        # set to None for non-deterministic arrows
+SEED = 3        # set to None for non-deterministic arrows
 
-AREA_OFFSET = 12.0   # horizontal distance between Area A and Area B
+AREA_OFFSET = 8.0   # horizontal distance between Area A and Area B
 
 AREA_A_NAME = "Area A"
 AREA_B_NAME = "Area B"
@@ -61,7 +69,7 @@ def draw_area(positions, area_name):
             (x, y),
             RADIUS,
             fill=False,
-            linewidth=2,
+            linewidth=0.8,
             edgecolor="black",
         )
         ax.add_patch(circle)
@@ -73,7 +81,7 @@ def draw_area(positions, area_name):
         else:
             label = "n"
 
-        ax.text(x, y, label, ha="center", va="center", fontsize=10)
+        ax.text(x, y, label, ha="center", va="center", fontsize=LABEL_FONT_SIZE)
         all_xs.append(x)
         all_ys.append(y)
 
@@ -92,14 +100,14 @@ def draw_area(positions, area_name):
         width,
         height,
         boxstyle="round,pad=0.3,rounding_size=0.4",
-        linewidth=2,
+        linewidth=0.8,
         edgecolor="black",
         facecolor="none",
     )
     ax.add_patch(border)
 
     # Area label under the area
-    label_y = ymin - 1.2  # a bit below the border
+    label_y = ymin - RADIUS * 3  # a bit below the border
     label_x = 0.5 * (xmin + xmax)
     ax.text(
         label_x,
@@ -107,7 +115,7 @@ def draw_area(positions, area_name):
         area_name,
         ha="center",
         va="center",
-        fontsize=12,
+        fontsize=8,
     )
     all_xs.append(label_x)
     all_ys.append(label_y)
@@ -118,8 +126,28 @@ def draw_area(positions, area_name):
 # -----------------------
 # Create figure and axes
 # -----------------------
-fig_width = 10
-fig, ax = plt.subplots(figsize=(fig_width, 6))
+fig_width = 8
+fig, ax = plt.subplots(figsize=(fig_width, 7), dpi=300)
+# Fix axes position so we can size elements predictably
+ax.set_position([0.02, 0.1, 0.96, 0.8])
+
+# Compute desired radius in data units so circles render at CIRCLE_DIAMETER_PX.
+axes_bbox = ax.get_position()
+fig_width_px = fig.get_size_inches()[0] * fig.dpi
+axis_width_px = fig_width_px * axes_bbox.width
+
+all_positions_x = []
+for pos in positions_A.values():
+    all_positions_x.append(pos[0])
+for pos in positions_B.values():
+    all_positions_x.append(pos[0])
+
+base_range_x = max(all_positions_x) - min(all_positions_x)
+
+desired_diameter_px = CIRCLE_DIAMETER_PX
+RADIUS = (desired_diameter_px * base_range_x) / (
+    2 * axis_width_px - 6 * desired_diameter_px
+)
 
 # Draw both areas
 bounds_A = draw_area(positions_A, AREA_A_NAME)
@@ -128,8 +156,6 @@ bounds_B = draw_area(positions_B, AREA_B_NAME)
 # -----------------------
 # Draw arrows from Area A to Area B
 # -----------------------
-arrow_color = "#CC0000"  # nice red
-
 for i in range(GRID_ROWS * GRID_COLS):      # nodes in Area A (0..24)
     sx, sy = positions_A[i]
     for j in range(GRID_ROWS * GRID_COLS):  # nodes in Area B (0..24)
@@ -152,26 +178,25 @@ for i in range(GRID_ROWS * GRID_COLS):      # nodes in Area A (0..24)
                 (start_x, start_y),
                 (end_x, end_y),
                 arrowstyle="->",
-                linewidth=1.3,
-                mutation_scale=12,
-                color=arrow_color,
+                linewidth=ARROW_LINEWIDTH,
+                mutation_scale=ARROW_HEAD_SCALE,
+                color=ARROW_COLOR,
             )
             ax.add_patch(arrow)
 
 # -----------------------
 # Global aesthetics
 # -----------------------
-xmin_global = min(all_xs) - RADIUS * 3
-xmax_global = max(all_xs) + RADIUS * 3
-ymin_global = min(all_ys) - RADIUS * 3
-ymax_global = max(all_ys) + RADIUS * 3
+xmin_global = min(all_xs) - RADIUS * GLOBAL_MARGIN_FACTOR
+xmax_global = max(all_xs) + RADIUS * GLOBAL_MARGIN_FACTOR
+ymin_global = min(all_ys) - RADIUS * GLOBAL_MARGIN_FACTOR
+ymax_global = max(all_ys) + RADIUS * GLOBAL_MARGIN_FACTOR
 
 ax.set_aspect("equal", adjustable="datalim")
 ax.set_xlim(xmin_global, xmax_global)
 ax.set_ylim(ymin_global, ymax_global)
 ax.axis("off")
 
-plt.tight_layout()
 # plt.savefig("bipartite_two_areas.pdf")
 # plt.savefig("bipartite_two_areas.svg")
 plt.savefig("bipartite_two_areas.png", dpi=300)

@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyac"
+version = "0.1.0"
+description = "Production-quality Python library for Assembly Calculus / NEMO experiments"
+requires-python = ">=3.11"
+authors = [
+    {name = "John", email = "john@example.com"}
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-timeout"
+]
+notebooks = [
+    "jupyter",
+    "nbconvert",
+    "matplotlib"
+]
+ml = [
+    "scikit-learn>=1.2"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "paper: marks paper replication tests",
+    "performance: marks performance benchmarks"
+]
+addopts = "--tb=short -q"
