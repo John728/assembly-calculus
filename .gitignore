@@ -1,50 +1,39 @@
-# Python
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+src/pyac.egg-info/
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
 
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-
-# Distribution / packaging
-*.egg-info/
-dist/
-build/
-
-# Jupyter Notebook
-.ipynb_checkpoints/
-*.ipynb_checkpoints/
-
-# pytest
+# Testing
 .pytest_cache/
+.coverage
+htmlcov/
 
-# mypy
+# Type checking
 .mypy_cache/
 .dmypy.json
 dmypy.json
 
-# ruff
+# Linting
 .ruff_cache/
 
-# Experiment artifacts (root-level generated files)
-/arc
-/state
-*.png
-*.pkl
-*.json
+# Jupyter
+.ipynb_checkpoints/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Keep notebooks outside the library repo
+notebooks/
 
-# OS
-.DS_Store
-Thumbs.db
+# Local outputs
+outputs/
+artifacts/
+checkpoints/
+logs/
+.sisyphus/*

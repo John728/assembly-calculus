@@ -3,6 +3,8 @@ dist/
 build/
 *.egg-info/
 .eggs/
+pip-wheel-metadata/
+src/pyac.egg-info/
 
 # Python cache
 __pycache__/
@@ -25,6 +27,9 @@ dmypy.json
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Keep notebooks outside the library repo
+notebooks/
 
 # Local outputs
 outputs/
