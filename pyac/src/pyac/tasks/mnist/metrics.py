@@ -61,3 +61,76 @@ def accuracy_vs_t(
         results[t_per_image] = float(result["test_accuracy"])
 
     return results
+
+
+def evaluate_softmax(
+    outputs: np.ndarray,
+    n_train_per_class: int,
+    n_test_per_class: int,
+    rng: Generator | None = None
+) -> dict[str, float]:
+    """
+    Evaluate feature rollouts using legacy SGD softmax optimization.
+    """
+    from pyac.core.rng import make_rng
+    effective_rng = make_rng(0) if rng is None else rng
+    n_neurons = outputs.shape[-1]
+    
+    def softmax(x):
+        x_shifted = x - x.max(axis=-1, keepdims=True)
+        exp_x = np.exp(x_shifted)
+        return exp_x / exp_x.sum(axis=-1, keepdims=True)
+
+    v = 0.1 * effective_rng.standard_normal((10, n_neurons))
+    targets = np.zeros((100, 10))
+    for i in range(10):
+        targets[i*10:(i+1)*10, i] = 1
+    update = np.zeros_like(v)
+    
+    for _ in range(100):
+        permutation = effective_rng.permutation(n_train_per_class)
+        for j in range(n_train_per_class // 10):
+            batch = outputs[:, 1, permutation[j*10:(j+1)*10]].reshape(10 * 10, n_neurons)
+            scores = softmax((batch[:, :, np.newaxis] * v.T[np.newaxis, :, :]).sum(axis=1))
+            update = 0.5 * update + 1e-3 * (batch[:, np.newaxis, :] * (scores - targets)[:, :, np.newaxis]).sum(axis=0)
+            v -= update
+            
+    train_correct = ((outputs[:, 1, :n_train_per_class] @ v.T).argmax(axis=-1) == np.arange(10)[:, np.newaxis]).sum()
+    test_correct = ((outputs[:, 1, n_train_per_class:n_train_per_class + n_test_per_class] @ v.T).argmax(axis=-1) == np.arange(10)[:, np.newaxis]).sum()
+    
+    return {
+        "train_accuracy": float(train_correct) / (10 * n_train_per_class),
+        "test_accuracy": float(test_correct) / (10 * n_test_per_class)
+    }
+
+
+def evaluate_voting(
+    outputs: np.ndarray,
+    cap_size: int,
+    n_train_per_class: int,
+) -> dict[str, float]:
+    """
+    Evaluate feature rollouts by computing class-wise prototypes (c) 
+    and returning the most active intersection count.
+    """
+    n_neurons = outputs.shape[-1]
+    n_test_per_class = outputs.shape[2] - n_train_per_class
+    c = np.zeros((10, n_neurons))
+    for i in range(10):
+        train_outputs = outputs[i, 1, :n_train_per_class]
+        c[i, train_outputs.sum(axis=0).argsort()[-cap_size:]] = 1
+        
+    predictions_train = (outputs[:, 1, :n_train_per_class] @ c.T).argmax(axis=-1)
+    train_acc = (predictions_train == np.arange(10)[:, np.newaxis]).sum() / (10 * n_train_per_class)
+    
+    if n_test_per_class > 0:
+        predictions_test = (outputs[:, 1, n_train_per_class:] @ c.T).argmax(axis=-1)
+        test_acc = (predictions_test == np.arange(10)[:, np.newaxis]).sum() / (10 * n_test_per_class)
+    else:
+        test_acc = 0.0
+    
+    return {
+        "train_accuracy": float(train_acc),
+        "test_accuracy": float(test_acc)
+    }
+

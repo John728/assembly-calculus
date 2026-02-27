@@ -230,7 +230,7 @@ class TestMultipleIncomingFibers:
     """Test normalization with multiple incoming fibers to same area."""
     
     def test_normalize_with_multiple_incoming_fibers(self):
-        """normalize() should handle multiple incoming fibers (sum columns across all sources)."""
+        """normalize() should normalize each incoming fiber independently."""
         spec = NetworkSpec(
             areas=[
                 AreaSpec("A", n=10, k=2, dynamics_type="feedforward"),
@@ -238,24 +238,23 @@ class TestMultipleIncomingFibers:
                 AreaSpec("C", n=10, k=2, dynamics_type="feedforward"),
             ],
             fibers=[
-                FiberSpec("A", "C", 0.3),  # Two sources to C
+                FiberSpec("A", "C", 0.3),
                 FiberSpec("B", "C", 0.3),
             ],
             beta=0.1,
         )
         net = Network(spec, make_rng(666))
         
-        # Perturb both incoming fibers
         net.weights[("A", "C")].data *= 2.0
         net.weights[("B", "C")].data *= 1.5
         
-        # Normalize
         net.normalize("C")
         
-        # C's column sums should be 1.0 (aggregated from both A and B)
-        col_sums_c = _get_column_sums(net.weights, "C", 10)
-        nonzero_cols = col_sums_c > 0
-        assert np.allclose(col_sums_c[nonzero_cols], 1.0, atol=1e-14)
+        for key in [("A", "C"), ("B", "C")]:
+            mat = net.weights[key]
+            col_sums = np.asarray(mat.sum(axis=0)).ravel()
+            nonzero = col_sums > 0
+            assert np.allclose(col_sums[nonzero], 1.0, atol=1e-14)
 
 
 class TestInitialState:

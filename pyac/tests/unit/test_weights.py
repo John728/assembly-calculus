@@ -126,11 +126,10 @@ class TestNormalizeWeights:
         # Check no NaNs
         assert not np.any(np.isnan(weights[('A', 'B')].data))
 
-    def test_normalize_weights_multiple_fibers_aggregates_column_sums(self):
-        """Multiple fibers to same area: normalize using total incoming connections."""
-        # Two fibers converging on area 'B'
-        conn_ab = csr_matrix([[2, 0], [0, 1]], dtype=np.float64)  # 2x2
-        conn_cb = csr_matrix([[1, 0], [0, 2]], dtype=np.float64)  # 2x2
+    def test_normalize_weights_multiple_fibers_normalizes_independently(self):
+        """Multiple fibers to same area: each matrix normalized independently."""
+        conn_ab = csr_matrix([[2, 0], [0, 1]], dtype=np.float64)
+        conn_cb = csr_matrix([[1, 0], [0, 2]], dtype=np.float64)
         
         weights = {
             ('A', 'B'): conn_ab.copy(),
@@ -148,19 +147,15 @@ class TestNormalizeWeights:
         
         normalize_weights(weights, 'B', spec)
         
-        # For column 0 of B: incoming = 2 (from A) + 1 (from C) = 3
-        # Expected: A gets 2/3, C gets 1/3
-        # For column 1 of B: incoming = 1 (from A) + 2 (from C) = 3
-        # Expected: A gets 1/3, C gets 2/3
+        ab_col0 = np.asarray(weights[('A', 'B')][:, 0].sum())
+        ab_col1 = np.asarray(weights[('A', 'B')][:, 1].sum())
+        cb_col0 = np.asarray(weights[('C', 'B')][:, 0].sum())
+        cb_col1 = np.asarray(weights[('C', 'B')][:, 1].sum())
         
-        col0_sums = weights[('A', 'B')][0, 0] + weights[('C', 'B')][0, 0]
-        col1_sums = weights[('A', 'B')][1, 1] + weights[('C', 'B')][1, 1]
-        
-        assert abs(col0_sums - 1.0) < 1e-10
-        assert abs(col1_sums - 1.0) < 1e-10
-        
-        assert abs(weights[('A', 'B')][0, 0] - 2.0/3.0) < 1e-10
-        assert abs(weights[('C', 'B')][0, 0] - 1.0/3.0) < 1e-10
+        assert abs(ab_col0 - 1.0) < 1e-10
+        assert abs(ab_col1 - 1.0) < 1e-10
+        assert abs(cb_col0 - 1.0) < 1e-10
+        assert abs(cb_col1 - 1.0) < 1e-10
 
     def test_normalize_weights_preserves_csr_format(self):
         """Output should remain in CSR format."""

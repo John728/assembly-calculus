@@ -90,7 +90,7 @@ def test_accuracy_improves_with_training() -> None:
         dfa,
         n_neurons=150,
         k=10,
-        density=0.2,
+        density=0.1,
         plasticity=0.7,
         rng=make_rng(42),
     )

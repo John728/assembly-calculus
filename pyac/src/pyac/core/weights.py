@@ -3,7 +3,7 @@ Weight initialization and normalization for Assembly Calculus.
 
 Two core operations:
 1. init_weights: Copy connectivity structure with all values set to 1.0
-2. normalize_weights: Column-normalize weights across ALL incoming fibers to an area
+2. normalize_weights: Column-normalize each incoming weight matrix independently
 """
 
 import numpy as np
@@ -53,12 +53,14 @@ def normalize_weights(
     network_spec: NetworkSpec,
 ) -> None:
     """
-    Column-normalize weights across ALL incoming fibers to an area.
+    Column-normalize each incoming weight matrix to an area independently.
     
-    For each target neuron (column) in the area, computes the sum of all
-    incoming weights from all source areas, then divides each matrix's
-    contribution by this total. Handles zero-sum columns (disconnected neurons)
-    by keeping them at zero (avoiding NaN from divide-by-zero).
+    For each incoming weight matrix, each column (target neuron) is divided
+    by the column sum of *that matrix alone*, so that every column sums to 1.
+    This matches the original paper's normalization:  A /= A.sum(axis=0)
+    and  W /= W.sum(axis=0)  applied independently.
+    
+    Handles zero-sum columns (disconnected neurons) by keeping them at zero.
     
     Modifies weights in place.
     
@@ -72,25 +74,15 @@ def normalize_weights(
     if not incoming_keys:
         return
     
-    first_matrix = weights[incoming_keys[0]]
-    n_target_neurons: int = first_matrix.shape[1]  # type: ignore[index]
-    
-    col_sums = np.zeros(n_target_neurons, dtype=np.float64)
     for key in incoming_keys:
         mat = weights[key]
-        col_sums_mat = mat.sum(axis=0)
-        col_sums += np.asarray(col_sums_mat).ravel()
-    
-    col_sums_safe = col_sums.copy()
-    col_sums_safe[col_sums_safe == 0.0] = 1.0
-    
-    for key in incoming_keys:
-        mat = weights[key]
-        col_sums_broadcast = col_sums_safe[np.newaxis, :]
+        col_sums = np.asarray(mat.sum(axis=0)).ravel()
+        col_sums_safe = col_sums.copy()
+        col_sums_safe[col_sums_safe == 0.0] = 1.0
         
         new_data = mat.data.copy()
         for i, val in enumerate(mat.data):
             col_idx = mat.indices[i]
-            new_data[i] = val / col_sums_broadcast[0, col_idx]
+            new_data[i] = val / col_sums_safe[col_idx]
         
         weights[key].data = new_data

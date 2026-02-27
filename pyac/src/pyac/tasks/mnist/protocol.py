@@ -133,3 +133,106 @@ def classify(
         "n_train": int(labels_train.shape[0]),
         "n_test": int(labels_test.shape[0]),
     }
+
+
+def train_disjoint_assemblies(
+    network: Network,
+    stimulus_area_name: str,
+    target_area_name: str,
+    images: np.ndarray,
+    labels: np.ndarray,
+    encoder: MNISTEncoder,
+    n_rounds: int = 5,
+    bias_penalty: float = -1.0,
+    input_multiplier: float = 5.0,
+    rng: Generator | None = None,
+) -> tuple[dict[int, Assembly], np.ndarray]:
+    """
+    Train disjoint assemblies class-by-class using a bias penalty.
+    """
+    _validate_area_exists(network, target_area_name)
+    _validate_area_exists(network, stimulus_area_name)
+    _validate_images(images)
+    _validate_labels(labels, images.shape[0])
+
+    effective_rng = make_rng(0) if rng is None else rng
+    area_n = network.areas_by_name[target_area_name].n
+    assemblies: dict[int, Assembly] = {}
+    
+    activations = np.zeros((10, n_rounds, area_n))
+    bias = np.zeros(area_n)
+
+    for class_label in range(10):
+        class_images = images[labels == class_label][:n_rounds]
+        
+        for a_name in network.area_names:
+            network.activations[a_name] = np.array([], dtype=np.int64)
+
+        for j in range(len(class_images)):
+            image = class_images[j]
+            stimulus_indices = encoder.encode(image, effective_rng)
+            stimulus = _stimulus_from_indices(network.areas_by_name[stimulus_area_name].n, stimulus_indices) * input_multiplier
+            
+            _ = network.step(
+                external_stimuli={stimulus_area_name: stimulus},
+                plasticity_on=True,
+                biases={target_area_name: bias}
+            )
+
+            act_h_idx = network.activations[target_area_name].copy()
+            act_h_new = np.zeros(area_n)
+            act_h_new[act_h_idx] = 1.0
+            activations[class_label, j] = act_h_new
+
+        bias[network.activations[target_area_name]] += bias_penalty
+
+        network.weights[(target_area_name, target_area_name)].setdiag(0)
+        network.weights[(target_area_name, target_area_name)].eliminate_zeros()
+        network.normalize(target_area_name)
+
+        assemblies[class_label] = network.get_assembly(target_area_name)
+
+    return assemblies, activations
+
+
+def generate_rollout_tensor(
+    network: Network,
+    stimulus_area_name: str,
+    target_area_name: str,
+    images: np.ndarray,
+    labels: np.ndarray,
+    encoder: MNISTEncoder,
+    n_rounds: int,
+    n_examples: int,
+    input_multiplier: float = 5.0,
+    rng: Generator | None = None,
+) -> np.ndarray:
+    """
+    Generate the legacy readout tensor from a trained network.
+    """
+    _validate_area_exists(network, target_area_name)
+    _validate_area_exists(network, stimulus_area_name)
+    _validate_images(images)
+    _validate_labels(labels, images.shape[0])
+
+    effective_rng = make_rng(0) if rng is None else rng
+    area_n = network.areas_by_name[target_area_name].n
+    
+    outputs = np.zeros((10, n_rounds + 1, n_examples, area_n), dtype=np.uint8)
+    
+    for class_label in range(10):
+        class_images = images[labels == class_label][:n_examples]
+        for ex in range(len(class_images)):
+            image = class_images[ex]
+            stimulus_indices = encoder.encode(image, effective_rng)
+            stimulus = _stimulus_from_indices(network.areas_by_name[stimulus_area_name].n, stimulus_indices) * input_multiplier
+            
+            for a_name in network.area_names:
+                network.activations[a_name] = np.array([], dtype=np.int64)
+                
+            for j in range(n_rounds):
+                _ = network.step(external_stimuli={stimulus_area_name: stimulus}, plasticity_on=False)
+                prev_idx = network.activations[target_area_name].copy()
+                outputs[class_label, j + 1, ex, prev_idx] = 1
+                
+    return outputs

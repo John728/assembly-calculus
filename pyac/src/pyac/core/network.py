@@ -82,10 +82,12 @@ class Network:
         self,
         external_stimuli: dict[str, np.ndarray] | None = None,
         plasticity_on: bool = True,
+        biases: dict[str, np.ndarray] | None = None,
     ) -> StepResult:
         self.step_count += 1
 
         stimuli = external_stimuli or {}
+        bias_map = biases or {}
         beta = self.spec.beta
 
         for area_name in self.step_order:
@@ -113,6 +115,10 @@ class Network:
             ext = stimuli.get(area_name)
             if ext is not None:
                 total_input += np.asarray(ext, dtype=np.float64)
+
+            bias = bias_map.get(area_name)
+            if bias is not None:
+                total_input += np.asarray(bias, dtype=np.float64)
 
             new_activations = k_cap(total_input, area.k, self.rng).astype(np.int64, copy=False)
 

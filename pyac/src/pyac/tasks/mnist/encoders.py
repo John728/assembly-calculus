@@ -103,3 +103,49 @@ class COLT2022Encoder(MNISTEncoder):
         sorted_indices = np.sort(top_k_indices).astype(np.int64)
 
         return sorted_indices
+
+
+class KCapSmoothedEncoder(MNISTEncoder):
+    """
+    Smoothing encoder following the legacy NEMO/AC approach.
+    
+    Applies a 3x3 uniform convolution filter to the image to spread
+    activation, then uses k-cap to select the top active neurons.
+    
+    Args:
+        cap_size: Number of neurons to activate.
+    """
+
+    def __init__(self, cap_size: int):
+        if cap_size <= 0:
+            raise ValueError("cap_size must be > 0")
+        if cap_size > 784:
+            raise ValueError("cap_size must be <= 784")
+
+        self.cap_size = cap_size
+
+    def encode(self, image: np.ndarray, rng: Generator) -> np.ndarray:
+        """
+        Encode image via 3x3 smoothing and top-k selection.
+        
+        Process:
+        1. Apply 3x3 uniform convolution.
+        2. Flatten to 784 pixels.
+        3. Select top cap_size neurons via argpartition.
+        4. Sort indices (Assembly convention).
+        """
+        from scipy.signal import convolve
+        
+        if image.shape != (28, 28):
+            raise ValueError(f"image must be (28, 28), got {image.shape}")
+
+        smooth = convolve(image.reshape(1, 28, 28), np.ones((1, 3, 3)), mode='same').reshape(784)
+        
+        if self.cap_size == 784:
+            top_k_indices = np.arange(784, dtype=np.int64)
+        else:
+            top_k_indices = np.argpartition(-smooth, self.cap_size)[: self.cap_size]
+
+        sorted_indices = np.sort(top_k_indices).astype(np.int64)
+        return sorted_indices
+
