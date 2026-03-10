@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from .base import BasePointerEncoder
+from config import NUM_CONFIGS
 
 class PointerTransformer(nn.Module):
     def __init__(self, N, d_model, num_layers, nhead, hidden_dim):
@@ -54,22 +55,23 @@ class PointerTransformer(nn.Module):
 transformer_configs = []
 _tiny_layers, _tiny_dim = 2, 64
 _xl_layers, _xl_dim = 8, 1024
-for i in range(50):
+for i in range(NUM_CONFIGS):
     # Interpolate between Tiny (2, 64) and XL (8, 1024)
-    frac = i / 49.0
+    frac = i / max(1, NUM_CONFIGS - 1)
     layers = int(round(_tiny_layers + frac * (_xl_layers - _tiny_layers)))
     hidden_dim = int(round(_tiny_dim + frac * (_xl_dim - _tiny_dim)))
     # Ensure d_model scales somewhat proportionally, e.g. hidden_dim // 4
     d_model = max(16, hidden_dim // 4)
-    # Ensure d_model is divisible by nhead (4)
-    d_model = max(1, d_model // 4) * 4
     nhead = 4
     
     # We tweak the d_model and hidden_dim slightly up to try to match MLP parameter sizes 
     # since MLP flattens the input causing massive matrices, while transformers share weights across sequence.
-    # To artificially match parameter scale, we scale d_model and hidden_dim by 2x for transformer.
-    d_model = d_model * 2
-    hidden_dim = hidden_dim * 2
+    # To artificially match parameter scale, we scale d_model and hidden_dim by 1.5x for transformer.
+    d_model = int(d_model * 1.5)
+    hidden_dim = int(hidden_dim * 1.5)
+    
+    # Ensure d_model is divisible by nhead (4)
+    d_model = max(1, d_model // nhead) * nhead
     
     transformer_configs.append({
         'name': f'Trans-{i+1:02d}',
