@@ -1,0 +1,22 @@
+suite_name: seen-comparison
+output_dir: outputs/seen-comparison
+seeds: [1]
+conditions:
+  - list_type: Seen
+    N: 16
+    num_train_lists: 8
+    num_test_lists: 0
+    k_train_min: 1
+    k_train_max: 4
+    k_test_min: 1
+    k_test_max: 8
+models:
+  MLP:
+    - model_name: MLP-01
+      layers: 2
+      hidden_dim: 64
+  AC:
+    - model_name: AC-Seen
+      assembly_size: 16
+      density: 0.15
+      plasticity: 0.25

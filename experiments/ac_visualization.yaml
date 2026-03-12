@@ -1,0 +1,23 @@
+suite_name: ac-visualization
+output_dir: outputs/ac-visualization
+seeds: [1]
+conditions:
+  - list_type: Seen
+    N: 8
+    num_train_lists: 2
+    num_test_lists: 0
+    k_train_min: 1
+    k_train_max: 4
+    k_test_min: 1
+    k_test_max: 6
+models:
+  AC:
+    - model_name: AC-Trace
+      assembly_size: 12
+      density: 0.2
+      plasticity: 0.25
+trace_plots:
+  enabled: true
+  list_idx: 0
+  start_node: 0
+  hops: 3

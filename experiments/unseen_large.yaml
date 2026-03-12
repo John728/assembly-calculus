@@ -1,0 +1,32 @@
+# Unseen-list evaluation starter config.
+# Current runner support is strongest for MLP here; AC unseen should be added in the later unseen-AC protocol phase.
+suite_name: unseen-large
+output_dir: outputs/unseen-large
+seeds: [1, 2, 3, 4]
+conditions:
+  - list_type: Unseen
+    N: 32
+    num_train_lists: 64
+    num_test_lists: 32
+    k_train_min: 1
+    k_train_max: 8
+    k_test_min: 1
+    k_test_max: 24
+models:
+  MLP:
+    - model_name: MLP-02
+      layers: 4
+      hidden_dim: 512
+      epochs: 30
+      batch_size: 256
+      lr: 0.001
+      samples_per_list_train: 32
+      samples_per_list_eval: 64
+    - model_name: MLP-03
+      layers: 6
+      hidden_dim: 1024
+      epochs: 40
+      batch_size: 256
+      lr: 0.0005
+      samples_per_list_train: 32
+      samples_per_list_eval: 64

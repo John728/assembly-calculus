@@ -1,0 +1,30 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+
+def test_generate_seen_suite_plots_from_standardized_results(tmp_path: Path) -> None:
+    from experiment_suite.plots import generate_seen_suite_plots
+
+    raw_results = tmp_path / "raw_results.csv"
+    raw_results.write_text(
+        "suite,seed,family,model_name,list_type,N,num_train_lists,num_test_lists,k_train_min,k_train_max,k_test,accuracy,internal_steps,params,runtime_ms,layers,hidden_dim,lr,epochs,assembly_size,density,plasticity,transition_rounds,association_steps\n"
+        "demo,1,MLP,MLP-01,Seen,16,8,0,1,4,1,1.0,,194432,,2,64,0.001,10,,,,,\n"
+        "demo,1,MLP,MLP-01,Seen,16,8,0,1,4,5,0.0,,194432,,2,64,0.001,10,,,,,\n"
+        "demo,1,AC,AC-Seen,Seen,16,8,0,1,4,1,1.0,2,,,,,,,16,0.15,0.25,12,2\n"
+        "demo,1,AC,AC-Seen,Seen,16,8,0,1,4,5,1.0,6,,,,,,,16,0.15,0.25,12,2\n",
+        encoding="utf-8",
+    )
+
+    out_dir = tmp_path / "plots"
+    paths = generate_seen_suite_plots(raw_results, out_dir)
+
+    expected = {
+        "accuracy_vs_hop_seen.png",
+        "accuracy_vs_hop_seen_best_mlp_vs_ac.png",
+        "max_solved_hop_seen.png",
+        "ac_time_vs_hop.png",
+        "paper_panel_seen_comparison.png",
+    }
+    assert {path.name for path in paths} == expected
+    assert all(path.exists() for path in paths)

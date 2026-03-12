@@ -1,0 +1,49 @@
+# Direct AC vs MLP scaling comparison for seen lists.
+# Good first config to run on the super-PC after `seen_small` verifies the environment.
+suite_name: seen-ac-mlp-scaling
+output_dir: outputs/seen-ac-mlp-scaling
+seeds: [1, 2, 3]
+conditions:
+  - list_type: Seen
+    N: 16
+    num_train_lists: 32
+    num_test_lists: 0
+    k_train_min: 1
+    k_train_max: 4
+    k_test_min: 1
+    k_test_max: 16
+models:
+  MLP:
+    - model_name: MLP-01
+      layers: 2
+      hidden_dim: 128
+      epochs: 20
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 32
+      samples_per_list_eval: 64
+    - model_name: MLP-02
+      layers: 4
+      hidden_dim: 512
+      epochs: 30
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 32
+      samples_per_list_eval: 64
+  AC:
+    - model_name: AC-Compact
+      assembly_size: 16
+      density: 0.15
+      plasticity: 0.25
+      presentation_rounds: 4
+      transition_rounds: 12
+      association_steps: 2
+      samples_per_list_eval: 64
+    - model_name: AC-Wide
+      assembly_size: 24
+      density: 0.2
+      plasticity: 0.3
+      presentation_rounds: 5
+      transition_rounds: 16
+      association_steps: 3
+      samples_per_list_eval: 64
