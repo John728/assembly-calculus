@@ -38,7 +38,7 @@ class PointerMLP(nn.Module):
 
 mlp_configs = []
 _tiny_layers, _tiny_dim = 2, 64
-_xl_layers, _xl_dim = 8, 1024
+_xl_layers, _xl_dim = 8, 4056
 for i in range(NUM_CONFIGS):
     # Interpolate between Tiny (2, 64) and XL (8, 1024)
     frac = i / max(1, NUM_CONFIGS - 1)

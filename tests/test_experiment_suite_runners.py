@@ -4,6 +4,13 @@ from experiment_suite.config import ExperimentCondition, ModelConfig
 from experiment_suite.jobs import ExperimentJob
 
 
+def _accuracy(row: dict[str, object]) -> float:
+    value = row["accuracy"]
+    if isinstance(value, (int, float)):
+        return float(value)
+    raise TypeError(f"Expected numeric accuracy, got {type(value).__name__}")
+
+
 def _tiny_mlp_job() -> ExperimentJob:
     return ExperimentJob(
         suite_name="demo",
@@ -68,6 +75,36 @@ def _tiny_ac_job() -> ExperimentJob:
     )
 
 
+def _tiny_unseen_ac_job() -> ExperimentJob:
+    return ExperimentJob(
+        suite_name="demo",
+        output_dir="outputs/demo",
+        family="AC",
+        model=ModelConfig(
+            family="AC",
+            values={
+                "model_name": "Tiny-Unseen-AC",
+                "assembly_size": 10,
+                "density": 0.5,
+                "plasticity": 0.25,
+                "samples_per_list_eval": 4,
+                "time_budgets": [2, 4],
+            },
+        ),
+        seed=1,
+        condition=ExperimentCondition(
+            list_type="Unseen",
+            N=6,
+            num_train_lists=4,
+            num_test_lists=2,
+            k_train_min=1,
+            k_train_max=2,
+            k_test_min=1,
+            k_test_max=3,
+        ),
+    )
+
+
 def test_mlp_runner_returns_standardized_rows() -> None:
     from experiment_suite.runners.mlp_runner import run_mlp_job
 
@@ -75,7 +112,7 @@ def test_mlp_runner_returns_standardized_rows() -> None:
 
     assert rows
     assert all(row["family"] == "MLP" for row in rows)
-    assert all(0.0 <= row["accuracy"] <= 1.0 for row in rows)
+    assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
     assert {row["list_type"] for row in rows} == {"Seen"}
 
 
@@ -86,5 +123,17 @@ def test_ac_runner_returns_standardized_rows() -> None:
 
     assert rows
     assert all(row["family"] == "AC" for row in rows)
-    assert all(0.0 <= row["accuracy"] <= 1.0 for row in rows)
+    assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
     assert {row["list_type"] for row in rows} == {"Seen"}
+
+
+def test_ac_runner_supports_unseen_jobs() -> None:
+    from experiment_suite.runners.ac_runner import run_ac_job
+
+    rows = run_ac_job(_tiny_unseen_ac_job())
+
+    assert rows
+    assert all(row["family"] == "AC" for row in rows)
+    assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
+    assert {row["list_type"] for row in rows} == {"Unseen"}
+    assert {row["internal_steps"] for row in rows} == {2, 4}
