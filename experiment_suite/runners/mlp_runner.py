@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from eval_mlp_baseline import ExplicitMLP, RandomListPermutationDataset, collate_dict, eval_model, generate_unique_lists, train_model
 from experiment_suite.jobs import ExperimentJob
+from experiment_suite.mlp_baseline import ExplicitMLP, RandomListPermutationDataset, collate_dict, eval_model, generate_unique_lists, train_model
 from experiment_suite.schema import standardize_mlp_row
 
 

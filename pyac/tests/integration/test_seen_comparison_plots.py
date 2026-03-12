@@ -78,6 +78,9 @@ def test_generate_seen_comparison_plots_writes_expected_pngs(tmp_path: Path) -> 
     expected = {
         "accuracy_vs_hop_seen.png",
         "accuracy_vs_hop_seen_best_mlp_vs_ac.png",
+        "mlp_accuracy_heatmap_seen.png",
+        "ac_accuracy_heatmap_seen.png",
+        "mlp_size_tradeoff_seen.png",
         "max_solved_hop_seen.png",
         "ac_time_vs_hop.png",
         "paper_panel_seen_comparison.png",

@@ -32,16 +32,11 @@ def build_seen_comparison_df(mlp_csv: str | Path, ac_csv: str | Path) -> pd.Data
     ac_seen["accuracy"] = ac_seen["Accuracy"].astype(float)
     ac_seen["internal_steps"] = ac_seen["Internal Steps"].astype(int)
 
-    combined = pd.concat(
-        [
-            mlp_seen[["family", "model_label", "list_type", "k", "accuracy", "internal_steps"]],
-            ac_seen[["family", "model_label", "list_type", "k", "accuracy", "internal_steps"]],
-        ],
-        ignore_index=True,
-    )
-    family_order = pd.CategoricalDtype(categories=["MLP", "AC"], ordered=True)
-    combined["family"] = combined["family"].astype(family_order)
-    return combined.sort_values(["family", "model_label", "k"], kind="stable").reset_index(drop=True)
+    mlp_view = pd.DataFrame(mlp_seen[["family", "model_label", "list_type", "k", "accuracy", "internal_steps"]])
+    ac_view = pd.DataFrame(ac_seen[["family", "model_label", "list_type", "k", "accuracy", "internal_steps"]])
+    combined = pd.concat([mlp_view, ac_view], ignore_index=True)
+    combined["family_sort"] = combined["family"].apply(lambda family: 0 if family == "MLP" else 1 if family == "AC" else 99)
+    return combined.sort_values(by=["family_sort", "model_label", "k"], kind="stable").reset_index(drop=True)
 
 
 def generate_seen_comparison_plots(mlp_csv: str | Path, ac_csv: str | Path, output_dir: str | Path) -> list[Path]:
@@ -49,6 +44,14 @@ def generate_seen_comparison_plots(mlp_csv: str | Path, ac_csv: str | Path, outp
     suite_like = combined.rename(columns={"model_label": "model_name"}).copy()
     suite_like["k_test"] = suite_like["k"]
     suite_like["k_train_max"] = 4
+    suite_like["params"] = None
+    suite_like["assembly_size"] = None
+    mlp_df = pd.read_csv(mlp_csv)
+    ac_df = pd.read_csv(ac_csv)
+    mlp_params = {str(row["Model"]): row.get("Params") for _, row in mlp_df.iterrows()}
+    ac_assembly = {str(row["Model"]): row.get("Assembly Size") for _, row in ac_df.iterrows()}
+    suite_like.loc[suite_like["family"] == "MLP", "params"] = suite_like.loc[suite_like["family"] == "MLP", "model_name"].map(mlp_params)
+    suite_like.loc[suite_like["family"] == "AC", "assembly_size"] = suite_like.loc[suite_like["family"] == "AC", "model_name"].map(ac_assembly)
     temp_csv = Path(output_dir) / "_tmp_seen_comparison.csv"
     temp_csv.parent.mkdir(parents=True, exist_ok=True)
     suite_like.to_csv(temp_csv, index=False)

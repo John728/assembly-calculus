@@ -15,8 +15,33 @@ models:
     - model_name: MLP-01
       layers: 2
       hidden_dim: 64
+      epochs: 6
+      batch_size: 64
+      lr: 0.001
+      samples_per_list_train: 12
+      samples_per_list_eval: 32
+    - model_name: MLP-02
+      layers: 4
+      hidden_dim: 256
+      epochs: 8
+      batch_size: 64
+      lr: 0.001
+      samples_per_list_train: 12
+      samples_per_list_eval: 32
   AC:
-    - model_name: AC-Seen
+    - model_name: AC-Compact
       assembly_size: 16
       density: 0.15
       plasticity: 0.25
+      presentation_rounds: 4
+      transition_rounds: 10
+      association_steps: 2
+      samples_per_list_eval: 32
+    - model_name: AC-Wide
+      assembly_size: 24
+      density: 0.2
+      plasticity: 0.3
+      presentation_rounds: 4
+      transition_rounds: 12
+      association_steps: 2
+      samples_per_list_eval: 32
