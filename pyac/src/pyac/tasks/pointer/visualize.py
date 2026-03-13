@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import matplotlib
 
@@ -81,82 +81,42 @@ def _save_assembly_heatmap(trace: dict[str, Any], output_dir: Path) -> Path:
     return path
 
 
-def _draw_graph_panel(
-    axis: Any,
-    labels: list[str],
-    positions: Mapping[str, tuple[float, float]],
-    colors: dict[str, tuple[float, float, float, float]],
-    edges: list[tuple[str, str, float]],
-    title: str,
-    highlighted_path: list[str] | None = None,
-) -> None:
-    for label in labels:
-        x_pos, y_pos = positions[label]
-        axis.scatter([x_pos], [y_pos], s=550, color=colors[label], edgecolors="#264653", linewidths=1.0, zorder=3)
-        axis.text(x_pos, y_pos + 0.16, label, ha="center", va="bottom", fontsize=9)
-
-    max_strength = max((strength for _, _, strength in edges), default=1.0)
-    for src, dst, strength in edges:
-        x0, y0 = positions[src]
-        x1, y1 = positions[dst]
-        axis.annotate(
-            "",
-            xy=(x1, y1),
-            xytext=(x0, y0),
-            arrowprops={
-                "arrowstyle": "->",
-                "lw": 1.0 + 3.0 * (strength / max_strength),
-                "alpha": 0.75,
-                "color": "#264653",
-            },
-            zorder=2,
-        )
-
-    if highlighted_path:
-        for idx in range(len(highlighted_path) - 1):
-            src = highlighted_path[idx]
-            dst = highlighted_path[idx + 1]
-            if src not in positions or dst not in positions:
-                continue
-            x0, y0 = positions[src]
-            x1, y1 = positions[dst]
-            axis.plot([x0, x1], [y0 + 0.03, y1 + 0.03], color="#e76f51", linewidth=2.6, alpha=0.95, zorder=4)
-
-    axis.set_title(title)
-    axis.axis("off")
-
-
 def _save_connectivity_graph(trace: dict[str, Any], output_dir: Path) -> Path:
     colors = _assembly_colors(trace)
     pointer_text = " -> ".join(str(value) for value in trace.get("pointer", []))
     labels = [str(span["label"]) for span in trace.get("assembly_spans", []) if int(span.get("list_idx", -1)) == int(trace["list_idx"])]
     if not labels:
         labels = [str(label) for label in trace["assembly_weight_matrix"]["labels"]]
-    positions = {label: (float(idx), 0.0) for idx, label in enumerate(labels)}
+    label_to_row = {label: idx for idx, label in enumerate(labels)}
+    rollout_labels = [label for label in trace.get("rollout_path_labels", []) if label in label_to_row]
+    rollout_matrix = np.zeros((len(labels), max(len(rollout_labels), 1)), dtype=np.float64)
+    for col_idx, label in enumerate(rollout_labels):
+        rollout_matrix[label_to_row[label], col_idx] = 1.0
 
-    expected_edges = [(str(edge["src"]), str(edge["dst"]), 1.0) for edge in trace.get("expected_edges", []) if str(edge["src"]) in positions and str(edge["dst"]) in positions]
-    matrix_labels = [str(label) for label in trace["assembly_weight_matrix"]["labels"]]
-    weights = np.asarray(trace["assembly_weight_matrix"]["values"], dtype=np.float64)
-    label_to_index = {label: idx for idx, label in enumerate(matrix_labels)}
-    learned_edges: list[tuple[str, str, float]] = []
-    local_weights = []
-    for src in labels:
-        for dst in labels:
-            strength = float(weights[label_to_index[src], label_to_index[dst]])
-            local_weights.append(strength)
-    threshold = max(local_weights) * 0.35 if local_weights else 0.0
-    for src in labels:
-        for dst in labels:
-            strength = float(weights[label_to_index[src], label_to_index[dst]])
-            if strength > threshold:
-                learned_edges.append((src, dst, strength))
+    expected_text = "\n".join(f"{edge['src']} -> {edge['dst']}" for edge in trace.get("expected_edges", []))
+    fig, axes = plt.subplots(1, 2, figsize=(15.5, 5.8), gridspec_kw={"width_ratios": [1.3, 1.0]})
+    axes[0].imshow(rollout_matrix, aspect="auto", cmap="viridis", vmin=0.0, vmax=1.0)
+    axes[0].set_title("Rollout trajectory by assembly")
+    axes[0].set_xlabel("Internal time")
+    axes[0].set_ylabel("Assembly")
+    axes[0].set_yticks(range(len(labels)), labels)
+    axes[0].set_xticks(range(max(len(rollout_labels), 1)), [str(idx) for idx in range(max(len(rollout_labels), 1))])
 
-    fig, axes = plt.subplots(1, 2, figsize=(16, 5.6), sharey=True)
-    _draw_graph_panel(axes[0], labels, positions, colors, expected_edges, "Expected pointer graph")
-    _draw_graph_panel(axes[1], labels, positions, colors, learned_edges, "Learned assembly graph", highlighted_path=trace.get("rollout_path_labels"))
-    fig.suptitle(f"Pointer list: [{pointer_text}]\nExpected vs learned structure", fontsize=14)
+    axes[1].axis("off")
+    axes[1].set_title("Expected pointer transitions")
+    axes[1].text(
+        0.02,
+        0.98,
+        expected_text if expected_text else "No expected transitions recorded",
+        va="top",
+        ha="left",
+        family="monospace",
+        fontsize=11,
+    )
+
+    fig.suptitle(f"Pointer list: [{pointer_text}]\nInternal rollout vs expected transitions", fontsize=14)
     path = output_dir / "assembly_connectivity_graph.png"
-    fig.subplots_adjust(top=0.85, bottom=0.12, wspace=0.15)
+    fig.subplots_adjust(top=0.84, bottom=0.14, wspace=0.25)
     fig.savefig(path, dpi=200)
     plt.close(fig)
     return path
