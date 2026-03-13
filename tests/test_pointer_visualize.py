@@ -53,8 +53,38 @@ def test_pointer_visualizations_write_expected_files(tmp_path: Path) -> None:
     paths = render_trace_visualizations(trace, tmp_path)
 
     assert {path.name for path in paths} == {
+        "assembly_bars_over_time.png",
         "assembly_heatmap.png",
         "assembly_connectivity_graph.png",
         "assembly_weight_matrix.png",
     }
     assert all(path.exists() for path in paths)
+
+
+def test_pointer_visualizations_support_neuron_strengths_without_active_neurons(tmp_path: Path) -> None:
+    from pyac.tasks.pointer.visualize import render_trace_visualizations
+
+    trace = {
+        "list_idx": 0,
+        "start_node": 0,
+        "hops": 1,
+        "target_node": 1,
+        "final_prediction": 1,
+        "pointer": [1, 0],
+        "rollout_path_labels": ["L0:N0", "L0:N1"],
+        "expected_edges": [{"src": "L0:N0", "dst": "L0:N1"}],
+        "assembly_spans": [],
+        "steps": [
+            {"time": 0, "active_neurons": [], "active_assemblies": ["L0:N0"], "neuron_strengths": {0: 0.8, 1: 0.3}},
+            {"time": 1, "active_neurons": [], "active_assemblies": ["L0:N1"], "neuron_strengths": {2: 1.0, 3: 0.4}},
+        ],
+        "assembly_weight_matrix": {
+            "labels": ["L0:N0", "L0:N1"],
+            "values": [[0.0, 1.0], [0.0, 0.0]],
+        },
+    }
+
+    paths = render_trace_visualizations(trace, tmp_path)
+
+    assert (tmp_path / "assembly_bars_over_time.png") in paths
+    assert (tmp_path / "assembly_bars_over_time.png").exists()

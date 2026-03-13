@@ -81,6 +81,87 @@ def _save_assembly_heatmap(trace: dict[str, Any], output_dir: Path) -> Path:
     return path
 
 
+def _save_assembly_bars_over_time(trace: dict[str, Any], output_dir: Path) -> Path:
+    steps = trace["steps"]
+    spans = trace.get("assembly_spans", [])
+    colors = _assembly_colors(trace)
+    pointer_text = " -> ".join(str(value) for value in trace.get("pointer", []))
+    max_from_spans = max((int(span["end"]) for span in spans), default=-1)
+    max_from_active = max((max((int(neuron) for neuron in step["active_neurons"]), default=-1) for step in steps), default=-1)
+    max_from_strengths = max(
+        (
+            max((int(neuron) for neuron in step.get("neuron_strengths", {}).keys()), default=-1)
+            for step in steps
+        ),
+        default=-1,
+    )
+    max_neuron = max(max_from_spans, max_from_active, max_from_strengths)
+    if max_neuron < 0:
+        max_neuron = 0
+    neuron_indices = np.arange(max_neuron + 1, dtype=np.int64)
+
+    fig, axes = plt.subplots(len(steps), 1, figsize=(18, max(2.9 * len(steps), 6.0)), sharex=True)
+    if len(steps) == 1:
+        axes = [axes]
+
+    for axis, step in zip(axes, steps):
+        strengths = np.zeros(max_neuron + 1, dtype=np.float64)
+        bar_colors: list[tuple[float, float, float, float] | str] = ["#d9d9d9"] * (max_neuron + 1)
+        step_strengths = step.get("neuron_strengths")
+        if isinstance(step_strengths, dict):
+            for neuron, strength in step_strengths.items():
+                neuron_idx = int(neuron)
+                if 0 <= neuron_idx <= max_neuron:
+                    strengths[neuron_idx] = float(strength)
+        else:
+            for neuron in step["active_neurons"]:
+                strengths[int(neuron)] = 1.0
+
+        for span in spans:
+            label = str(span["label"])
+            start = int(span["start"])
+            end = int(span["end"])
+            axis.axvspan(start - 0.5, end + 0.5, color=colors[label], alpha=0.08)
+            axis.axvline(end + 0.5, color="#7f7f7f", linewidth=0.8, alpha=0.9)
+            for neuron in range(start, min(end + 1, max_neuron + 1)):
+                bar_colors[neuron] = colors[label]
+
+        if not spans and step["active_assemblies"]:
+            fallback_color = colors.get(step["active_assemblies"][0], "#4c78a8")
+            bar_colors = [fallback_color] * (max_neuron + 1)
+
+        axis.bar(
+            neuron_indices,
+            strengths,
+            color=bar_colors,
+            width=0.9,
+            edgecolor="white",
+            linewidth=0.2,
+        )
+
+        active_labels = ", ".join(step["active_assemblies"]) if step["active_assemblies"] else "none"
+        axis.set_ylim(0.0, max(1.05, float(np.max(strengths)) + 0.05))
+        axis.set_ylabel(f"t={step['time']}\nstrength")
+        axis.set_title(f"Active assemblies: {active_labels}", fontsize=10, loc="left")
+        axis.grid(axis="y", alpha=0.2)
+
+    if spans:
+        tick_positions = [(int(span["start"]) + int(span["end"])) / 2.0 for span in spans]
+        tick_labels = [str(span["label"]) for span in spans]
+        axes[-1].set_xticks(tick_positions, tick_labels, rotation=45, ha="right")
+    axes[-1].set_xlabel("Neuron index grouped by assembly")
+    fig.suptitle(
+        f"Pointer list: [{pointer_text}]\nAssembly-grouped neuron activations over time (target={trace['target_node']}, pred={trace['final_prediction']})",
+        fontsize=14,
+        y=0.995,
+    )
+    path = output_dir / "assembly_bars_over_time.png"
+    fig.subplots_adjust(top=0.94, bottom=0.16, hspace=0.5)
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
 def _save_connectivity_graph(trace: dict[str, Any], output_dir: Path) -> Path:
     colors = _assembly_colors(trace)
     pointer_text = " -> ".join(str(value) for value in trace.get("pointer", []))
@@ -157,6 +238,7 @@ def render_trace_visualizations(trace: dict[str, Any], output_dir: str | Path) -
     output_path.mkdir(parents=True, exist_ok=True)
     return [
         _save_assembly_heatmap(trace, output_path),
+        _save_assembly_bars_over_time(trace, output_path),
         _save_connectivity_graph(trace, output_path),
         _save_weight_matrix(trace, output_path),
     ]
