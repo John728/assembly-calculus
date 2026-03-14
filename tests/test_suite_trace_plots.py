@@ -55,6 +55,8 @@ def test_suite_trace_plot_hook_writes_expected_files(tmp_path: Path) -> None:
     out_dir = module.run_suite(config_path=cfg_path)
     trace_dir = out_dir / "trace_plots"
 
+    assert (trace_dir / "assembly_bars_over_time.png").exists()
     assert (trace_dir / "assembly_heatmap.png").exists()
     assert (trace_dir / "assembly_connectivity_graph.png").exists()
     assert (trace_dir / "assembly_weight_matrix.png").exists()
+    assert (trace_dir / "pointer_reference.png").exists()

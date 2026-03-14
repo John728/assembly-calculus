@@ -126,3 +126,69 @@ def test_load_suite_config_rejects_boolean_seed(tmp_path: Path) -> None:
         assert "seed" in str(exc)
     else:
         raise AssertionError("Expected ValueError for boolean seed")
+
+
+def test_paper_family_configs_use_canonical_output_roots() -> None:
+    from experiment_suite.config import load_suite_config
+
+    root = Path(__file__).resolve().parents[1]
+    config_expectations = {
+        root / "experiments" / "seen_mlp.yaml": "outputs/experiments/seen-mlp",
+        root / "experiments" / "unseen_mlp.yaml": "outputs/experiments/unseen-mlp",
+        root / "experiments" / "seen_ac.yaml": "outputs/experiments/seen-ac",
+        root / "experiments" / "unseen_ac.yaml": "outputs/experiments/unseen-ac",
+    }
+
+    for config_path, expected_output in config_expectations.items():
+        config = load_suite_config(config_path)
+        assert config.output_dir == expected_output
+
+
+def test_paper_ac_family_configs_share_core_model_surface() -> None:
+    from experiment_suite.config import load_suite_config
+
+    root = Path(__file__).resolve().parents[1]
+    seen_ac = load_suite_config(root / "experiments" / "seen_ac.yaml")
+    unseen_ac = load_suite_config(root / "experiments" / "unseen_ac.yaml")
+
+    seen_model_keys = set(seen_ac.models["AC"][0].values.keys())
+    unseen_model_keys = set(unseen_ac.models["AC"][0].values.keys())
+
+    assert seen_model_keys == unseen_model_keys
+    assert {model.model_name for model in seen_ac.models["AC"]} == {"AC-01", "AC-02"}
+    assert {model.model_name for model in unseen_ac.models["AC"]} == {"AC-01", "AC-02"}
+
+
+def test_paper_mlp_family_configs_use_calibrated_story_ranges() -> None:
+    from experiment_suite.config import load_suite_config
+
+    root = Path(__file__).resolve().parents[1]
+    seen_mlp = load_suite_config(root / "experiments" / "seen_mlp.yaml")
+    unseen_mlp = load_suite_config(root / "experiments" / "unseen_mlp.yaml")
+
+    seen_condition = seen_mlp.conditions[0]
+    unseen_condition = unseen_mlp.conditions[0]
+
+    assert seen_condition.N == 24
+    assert seen_condition.k_train_max == 4
+    assert seen_condition.k_test_max == 12
+    assert unseen_condition.N == 12
+    assert unseen_condition.k_train_max == 4
+    assert unseen_condition.k_test_max == 10
+    assert {model.model_name for model in seen_mlp.models["MLP"]} == {"MLP-01", "MLP-02", "MLP-03"}
+    assert {model.model_name for model in unseen_mlp.models["MLP"]} == {"MLP-01", "MLP-02", "MLP-03"}
+
+
+def test_paper_ac_family_configs_enable_canonical_trace_examples() -> None:
+    from experiment_suite.config import load_suite_config
+
+    root = Path(__file__).resolve().parents[1]
+    seen_ac = load_suite_config(root / "experiments" / "seen_ac.yaml")
+    unseen_ac = load_suite_config(root / "experiments" / "unseen_ac.yaml")
+
+    assert seen_ac.trace_plots is not None
+    assert unseen_ac.trace_plots is not None
+    assert seen_ac.trace_plots["enabled"] is True
+    assert unseen_ac.trace_plots["enabled"] is True
+    assert int(seen_ac.trace_plots["hops"]) == 4
+    assert int(unseen_ac.trace_plots["hops"]) == 4

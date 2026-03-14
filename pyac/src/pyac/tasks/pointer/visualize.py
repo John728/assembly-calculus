@@ -32,7 +32,6 @@ def _save_assembly_heatmap(trace: dict[str, Any], output_dir: Path) -> Path:
     steps = trace["steps"]
     spans = trace.get("assembly_spans", [])
     colors = _assembly_colors(trace)
-    pointer_text = " -> ".join(str(value) for value in trace.get("pointer", []))
     max_neuron = max(int(span["end"]) for span in spans) if spans else max((max(step["active_neurons"]) if step["active_neurons"] else -1) for step in steps)
     neuron_indices = np.arange(max_neuron + 1, dtype=np.int64)
 
@@ -70,7 +69,7 @@ def _save_assembly_heatmap(trace: dict[str, Any], output_dir: Path) -> Path:
         axes[-1].set_xticks(tick_positions, tick_labels, rotation=45, ha="right")
     axes[-1].set_xlabel("Neuron index grouped by assembly")
     fig.suptitle(
-        f"Pointer list: [{pointer_text}]\nAssembly firing over time (target={trace['target_node']}, pred={trace['final_prediction']})",
+        f"Assembly firing over time (target={trace['target_node']}, pred={trace['final_prediction']})",
         fontsize=14,
         y=0.995,
     )
@@ -85,7 +84,6 @@ def _save_assembly_bars_over_time(trace: dict[str, Any], output_dir: Path) -> Pa
     steps = trace["steps"]
     spans = trace.get("assembly_spans", [])
     colors = _assembly_colors(trace)
-    pointer_text = " -> ".join(str(value) for value in trace.get("pointer", []))
     max_from_spans = max((int(span["end"]) for span in spans), default=-1)
     max_from_active = max((max((int(neuron) for neuron in step["active_neurons"]), default=-1) for step in steps), default=-1)
     max_from_strengths = max(
@@ -151,7 +149,7 @@ def _save_assembly_bars_over_time(trace: dict[str, Any], output_dir: Path) -> Pa
         axes[-1].set_xticks(tick_positions, tick_labels, rotation=45, ha="right")
     axes[-1].set_xlabel("Neuron index grouped by assembly")
     fig.suptitle(
-        f"Pointer list: [{pointer_text}]\nAssembly-grouped neuron activations over time (target={trace['target_node']}, pred={trace['final_prediction']})",
+        f"Assembly-grouped neuron activations over time (target={trace['target_node']}, pred={trace['final_prediction']})",
         fontsize=14,
         y=0.995,
     )
@@ -164,7 +162,6 @@ def _save_assembly_bars_over_time(trace: dict[str, Any], output_dir: Path) -> Pa
 
 def _save_connectivity_graph(trace: dict[str, Any], output_dir: Path) -> Path:
     colors = _assembly_colors(trace)
-    pointer_text = " -> ".join(str(value) for value in trace.get("pointer", []))
     labels = [str(span["label"]) for span in trace.get("assembly_spans", []) if int(span.get("list_idx", -1)) == int(trace["list_idx"])]
     if not labels:
         labels = [str(label) for label in trace["assembly_weight_matrix"]["labels"]]
@@ -195,7 +192,7 @@ def _save_connectivity_graph(trace: dict[str, Any], output_dir: Path) -> Path:
         fontsize=11,
     )
 
-    fig.suptitle(f"Pointer list: [{pointer_text}]\nInternal rollout vs expected transitions", fontsize=14)
+    fig.suptitle("Internal rollout vs expected transitions", fontsize=14)
     path = output_dir / "assembly_connectivity_graph.png"
     fig.subplots_adjust(top=0.84, bottom=0.14, wspace=0.25)
     fig.savefig(path, dpi=200)
@@ -206,7 +203,6 @@ def _save_connectivity_graph(trace: dict[str, Any], output_dir: Path) -> Path:
 def _save_weight_matrix(trace: dict[str, Any], output_dir: Path) -> Path:
     labels = list(trace["assembly_weight_matrix"]["labels"])
     weights = np.asarray(trace["assembly_weight_matrix"]["values"], dtype=np.float64)
-    pointer_text = " -> ".join(str(value) for value in trace.get("pointer", []))
     expected = np.zeros_like(weights)
     label_to_index = {label: idx for idx, label in enumerate(labels)}
     for edge in trace.get("expected_edges", []):
@@ -225,9 +221,47 @@ def _save_weight_matrix(trace: dict[str, Any], output_dir: Path) -> Path:
         axis.set_yticks(range(len(labels)), labels)
         axis.set_xlabel("Destination assembly")
     axes[0].set_ylabel("Source assembly")
-    fig.suptitle(f"Pointer list: [{pointer_text}]\nExpected vs learned assembly transitions", fontsize=14)
+    fig.suptitle("Expected vs learned assembly transitions", fontsize=14)
     fig.subplots_adjust(top=0.86, bottom=0.24, wspace=0.12)
     path = output_dir / "assembly_weight_matrix.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def _save_pointer_reference(trace: dict[str, Any], output_dir: Path) -> Path:
+    pointer = [int(value) for value in trace.get("pointer", [])]
+    path_labels = trace.get("rollout_path_labels", [])
+    list_type = "Unseen" if any(str(label).startswith("N") for label in path_labels) else "Seen"
+    pointer_mapping = "\n".join(
+        f"{idx} -> {value}" for idx, value in enumerate(pointer)
+    ) or "No pointer mapping recorded"
+
+    fig, axis = plt.subplots(figsize=(8.5, max(4.5, 1.4 + 0.28 * max(len(pointer), 1))))
+    axis.axis("off")
+    summary = "\n".join(
+        [
+            f"family: {list_type}",
+            f"list_idx: {trace['list_idx']}",
+            f"start_node: {trace.get('start_node', 'n/a')}",
+            f"hops: {trace.get('hops', 'n/a')}",
+            f"target: {trace['target_node']}",
+            f"prediction: {trace['final_prediction']}",
+        ]
+    )
+    axis.text(0.02, 0.98, summary, va="top", ha="left", family="monospace", fontsize=11)
+    axis.text(
+        0.42,
+        0.98,
+        "pointer mapping\n" + pointer_mapping,
+        va="top",
+        ha="left",
+        family="monospace",
+        fontsize=11,
+    )
+    fig.suptitle("Pointer reference", fontsize=14)
+    fig.subplots_adjust(top=0.86, left=0.05, right=0.97, bottom=0.08)
+    path = output_dir / "pointer_reference.png"
     fig.savefig(path, dpi=200)
     plt.close(fig)
     return path
@@ -241,4 +275,5 @@ def render_trace_visualizations(trace: dict[str, Any], output_dir: str | Path) -
         _save_assembly_bars_over_time(trace, output_path),
         _save_connectivity_graph(trace, output_path),
         _save_weight_matrix(trace, output_path),
+        _save_pointer_reference(trace, output_path),
     ]

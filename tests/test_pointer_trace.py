@@ -38,3 +38,20 @@ def test_record_rollout_trace_has_expected_fields() -> None:
     assert "active_assemblies" in first_step
     assert isinstance(first_step["active_neurons"], list)
     assert isinstance(first_step["active_assemblies"], list)
+
+
+def test_record_rollout_trace_supports_unseen_pointer_tasks() -> None:
+    from pyac.core.rng import make_rng
+    from pyac.tasks.pointer.trace import record_rollout_trace
+    from pyac.tasks.pointer.unseen_protocol import build_unseen_pointer_network
+
+    pointer = [2, 4, 1, 0, 3]
+    network, task = build_unseen_pointer_network(list_length=5, assembly_size=10, density=0.5, plasticity=0.25, rng=make_rng(23))
+
+    trace = record_rollout_trace(network, task, [pointer], list_idx=0, start_node=0, hops=3)
+
+    assert trace["final_prediction"] == 4
+    assert trace["target_node"] == 4
+    assert trace["assembly_spans"]
+    assert trace["expected_edges"]
+    assert trace["steps"]

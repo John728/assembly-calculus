@@ -51,3 +51,49 @@ def test_run_experiment_suite_writes_outputs(tmp_path: Path) -> None:
     assert (out_dir / "raw_results.csv").exists()
     assert (out_dir / "summary.csv").exists()
     assert (out_dir / "config_snapshot.yaml").exists()
+    assert (out_dir / "plots" / "accuracy_vs_hop_seen_mlp.png").exists()
+    assert (out_dir / "plots" / "seen_mlp_heatmap.png").exists()
+    assert (out_dir / "plots" / "size_tradeoff_seen_mlp.png").exists()
+
+
+def test_run_experiment_suite_writes_family_local_ac_trace_outputs(tmp_path: Path) -> None:
+    cfg_path = tmp_path / "suite.yaml"
+    cfg_path.write_text(
+        "suite_name: seen-ac-demo\n"
+        "output_dir: " + str(tmp_path / "outputs" / "seen-ac-demo") + "\n"
+        "seeds: [1]\n"
+        "conditions:\n"
+        "  - list_type: Seen\n"
+        "    N: 8\n"
+        "    num_train_lists: 2\n"
+        "    num_test_lists: 0\n"
+        "    k_train_min: 1\n"
+        "    k_train_max: 2\n"
+        "    k_test_min: 1\n"
+        "    k_test_max: 6\n"
+        "models:\n"
+        "  AC:\n"
+        "    - model_name: Tiny-AC\n"
+        "      assembly_size: 8\n"
+        "      density: 0.2\n"
+        "      plasticity: 0.25\n"
+        "      presentation_rounds: 2\n"
+        "      transition_rounds: 3\n"
+        "      association_steps: 2\n"
+        "      samples_per_list_eval: 4\n"
+        "trace_plots:\n"
+        "  enabled: true\n"
+        "  list_idx: 0\n"
+        "  start_node: 0\n"
+        "  hops: 6\n",
+        encoding="utf-8",
+    )
+
+    module = _load_module()
+    out_dir = module.run_suite(config_path=cfg_path)
+
+    trace_dir = out_dir / "trace_plots"
+    assert (trace_dir / "assembly_heatmap.png").exists()
+    assert (trace_dir / "assembly_bars_over_time.png").exists()
+    assert (trace_dir / "assembly_connectivity_graph.png").exists()
+    assert (trace_dir / "assembly_weight_matrix.png").exists()
