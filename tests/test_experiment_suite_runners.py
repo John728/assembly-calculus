@@ -27,6 +27,7 @@ def _tiny_mlp_job() -> ExperimentJob:
                 "lr": 1e-3,
                 "samples_per_list_train": 4,
                 "samples_per_list_eval": 4,
+                "patience": 2,
             },
         ),
         seed=1,
@@ -105,6 +106,38 @@ def _tiny_unseen_ac_job() -> ExperimentJob:
     )
 
 
+def _tiny_proper_unseen_ac_job() -> ExperimentJob:
+    return ExperimentJob(
+        suite_name="demo",
+        output_dir="outputs/demo",
+        family="AC",
+        model=ModelConfig(
+            family="AC",
+            values={
+                "model_name": "Tiny-Proper-Unseen-AC",
+                "protocol_variant": "proper_unseen",
+                "assembly_size": 8,
+                "density": 0.35,
+                "plasticity": 0.2,
+                "train_episodes": 2,
+                "samples_per_list_eval": 4,
+                "t_equals_k": True,
+            },
+        ),
+        seed=1,
+        condition=ExperimentCondition(
+            list_type="Unseen",
+            N=6,
+            num_train_lists=4,
+            num_test_lists=2,
+            k_train_min=1,
+            k_train_max=3,
+            k_test_min=1,
+            k_test_max=3,
+        ),
+    )
+
+
 def test_mlp_runner_returns_standardized_rows() -> None:
     from experiment_suite.runners.mlp_runner import run_mlp_job
 
@@ -114,6 +147,7 @@ def test_mlp_runner_returns_standardized_rows() -> None:
     assert all(row["family"] == "MLP" for row in rows)
     assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
     assert {row["list_type"] for row in rows} == {"Seen"}
+    assert all(row["epochs"] <= 1 for row in rows)
 
 
 def test_ac_runner_returns_standardized_rows() -> None:
@@ -137,3 +171,19 @@ def test_ac_runner_supports_unseen_jobs() -> None:
     assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
     assert {row["list_type"] for row in rows} == {"Unseen"}
     assert {row["internal_steps"] for row in rows} == {2, 4}
+
+
+def test_ac_runner_supports_proper_unseen_jobs() -> None:
+    from experiment_suite.runners.ac_runner import run_ac_job_with_artifacts
+
+    rows, artifacts = run_ac_job_with_artifacts(_tiny_proper_unseen_ac_job())
+
+    assert rows
+    assert all(row["family"] == "AC" for row in rows)
+    assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
+    assert {row["list_type"] for row in rows} == {"Unseen"}
+    assert all(row["model_name"] == "Tiny-Proper-Unseen-AC" for row in rows)
+    assert all(int(row["internal_steps"]) == int(row["k_test"]) for row in rows)
+    assert artifacts["task"].__class__.__name__ == "ProperUnseenPointerTask"
+    assert "training_history" in artifacts
+    assert "mechanism_trace" in artifacts

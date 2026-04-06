@@ -96,6 +96,7 @@ def run_suite(config_path: str | Path) -> Path:
             start_node=_as_int(config.trace_plots.get("start_node"), 0),
             hops=_as_int(config.trace_plots.get("hops"), 1),
             settle_steps=_as_int(config.trace_plots.get("settle_steps"), 1),
+            internal_steps=10,
         )
         render_trace_visualizations(trace, output_dir / "trace_plots")
 

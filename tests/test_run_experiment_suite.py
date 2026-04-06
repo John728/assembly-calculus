@@ -97,3 +97,77 @@ def test_run_experiment_suite_writes_family_local_ac_trace_outputs(tmp_path: Pat
     assert (trace_dir / "assembly_bars_over_time.png").exists()
     assert (trace_dir / "assembly_connectivity_graph.png").exists()
     assert (trace_dir / "assembly_weight_matrix.png").exists()
+
+
+def test_dev_and_paper_configs_share_artifact_contract(tmp_path: Path) -> None:
+    module = _load_module()
+
+    dev_cfg = tmp_path / "dev.yaml"
+    dev_cfg.write_text(
+        "suite_name: seen-mlp-dev-test\n"
+        "output_dir: " + str(tmp_path / "outputs" / "seen-mlp-dev-test") + "\n"
+        "seeds: [1]\n"
+        "conditions:\n"
+        "  - list_type: Seen\n"
+        "    N: 8\n"
+        "    num_train_lists: 2\n"
+        "    num_test_lists: 0\n"
+        "    k_train_min: 1\n"
+        "    k_train_max: 2\n"
+        "    k_test_min: 1\n"
+        "    k_test_max: 2\n"
+        "models:\n"
+        "  MLP:\n"
+        "    - model_name: Dev-MLP\n"
+        "      layers: 2\n"
+        "      hidden_dim: 32\n"
+        "      epochs: 1\n"
+        "      batch_size: 16\n"
+        "      lr: 0.001\n"
+        "      samples_per_list_train: 4\n"
+        "      samples_per_list_eval: 4\n",
+        encoding="utf-8",
+    )
+
+    paper_cfg = tmp_path / "paper.yaml"
+    paper_cfg.write_text(
+        "suite_name: seen-mlp-paper-test\n"
+        "output_dir: " + str(tmp_path / "outputs" / "seen-mlp-paper-test") + "\n"
+        "seeds: [1, 2]\n"
+        "conditions:\n"
+        "  - list_type: Seen\n"
+        "    N: 8\n"
+        "    num_train_lists: 3\n"
+        "    num_test_lists: 0\n"
+        "    k_train_min: 1\n"
+        "    k_train_max: 2\n"
+        "    k_test_min: 1\n"
+        "    k_test_max: 3\n"
+        "models:\n"
+        "  MLP:\n"
+        "    - model_name: Paper-MLP\n"
+        "      layers: 2\n"
+        "      hidden_dim: 32\n"
+        "      epochs: 1\n"
+        "      batch_size: 16\n"
+        "      lr: 0.001\n"
+        "      samples_per_list_train: 4\n"
+        "      samples_per_list_eval: 4\n",
+        encoding="utf-8",
+    )
+
+    dev_out = module.run_suite(config_path=dev_cfg)
+    paper_out = module.run_suite(config_path=paper_cfg)
+
+    for out_dir in (dev_out, paper_out):
+        assert (out_dir / "raw_results.csv").exists()
+        assert (out_dir / "summary.csv").exists()
+        assert (out_dir / "config_snapshot.yaml").exists()
+        assert (out_dir / "plots").exists()
+
+
+def test_python_nci_launcher_targets_existing_dev_and_paper_configs() -> None:
+    root = Path(__file__).resolve().parents[1]
+
+    assert (root / "experiments" / "seen_mlp_dev.yaml").exists()
+    assert (root / "experiments" / "seen_mlp_paper.yaml").exists()

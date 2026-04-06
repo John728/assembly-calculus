@@ -1,0 +1,4 @@
+suite,seed,family,model_name,list_type,N,num_train_lists,num_test_lists,k_train_min,k_train_max,k_test,accuracy,internal_steps,params,runtime_ms,layers,hidden_dim,lr,epochs,assembly_size,density,plasticity,transition_rounds,association_steps
+unseen-ac-proper-dev,1,AC,AC-Proper-01,Unseen,6,8,4,1,3,1,1.0,1,,,,,,,32,0.2,0.1,,
+unseen-ac-proper-dev,1,AC,AC-Proper-01,Unseen,6,8,4,1,3,2,1.0,2,,,,,,,32,0.2,0.1,,
+unseen-ac-proper-dev,1,AC,AC-Proper-01,Unseen,6,8,4,1,3,3,1.0,3,,,,,,,32,0.2,0.1,,

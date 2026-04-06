@@ -1,0 +1,9 @@
+suite,seed,family,model_name,list_type,N,num_train_lists,num_test_lists,k_train_min,k_train_max,k_test,accuracy,internal_steps,params,runtime_ms,layers,hidden_dim,lr,epochs,assembly_size,density,plasticity,transition_rounds,association_steps
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,1,0.07291666666666667,,981184,,4,512,0.001,16,,,,,
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,2,0.0375,,981184,,4,512,0.001,16,,,,,
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,3,0.06875,,981184,,4,512,0.001,16,,,,,
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,4,0.06458333333333334,,981184,,4,512,0.001,16,,,,,
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,5,0.058333333333333334,,981184,,4,512,0.001,16,,,,,
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,6,0.04791666666666667,,981184,,4,512,0.001,16,,,,,
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,7,0.06458333333333334,,981184,,4,512,0.001,16,,,,,
+seen-mlp-dev,1,MLP,MLP-01,Seen,16,12,0,1,4,8,0.07083333333333333,,981184,,4,512,0.001,16,,,,,

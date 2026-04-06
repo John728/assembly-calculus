@@ -24,6 +24,15 @@ def _sort_df(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     return pd.DataFrame(df.sort_values(by=columns))
 
 
+def _format_params_short(value: Any) -> str:
+    params = _to_int_scalar(value)
+    if params >= 1_000_000:
+        return f"{params / 1_000_000:.1f}M"
+    if params >= 1_000:
+        return f"{params / 1_000:.0f}k"
+    return str(params)
+
+
 def _build_suite_comparison_df(raw_results_csv: str | Path, list_type: str) -> pd.DataFrame:
     df = pd.read_csv(raw_results_csv)
     frame = pd.DataFrame(df[df["list_type"] == list_type].copy())
@@ -127,12 +136,16 @@ def _save_family_heatmap(comparison_df: pd.DataFrame, family: str, output_dir: P
     del value_column
     family_df = pd.DataFrame(comparison_df[comparison_df["family"] == family].copy())
     if family == "MLP":
-        family_df["row_label"] = family_df.apply(lambda row: f"{row['model_label']} ({int(row['params'])}p)", axis=1)
+        family_df["row_label"] = family_df.apply(lambda row: f"{row['model_label']} / {_format_params_short(row['params'])}", axis=1)
     else:
         family_df["row_label"] = family_df.apply(lambda row: f"{row['model_label']} (asm={int(row['assembly_size'])})", axis=1)
     pivot_df = family_df.pivot_table(index="row_label", columns="k", values="accuracy", aggfunc="mean")
-    plt.figure(figsize=(10, 5.5))
-    sns.heatmap(pivot_df, annot=True, cmap="viridis", fmt=".2f", vmin=0.0, vmax=1.0)
+    n_rows, n_cols = pivot_df.shape
+    fig_w = max(12.0, 0.9 * n_cols + 4.0)
+    fig_h = max(4.5, 1.0 * n_rows + 2.0)
+    plt.figure(figsize=(fig_w, fig_h))
+    annot_size = 9 if n_cols <= 16 else 7
+    sns.heatmap(pivot_df, annot=True, annot_kws={"size": annot_size}, cmap="viridis", fmt=".2f", vmin=0.0, vmax=1.0)
     plt.title(title)
     plt.xlabel("Hop Count")
     plt.ylabel("Model")
@@ -193,6 +206,21 @@ def _save_size_vs_time_tradeoff(comparison_df: pd.DataFrame, output_dir: Path, f
     path = output_dir / filename
     fig.savefig(path, dpi=220)
     plt.close(fig)
+    return path
+
+
+def _save_ac_resource_tradeoff(comparison_df: pd.DataFrame, output_dir: Path, filename: str, title: str) -> Path:
+    ms_df = _max_solved_hop_df(comparison_df)
+    ac_df = _sort_df(pd.DataFrame(ms_df[ms_df["family"] == "AC"].copy()), ["assembly_size"])
+    plt.figure(figsize=(8.5, 5.2))
+    sns.lineplot(data=ac_df, x="assembly_size", y="max_solved_hop", marker="o")
+    plt.title(title)
+    plt.xlabel("Assembly Size")
+    plt.ylabel("Max Solved Hop")
+    plt.tight_layout()
+    path = output_dir / filename
+    plt.savefig(path, dpi=220)
+    plt.close()
     return path
 
 
@@ -280,6 +308,33 @@ def generate_seen_suite_plots(raw_results_csv: str | Path, output_dir: str | Pat
     ]
 
 
+def generate_seen_mlp_plots(raw_results_csv: str | Path, output_dir: str | Path) -> list[Path]:
+    sns.set_theme(style="whitegrid", context="talk")
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    comparison_df = build_seen_suite_comparison_df(raw_results_csv)
+    mlp_df = pd.DataFrame(comparison_df[comparison_df["family"] == "MLP"].copy())
+    return [
+        _save_accuracy_vs_hop_generic(mlp_df, output_path, "accuracy_vs_hop_seen_mlp.png", "Seen MLP: accuracy vs hop"),
+        _save_family_heatmap(mlp_df, "MLP", output_path, "seen_mlp_heatmap.png", "Seen MLP heatmap"),
+        _save_mlp_size_tradeoff(mlp_df, output_path).rename(output_path / "size_tradeoff_seen_mlp.png"),
+    ]
+
+
+def generate_seen_ac_plots(raw_results_csv: str | Path, output_dir: str | Path) -> list[Path]:
+    sns.set_theme(style="whitegrid", context="talk")
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    comparison_df = build_seen_suite_comparison_df(raw_results_csv)
+    ac_df = pd.DataFrame(comparison_df[comparison_df["family"] == "AC"].copy())
+    return [
+        _save_accuracy_vs_hop_generic(ac_df, output_path, "accuracy_vs_hop_seen_ac.png", "Seen AC: Accuracy vs Hop Count"),
+        _save_family_heatmap(ac_df, "AC", output_path, "accuracy_heatmap_seen_ac.png", "Seen AC: accuracy heatmap"),
+        _save_ac_resource_tradeoff(ac_df, output_path, "size_tradeoff_seen_ac.png", "Seen AC: assembly size tradeoff"),
+        _save_max_solved_hop(ac_df, output_path).rename(output_path / "max_solved_hop_seen_ac.png"),
+    ]
+
+
 def generate_unseen_suite_plots(raw_results_csv: str | Path, output_dir: str | Path) -> list[Path]:
     sns.set_theme(style="whitegrid", context="talk")
     output_path = Path(output_dir)
@@ -291,4 +346,31 @@ def generate_unseen_suite_plots(raw_results_csv: str | Path, output_dir: str | P
         _save_family_heatmap(comparison_df, "AC", output_path, "ac_accuracy_heatmap_unseen.png", "AC unseen accuracy heatmap"),
         _save_ac_time_sweep_unseen(comparison_df, output_path),
         _save_size_vs_time_tradeoff(comparison_df, output_path, "unseen_size_vs_time_tradeoff.png", "Unseen Lists: MLP size vs AC resource tradeoff"),
+    ]
+
+
+def generate_unseen_mlp_plots(raw_results_csv: str | Path, output_dir: str | Path) -> list[Path]:
+    sns.set_theme(style="whitegrid", context="talk")
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    comparison_df = build_unseen_suite_comparison_df(raw_results_csv)
+    mlp_df = pd.DataFrame(comparison_df[comparison_df["family"] == "MLP"].copy())
+    return [
+        _save_accuracy_vs_hop_generic(mlp_df, output_path, "accuracy_vs_hop_unseen_mlp.png", "Unseen MLP: accuracy vs hop"),
+        _save_family_heatmap(mlp_df, "MLP", output_path, "unseen_mlp_heatmap.png", "Unseen MLP heatmap"),
+        _save_mlp_size_tradeoff(mlp_df, output_path).rename(output_path / "size_tradeoff_unseen_mlp.png"),
+    ]
+
+
+def generate_unseen_ac_plots(raw_results_csv: str | Path, output_dir: str | Path) -> list[Path]:
+    sns.set_theme(style="whitegrid", context="talk")
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    comparison_df = build_unseen_suite_comparison_df(raw_results_csv)
+    ac_df = pd.DataFrame(comparison_df[comparison_df["family"] == "AC"].copy())
+    return [
+        _save_accuracy_vs_hop_generic(ac_df, output_path, "accuracy_vs_hop_unseen_ac.png", "Unseen AC: Accuracy vs Hop Count"),
+        _save_family_heatmap(ac_df, "AC", output_path, "accuracy_heatmap_unseen_ac.png", "Unseen AC: accuracy heatmap"),
+        _save_ac_resource_tradeoff(ac_df, output_path, "size_tradeoff_unseen_ac.png", "Unseen AC: assembly size tradeoff"),
+        _save_max_solved_hop(ac_df, output_path).rename(output_path / "max_solved_hop_unseen_ac.png"),
     ]

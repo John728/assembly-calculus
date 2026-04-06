@@ -3,6 +3,102 @@ from __future__ import annotations
 from pathlib import Path
 
 
+def test_generate_seen_mlp_family_plots(tmp_path: Path) -> None:
+    from experiment_suite.plots import generate_seen_mlp_plots
+
+    raw_results = tmp_path / "raw_results.csv"
+    raw_results.write_text(
+        "suite,seed,family,model_name,list_type,N,num_train_lists,num_test_lists,k_train_min,k_train_max,k_test,accuracy,internal_steps,params,runtime_ms,layers,hidden_dim,lr,epochs,assembly_size,density,plasticity,transition_rounds,association_steps\n"
+        "demo,1,MLP,MLP-01,Seen,16,8,0,1,4,1,1.0,,194432,,2,64,0.001,10,,,,,\n"
+        "demo,1,MLP,MLP-02,Seen,16,8,0,1,4,1,1.0,,6264961,,4,1395,0.001,10,,,,,\n"
+        "demo,1,MLP,MLP-01,Seen,16,8,0,1,4,5,0.0,,194432,,2,64,0.001,10,,,,,\n"
+        "demo,1,MLP,MLP-02,Seen,16,8,0,1,4,5,0.65,,6264961,,4,1395,0.001,10,,,,,\n",
+        encoding="utf-8",
+    )
+
+    out_dir = tmp_path / "plots"
+    paths = generate_seen_mlp_plots(raw_results, out_dir)
+
+    assert {path.name for path in paths} == {
+        "accuracy_vs_hop_seen_mlp.png",
+        "seen_mlp_heatmap.png",
+        "size_tradeoff_seen_mlp.png",
+    }
+
+
+def test_generate_seen_ac_family_plots(tmp_path: Path) -> None:
+    from experiment_suite.plots import generate_seen_ac_plots
+
+    raw_results = tmp_path / "raw_results.csv"
+    raw_results.write_text(
+        "suite,seed,family,model_name,list_type,N,num_train_lists,num_test_lists,k_train_min,k_train_max,k_test,accuracy,internal_steps,params,runtime_ms,layers,hidden_dim,lr,epochs,assembly_size,density,plasticity,transition_rounds,association_steps\n"
+        "demo,1,AC,AC-01,Seen,16,8,0,1,4,1,1.0,1,,,,,,,16,0.15,0.25,12,2\n"
+        "demo,1,AC,AC-02,Seen,16,8,0,1,4,1,1.0,1,,,,,,,24,0.2,0.3,16,3\n"
+        "demo,1,AC,AC-01,Seen,16,8,0,1,4,5,0.75,5,,,,,,,16,0.15,0.25,12,2\n"
+        "demo,1,AC,AC-02,Seen,16,8,0,1,4,5,1.0,5,,,,,,,24,0.2,0.3,16,3\n",
+        encoding="utf-8",
+    )
+
+    out_dir = tmp_path / "plots"
+    paths = generate_seen_ac_plots(raw_results, out_dir)
+
+    assert {path.name for path in paths} == {
+        "accuracy_vs_hop_seen_ac.png",
+        "accuracy_heatmap_seen_ac.png",
+        "size_tradeoff_seen_ac.png",
+        "max_solved_hop_seen_ac.png",
+    }
+
+
+def test_generate_unseen_mlp_family_plots(tmp_path: Path) -> None:
+    from experiment_suite.plots import generate_unseen_mlp_plots
+
+    raw_results = tmp_path / "raw_results.csv"
+    raw_results.write_text(
+        "suite,seed,family,model_name,list_type,N,num_train_lists,num_test_lists,k_train_min,k_train_max,k_test,accuracy,internal_steps,params,runtime_ms,layers,hidden_dim,lr,epochs,assembly_size,density,plasticity,transition_rounds,association_steps\n"
+        "demo,1,MLP,MLP-01,Unseen,16,8,4,1,4,1,0.09,,194432,,2,64,0.001,10,,,,,\n"
+        "demo,1,MLP,MLP-02,Unseen,16,8,4,1,4,1,0.14,,6264961,,4,1395,0.001,10,,,,,\n"
+        "demo,1,MLP,MLP-01,Unseen,16,8,4,1,4,5,0.03,,194432,,2,64,0.001,10,,,,,\n"
+        "demo,1,MLP,MLP-02,Unseen,16,8,4,1,4,5,0.05,,6264961,,4,1395,0.001,10,,,,,\n",
+        encoding="utf-8",
+    )
+
+    out_dir = tmp_path / "plots"
+    paths = generate_unseen_mlp_plots(raw_results, out_dir)
+
+    assert {path.name for path in paths} == {
+        "accuracy_vs_hop_unseen_mlp.png",
+        "unseen_mlp_heatmap.png",
+        "size_tradeoff_unseen_mlp.png",
+    }
+
+
+def test_generate_unseen_ac_family_plots(tmp_path: Path) -> None:
+    from experiment_suite.plots import generate_unseen_ac_plots
+
+    raw_results = tmp_path / "raw_results.csv"
+    raw_results.write_text(
+        "suite,seed,family,model_name,list_type,N,num_train_lists,num_test_lists,k_train_min,k_train_max,k_test,accuracy,internal_steps,params,runtime_ms,layers,hidden_dim,lr,epochs,assembly_size,density,plasticity,transition_rounds,association_steps\n"
+        "demo,1,AC,AC-01,Unseen,16,8,4,1,4,1,1.0,1,,,,,,,16,0.5,0.25,,\n"
+        "demo,1,AC,AC-02,Unseen,16,8,4,1,4,1,1.0,1,,,,,,,24,0.5,0.25,,\n"
+        "demo,1,AC,AC-01,Unseen,16,8,4,1,4,5,0.0,1,,,,,,,16,0.5,0.25,,\n"
+        "demo,1,AC,AC-01,Unseen,16,8,4,1,4,5,1.0,5,,,,,,,16,0.5,0.25,,\n"
+        "demo,1,AC,AC-02,Unseen,16,8,4,1,4,5,0.0,1,,,,,,,24,0.5,0.25,,\n"
+        "demo,1,AC,AC-02,Unseen,16,8,4,1,4,5,1.0,5,,,,,,,24,0.5,0.25,,\n",
+        encoding="utf-8",
+    )
+
+    out_dir = tmp_path / "plots"
+    paths = generate_unseen_ac_plots(raw_results, out_dir)
+
+    assert {path.name for path in paths} == {
+        "accuracy_vs_hop_unseen_ac.png",
+        "accuracy_heatmap_unseen_ac.png",
+        "size_tradeoff_unseen_ac.png",
+        "max_solved_hop_unseen_ac.png",
+    }
+
+
 def test_generate_seen_suite_plots_from_standardized_results(tmp_path: Path) -> None:
     from experiment_suite.plots import generate_seen_suite_plots
 

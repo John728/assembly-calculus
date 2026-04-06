@@ -7,11 +7,13 @@ import numpy as np
 from pyac.core.network import Network
 from pyac.tasks.pointer.data import follow_pointer
 from pyac.tasks.pointer.protocol import PointerTask, _decode_node, _reset_network, _stimulus_from_indices
-from pyac.tasks.pointer.unseen_protocol import (
-    UnseenPointerTask,
-    _clear_activations,
-    _decode_node as _decode_unseen_node,
-    write_list_episode,
+
+from pyac.tasks.pointer.proper_unseen_protocol import (
+    ProperUnseenPointerTask,
+    _decode_node as _decode_proper_unseen_node,
+    reset_proper_episode_memory,
+    rollout_proper_unseen_pointer,
+    write_unseen_episode,
 )
 
 
@@ -58,7 +60,10 @@ def _assembly_spans(task: PointerTask) -> list[dict[str, int | str]]:
     return spans
 
 
-def _active_unseen_labels(task: UnseenPointerTask, area_name: str, active_indices: np.ndarray) -> list[str]:
+
+
+
+def _active_proper_unseen_labels(task: ProperUnseenPointerTask, area_name: str, active_indices: np.ndarray) -> list[str]:
     labels: list[str] = []
     active_set = set(int(index) for index in active_indices.tolist())
     for node_idx, assembly in task.node_assemblies[area_name].items():
@@ -67,25 +72,30 @@ def _active_unseen_labels(task: UnseenPointerTask, area_name: str, active_indice
     return labels
 
 
-def _unseen_assembly_weight_matrix(network: Network, task: UnseenPointerTask) -> dict[str, Any]:
+
+
+
+def _clear_activations(network: Network) -> None:
+    for area_name in network.area_names:
+        network.activations[area_name] = np.array([], dtype=np.int64)
+
+def _proper_unseen_assembly_weight_matrix(network: Network, task: ProperUnseenPointerTask) -> dict[str, Any]:
     key_area, value_area = task.episodic_fiber
     weights = network.weights[task.episodic_fiber]
     labels = [f"N{node_idx}" for node_idx in sorted(task.node_assemblies[key_area].keys())]
     matrix = np.zeros((len(labels), len(labels)), dtype=np.float64)
-
     for src_node in sorted(task.node_assemblies[key_area].keys()):
         src_assembly = task.node_assemblies[key_area][src_node]
         for dst_node in sorted(task.node_assemblies[value_area].keys()):
             dst_assembly = task.node_assemblies[value_area][dst_node]
             submatrix = weights[np.ix_(src_assembly.indices, dst_assembly.indices)]
             matrix[src_node, dst_node] = float(submatrix.sum())
-
     return {"labels": labels, "values": matrix.tolist()}
 
 
-def _unseen_assembly_spans(task: UnseenPointerTask) -> list[dict[str, int | str]]:
+def _proper_unseen_assembly_spans(task: ProperUnseenPointerTask) -> list[dict[str, int | str]]:
     spans: list[dict[str, int | str]] = []
-    current_area = task.area_map["current"]
+    current_area = task.area_map["cur"]
     for node_idx, assembly in sorted(task.node_assemblies[current_area].items()):
         spans.append(
             {
@@ -99,19 +109,26 @@ def _unseen_assembly_spans(task: UnseenPointerTask) -> list[dict[str, int | str]
     return spans
 
 
-def _record_unseen_rollout_trace(
+
+
+
+def _record_proper_unseen_rollout_trace(
     network: Network,
-    task: UnseenPointerTask,
+    task: ProperUnseenPointerTask,
     lists: list[np.ndarray],
     *,
     list_idx: int,
     start_node: int,
     hops: int,
+    internal_steps: int | None = None,
 ) -> dict[str, Any]:
     pointer = np.asarray(lists[list_idx], dtype=np.int64)
-    write_list_episode(network, task, pointer)
+    rollout_steps = internal_steps if internal_steps is not None else hops
+    trace_summary = rollout_proper_unseen_pointer(network, task, pointer, start_node=start_node, hops=hops, internal_steps=rollout_steps)
+    reset_proper_episode_memory(network, task)
+    write_unseen_episode(network, task, pointer)
 
-    current_area = task.area_map["current"]
+    current_area = task.area_map["cur"]
     readout_area = task.area_map["readout"]
     current_assembly = task.node_assemblies[current_area][start_node]
     current_stimulus = np.zeros(network.areas_by_name[current_area].n, dtype=np.float64)
@@ -119,35 +136,27 @@ def _record_unseen_rollout_trace(
 
     _clear_activations(network)
     network.inhibit(readout_area)
-
     steps: list[dict[str, Any]] = []
     network.step(external_stimuli={current_area: current_stimulus}, plasticity_on=False)
     active = network.activations[current_area].copy()
-    steps.append(
-        {
-            "time": 0,
-            "active_neurons": active.tolist(),
-            "active_assemblies": _active_unseen_labels(task, current_area, active),
-        }
-    )
-
-    for hop_idx in range(hops):
+    steps.append({"time": 0, "active_neurons": active.tolist(), "active_assemblies": _active_proper_unseen_labels(task, current_area, active)})
+    for hop_idx in range(rollout_steps):
         network.step(plasticity_on=False)
         active = network.activations[current_area].copy()
-        steps.append(
-            {
-                "time": hop_idx + 1,
-                "active_neurons": active.tolist(),
-                "active_assemblies": _active_unseen_labels(task, current_area, active),
-            }
-        )
-
+        steps.append({"time": hop_idx + 1, "active_neurons": active.tolist(), "active_assemblies": _active_proper_unseen_labels(task, current_area, active)})
     network.disinhibit(readout_area)
-    final_prediction = _decode_unseen_node(task, current_area, network.activations[current_area])
+
+    final_prediction = _decode_proper_unseen_node(task, current_area, network.activations[current_area])
     target_node = follow_pointer(pointer, start=start_node, hops=hops)
     expected_edges = [{"src": f"N{src}", "dst": f"N{int(dst)}"} for src, dst in enumerate(pointer.tolist())]
     rollout_path_labels = [step["active_assemblies"][0] for step in steps if step["active_assemblies"]]
-
+    cue_count_value = trace_summary.get("external_cue_count", 1)
+    if isinstance(cue_count_value, (int, np.integer)):
+        cue_count = int(cue_count_value)
+    elif isinstance(cue_count_value, (float, str)):
+        cue_count = int(cue_count_value)
+    else:
+        cue_count = 1
     return {
         "list_idx": int(list_idx),
         "start_node": int(start_node),
@@ -158,30 +167,34 @@ def _record_unseen_rollout_trace(
         "final_prediction": int(final_prediction),
         "target_node": int(target_node),
         "expected_edges": expected_edges,
-        "assembly_spans": _unseen_assembly_spans(task),
-        "assembly_weight_matrix": _unseen_assembly_weight_matrix(network, task),
+        "assembly_spans": _proper_unseen_assembly_spans(task),
+        "assembly_weight_matrix": _proper_unseen_assembly_weight_matrix(network, task),
+        "external_cue_count": cue_count,
     }
 
 
 def record_rollout_trace(
     network: Network,
-    task: PointerTask | UnseenPointerTask,
+    task: PointerTask | ProperUnseenPointerTask,
     lists: list[np.ndarray],
     *,
     list_idx: int,
     start_node: int,
     hops: int,
     settle_steps: int = 1,
+    internal_steps: int | None = None,
 ) -> dict[str, Any]:
-    if isinstance(task, UnseenPointerTask):
-        return _record_unseen_rollout_trace(
+    if isinstance(task, ProperUnseenPointerTask):
+        return _record_proper_unseen_rollout_trace(
             network,
             task,
             lists,
             list_idx=list_idx,
             start_node=start_node,
             hops=hops,
+            internal_steps=internal_steps,
         )
+
 
     input_area = task.area_map["input"]
     state_area = task.area_map["state"]

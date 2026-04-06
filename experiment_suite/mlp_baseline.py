@@ -82,24 +82,26 @@ class RandomListPermutationDataset(Dataset[dict[str, int | torch.Tensor]]):
     def __getitem__(self, idx: int) -> dict[str, int | torch.Tensor]:
         del idx
         possible_ks = list(range(self.k_range[0], self.k_range[1] + 1))
-        list_idx = torch.randint(0, len(self.lists), (1,)).item()
+        list_idx = int(torch.randint(0, len(self.lists), (1,)).item())
         pointer = self.lists[list_idx]
         start = torch.randint(0, self.N, (1,)).item()
         if self.fixed_k is not None:
             hops = self.fixed_k
         else:
-            hops = possible_ks[torch.randint(0, len(possible_ks), (1,)).item()]
+            hop_index = int(torch.randint(0, len(possible_ks), (1,)).item())
+            hops = int(possible_ks[hop_index])
 
-        x = start
+        x = int(start)
         for _ in range(hops):
-            x = pointer[x].item()
+            x = int(pointer[x].item())
 
-        return {"p": pointer, "s": start, "k": hops, "y": x}
+        return {"p": pointer, "s": int(start), "k": int(hops), "y": int(x)}
 
 
 def collate_dict(batch: list[dict[str, int | torch.Tensor]]) -> dict[str, torch.Tensor]:
+    p_tensors = [item["p"] for item in batch if isinstance(item["p"], torch.Tensor)]
     return {
-        "p": torch.stack([item["p"] for item in batch if isinstance(item["p"], torch.Tensor)]),
+        "p": torch.stack(p_tensors),
         "s": torch.tensor([int(item["s"]) for item in batch]),
         "k": torch.tensor([int(item["k"]) for item in batch]),
         "y": torch.tensor([int(item["y"]) for item in batch]),
@@ -115,6 +117,12 @@ def train_model(model: nn.Module, train_loader, args, device: torch.device) -> n
     optimizer = torch.optim.Adam(model.parameters(), lr=model_lr)
     criterion = nn.CrossEntropyLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    val_loader = getattr(args, "val_loader", None)
+    patience = int(getattr(args, "patience", 0))
+    best_val = -1.0
+    best_state: dict[str, torch.Tensor] | None = None
+    epochs_without_improvement = 0
+    epochs_run = 0
 
     for _ in range(args.epochs):
         for batch in train_loader:
@@ -125,6 +133,22 @@ def train_model(model: nn.Module, train_loader, args, device: torch.device) -> n
             loss.backward()
             optimizer.step()
         scheduler.step()
+        epochs_run += 1
+
+        if val_loader is not None:
+            val_acc = eval_model(model, val_loader, device)
+            if val_acc > best_val:
+                best_val = val_acc
+                best_state = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+                epochs_without_improvement = 0
+            else:
+                epochs_without_improvement += 1
+                if patience > 0 and epochs_without_improvement >= patience:
+                    break
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+    setattr(model, "trained_epochs", epochs_run)
     return model
 
 

@@ -1,0 +1,37 @@
+suite_name: unseen-ac-proper-paper
+output_dir: outputs/experiments/unseen-ac-proper-paper
+seeds: [1, 2, 3]
+trace_plots:
+  enabled: true
+  list_idx: 0
+  start_node: 0
+  hops: 3
+conditions:
+  - list_type: Unseen
+    N: 6
+    num_train_lists: 12
+    num_test_lists: 6
+    k_train_min: 1
+    k_train_max: 3
+    k_test_min: 1
+    k_test_max: 3
+models:
+  AC:
+    - model_name: AC-Proper-01
+      protocol_variant: proper_unseen
+      assembly_size: 12
+      density: 0.45
+      plasticity: 0.3
+      train_episodes: 24
+      samples_per_list_eval: 16
+      t_equals_k: false
+      time_budgets: [10]
+    - model_name: AC-Proper-02
+      protocol_variant: proper_unseen
+      assembly_size: 14
+      density: 0.5
+      plasticity: 0.3
+      train_episodes: 32
+      samples_per_list_eval: 16
+      t_equals_k: false
+      time_budgets: [10]

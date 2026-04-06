@@ -48,69 +48,99 @@ def run_ac_job_with_artifacts(job: ExperimentJob) -> tuple[list[dict[str, object
     spawn_rngs = rng_module.spawn_rngs
     accuracy_vs_hop = pointer_module.accuracy_vs_hop
     build_pointer_network = pointer_module.build_pointer_network
-    build_unseen_pointer_network = pointer_module.build_unseen_pointer_network
-    evaluate_unseen_rollout = pointer_module.evaluate_unseen_rollout
+    build_proper_unseen_pointer_network = pointer_module.build_proper_unseen_pointer_network
+    evaluate_proper_unseen_rollout = pointer_module.evaluate_proper_unseen_rollout
     generate_unique_lists = pointer_module.generate_unique_lists
+    train_proper_unseen_controller = pointer_module.train_proper_unseen_controller
     train_node_assemblies = pointer_module.train_node_assemblies
     train_seen_transitions = pointer_module.train_seen_transitions
+    rollout_proper_unseen_pointer = pointer_module.rollout_proper_unseen_pointer
 
     model_values = job.model.values
     root_rng = make_rng(job.seed)
     list_rng, net_rng, eval_rng = spawn_rngs(root_rng, 3)
 
     if job.condition.list_type == "Unseen":
-        lists = generate_unique_lists(job.condition.num_test_lists, job.condition.N, list_rng)
-        network, task = build_unseen_pointer_network(
+        train_rng = spawn_rngs(root_rng, 1)[0]
+        training_lists = generate_unique_lists(job.condition.num_train_lists, job.condition.N, list_rng)
+        test_lists = generate_unique_lists(job.condition.num_test_lists, job.condition.N, list_rng)
+        network, task = build_proper_unseen_pointer_network(
             list_length=job.condition.N,
             assembly_size=_as_int(model_values.get("assembly_size"), 16),
             density=_as_float(model_values.get("density"), 0.35),
             plasticity=_as_float(model_values.get("plasticity"), 0.2),
             rng=net_rng,
         )
+        time_budgets_raw = model_values.get("time_budgets")
+        time_budgets = [_as_int(v, 10) for v in time_budgets_raw] if isinstance(time_budgets_raw, list) else [10]
+        t_equals_k = bool(model_values.get("t_equals_k", False))
+        training_history = train_proper_unseen_controller(
+            network,
+            task,
+            training_lists=training_lists,
+            k_values=list(range(job.condition.k_train_min, job.condition.k_train_max + 1)),
+            episodes=_as_int(model_values.get("train_episodes"), 4),
+            rng=train_rng,
+            train_time_budget=max(time_budgets),
+        )
         rows: list[dict[str, object]] = []
         time_budgets_raw = model_values.get("time_budgets")
-        if isinstance(time_budgets_raw, list) and time_budgets_raw:
-            time_budgets = [_as_int(value, job.condition.k_test_max) for value in time_budgets_raw]
-        else:
-            time_budgets = [job.condition.k_test_max]
-        for internal_steps in time_budgets:
-            for hop in range(job.condition.k_test_min, job.condition.k_test_max + 1):
-                accuracy = evaluate_unseen_rollout(
-                    network,
-                    task,
-                    lists,
-                    hops=hop,
-                    internal_steps=internal_steps,
-                    samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
-                    rng=eval_rng,
+        max_budget = max([_as_int(v, 10) for v in time_budgets_raw]) if isinstance(time_budgets_raw, list) else 10
+        
+        for hop in range(job.condition.k_test_min, job.condition.k_test_max + 1):
+            # For accuracy measurement, internal_steps MUST match hop
+            accuracy = evaluate_proper_unseen_rollout(
+                network,
+                task,
+                test_lists,
+                hops=hop,
+                internal_steps=hop,
+                samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
+                rng=eval_rng,
+            )
+            raw_row = {
+                "List Type": "Unseen",
+                "Model": str(model_values.get("model_name", job.model.model_name)),
+                "N": job.condition.N,
+                "Num Lists": job.condition.num_test_lists,
+                "k": hop,
+                "Accuracy": accuracy,
+                "Internal Steps": hop,
+                "Assembly Size": _as_int(model_values.get("assembly_size"), 32),
+                "Density": _as_float(model_values.get("density"), 0.2),
+                "Plasticity": _as_float(model_values.get("plasticity"), 0.1),
+                "Transition Rounds": None,
+                "Association Steps": None,
+            }
+            rows.append(
+                standardize_ac_row(
+                    raw_row,
+                    suite=job.suite_name,
+                    seed=job.seed,
+                    N=job.condition.N,
+                    num_train_lists=job.condition.num_train_lists,
+                    num_test_lists=job.condition.num_test_lists,
+                    k_train_min=job.condition.k_train_min,
+                    k_train_max=job.condition.k_train_max,
                 )
-                raw_row = {
-                    "List Type": "Unseen",
-                    "Model": str(model_values.get("model_name", job.model.model_name)),
-                    "N": job.condition.N,
-                    "Num Lists": job.condition.num_test_lists,
-                    "k": hop,
-                    "Accuracy": accuracy,
-                    "Internal Steps": internal_steps,
-                    "Assembly Size": _as_int(model_values.get("assembly_size"), 16),
-                    "Density": _as_float(model_values.get("density"), 0.35),
-                    "Plasticity": _as_float(model_values.get("plasticity"), 0.2),
-                    "Transition Rounds": None,
-                    "Association Steps": None,
-                }
-                rows.append(
-                    standardize_ac_row(
-                        raw_row,
-                        suite=job.suite_name,
-                        seed=job.seed,
-                        N=job.condition.N,
-                        num_train_lists=job.condition.num_train_lists,
-                        num_test_lists=job.condition.num_test_lists,
-                        k_train_min=job.condition.k_train_min,
-                        k_train_max=job.condition.k_train_max,
-                    )
-                )
-        return rows, {"network": network, "task": task, "lists": lists}
+            )
+            
+        mechanism_trace = rollout_proper_unseen_pointer(
+            network,
+            task,
+            test_lists[0],
+            start_node=0,
+            hops=job.condition.k_test_max,
+            internal_steps=max_budget,
+        )
+        return rows, {
+            "network": network,
+            "task": task,
+            "lists": test_lists,
+            "training_lists": training_lists,
+            "training_history": training_history,
+            "mechanism_trace": mechanism_trace,
+        }
 
     lists = generate_unique_lists(job.condition.num_train_lists, job.condition.N, list_rng)
     network, task = build_pointer_network(

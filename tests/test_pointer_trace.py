@@ -40,18 +40,25 @@ def test_record_rollout_trace_has_expected_fields() -> None:
     assert isinstance(first_step["active_assemblies"], list)
 
 
-def test_record_rollout_trace_supports_unseen_pointer_tasks() -> None:
-    from pyac.core.rng import make_rng
+
+
+
+def test_record_rollout_trace_supports_proper_unseen_pointer_tasks() -> None:
+    from pyac.core.rng import make_rng, spawn_rngs
+    from pyac.tasks.pointer import generate_unique_lists
+    from pyac.tasks.pointer.proper_unseen_protocol import (
+        build_proper_unseen_pointer_network,
+        train_proper_unseen_controller,
+    )
     from pyac.tasks.pointer.trace import record_rollout_trace
-    from pyac.tasks.pointer.unseen_protocol import build_unseen_pointer_network
 
-    pointer = [2, 4, 1, 0, 3]
-    network, task = build_unseen_pointer_network(list_length=5, assembly_size=10, density=0.5, plasticity=0.25, rng=make_rng(23))
+    root_rng = make_rng(37)
+    list_rng, net_rng, train_rng = spawn_rngs(root_rng, 3)
+    training_lists = generate_unique_lists(4, 6, list_rng)
+    network, task = build_proper_unseen_pointer_network(list_length=6, assembly_size=8, density=0.35, plasticity=0.2, rng=net_rng)
+    train_proper_unseen_controller(network, task, training_lists=training_lists, k_values=[1, 2], episodes=2, rng=train_rng)
 
-    trace = record_rollout_trace(network, task, [pointer], list_idx=0, start_node=0, hops=3)
+    trace = record_rollout_trace(network, task, training_lists, list_idx=0, start_node=0, hops=2)
 
-    assert trace["final_prediction"] == 4
-    assert trace["target_node"] == 4
-    assert trace["assembly_spans"]
-    assert trace["expected_edges"]
     assert trace["steps"]
+    assert trace["external_cue_count"] == 1

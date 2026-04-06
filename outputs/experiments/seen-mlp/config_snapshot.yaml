@@ -1,0 +1,41 @@
+suite_name: seen-mlp
+output_dir: outputs/experiments/seen-mlp
+seeds: [1]
+conditions:
+  - list_type: Seen
+    N: 24
+    num_train_lists: 24
+    num_test_lists: 0
+    k_train_min: 1
+    k_train_max: 4
+    k_test_min: 1
+    k_test_max: 12
+models:
+  MLP:
+    - model_name: MLP-01
+      layers: 4
+      hidden_dim: 512
+      epochs: 60
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 100
+      samples_per_list_eval: 100
+      patience: 12
+    - model_name: MLP-02
+      layers: 4
+      hidden_dim: 1024
+      epochs: 60
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 100
+      samples_per_list_eval: 100
+      patience: 12
+    - model_name: MLP-03
+      layers: 4
+      hidden_dim: 1536
+      epochs: 80
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 150
+      samples_per_list_eval: 120
+      patience: 16

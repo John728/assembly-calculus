@@ -1,0 +1,23 @@
+suite_name: unseen-mlp-dev
+output_dir: outputs/experiments/unseen-mlp-dev
+seeds: [1]
+conditions:
+  - list_type: Unseen
+    N: 10
+    num_train_lists: 12
+    num_test_lists: 6
+    k_train_min: 1
+    k_train_max: 4
+    k_test_min: 1
+    k_test_max: 6
+models:
+  MLP:
+    - model_name: MLP-01
+      layers: 3
+      hidden_dim: 256
+      epochs: 24
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 48
+      samples_per_list_eval: 48
+      patience: 6

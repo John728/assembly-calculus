@@ -1,0 +1,28 @@
+suite_name: unseen-ac-proper-dev
+output_dir: outputs/experiments/unseen-ac-proper-dev
+seeds: [1]
+trace_plots:
+  enabled: true
+  list_idx: 0
+  start_node: 0
+  hops: 3
+conditions:
+  - list_type: Unseen
+    N: 6
+    num_train_lists: 8
+    num_test_lists: 4
+    k_train_min: 1
+    k_train_max: 3
+    k_test_min: 1
+    k_test_max: 3
+models:
+  AC:
+    - model_name: AC-Proper-01
+      protocol_variant: proper_unseen
+      assembly_size: 32
+      density: 0.2
+      plasticity: 0.1
+      train_episodes: 12
+      samples_per_list_eval: 8
+      t_equals_k: false
+      time_budgets: [10]

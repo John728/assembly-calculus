@@ -34,4 +34,3 @@ htmlcov/
 # Local orchestration artifacts
 .sisyphus/
 weights/*
-outputs/*

@@ -11,6 +11,32 @@ from experiment_suite.mlp_baseline import ExplicitMLP, RandomListPermutationData
 from experiment_suite.schema import standardize_mlp_row
 
 
+def _as_int(value: object, default: int) -> int:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        raise ValueError("Boolean values are not valid integer hyperparameters")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        return int(value)
+    raise ValueError(f"Unsupported integer value type: {type(value).__name__}")
+
+
+def _as_float(value: object, default: float) -> float:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        raise ValueError("Boolean values are not valid float hyperparameters")
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        return float(value)
+    raise ValueError(f"Unsupported float value type: {type(value).__name__}")
+
+
 def _set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -28,13 +54,14 @@ def run_mlp_job(job: ExperimentJob) -> list[dict[str, object]]:
     test_lists = all_lists[job.condition.num_train_lists :]
 
     model_values = job.model.values
-    samples_per_list_train = int(model_values.get("samples_per_list_train", 50))
-    samples_per_list_eval = int(model_values.get("samples_per_list_eval", 50))
-    batch_size = int(model_values.get("batch_size", 128))
-    lr = float(model_values.get("lr", 1e-3))
-    epochs = int(model_values.get("epochs", 10))
-    hidden_dim = int(model_values.get("hidden_dim", 64))
-    layers = int(model_values.get("layers", 2))
+    samples_per_list_train = _as_int(model_values.get("samples_per_list_train"), 50)
+    samples_per_list_eval = _as_int(model_values.get("samples_per_list_eval"), 50)
+    batch_size = _as_int(model_values.get("batch_size"), 128)
+    lr = _as_float(model_values.get("lr"), 1e-3)
+    epochs = _as_int(model_values.get("epochs"), 10)
+    patience = _as_int(model_values.get("patience"), 0)
+    hidden_dim = _as_int(model_values.get("hidden_dim"), 64)
+    layers = _as_int(model_values.get("layers"), 2)
 
     model = ExplicitMLP(
         N=job.condition.N,
@@ -46,7 +73,7 @@ def run_mlp_job(job: ExperimentJob) -> list[dict[str, object]]:
     train_args = type(
         "TrainArgs",
         (),
-        {"lr": lr, "epochs": epochs},
+        {"lr": lr, "epochs": epochs, "patience": patience, "val_loader": None},
     )()
 
     ds_train = RandomListPermutationDataset(
@@ -54,7 +81,14 @@ def run_mlp_job(job: ExperimentJob) -> list[dict[str, object]]:
         samples_per_list=samples_per_list_train,
         k_range=(job.condition.k_train_min, job.condition.k_train_max),
     )
+    ds_val = RandomListPermutationDataset(
+        train_lists,
+        samples_per_list=max(1, min(samples_per_list_eval, 16)),
+        k_range=(job.condition.k_train_max, job.condition.k_train_max),
+        fixed_k=job.condition.k_train_max,
+    )
     loader_train = DataLoader(ds_train, batch_size=batch_size, shuffle=True, collate_fn=collate_dict)
+    train_args.val_loader = DataLoader(ds_val, batch_size=batch_size, collate_fn=collate_dict)
     train_model(model, loader_train, train_args, device)
 
     eval_lists = train_lists if job.condition.list_type == "Seen" else test_lists
@@ -81,7 +115,7 @@ def run_mlp_job(job: ExperimentJob) -> list[dict[str, object]]:
             "k": hop,
             "Accuracy": accuracy,
             "LR": lr,
-            "Epochs": epochs,
+            "Epochs": int(getattr(model, "trained_epochs", epochs)),
         }
         rows.append(
             standardize_mlp_row(

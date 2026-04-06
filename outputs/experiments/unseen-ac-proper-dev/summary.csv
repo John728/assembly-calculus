@@ -1,0 +1,4 @@
+family,model_name,list_type,k_test,mean_accuracy,num_rows
+AC,AC-Proper-01,Unseen,1,1.0,1
+AC,AC-Proper-01,Unseen,2,1.0,1
+AC,AC-Proper-01,Unseen,3,1.0,1

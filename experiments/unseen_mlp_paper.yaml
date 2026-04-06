@@ -1,0 +1,41 @@
+suite_name: unseen-mlp-paper
+output_dir: outputs/experiments/unseen-mlp-paper
+seeds: [1, 2, 3]
+conditions:
+  - list_type: Unseen
+    N: 12
+    num_train_lists: 24
+    num_test_lists: 12
+    k_train_min: 1
+    k_train_max: 4
+    k_test_min: 1
+    k_test_max: 10
+models:
+  MLP:
+    - model_name: MLP-01
+      layers: 3
+      hidden_dim: 256
+      epochs: 80
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 120
+      samples_per_list_eval: 120
+      patience: 16
+    - model_name: MLP-02
+      layers: 4
+      hidden_dim: 512
+      epochs: 80
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 120
+      samples_per_list_eval: 120
+      patience: 16
+    - model_name: MLP-03
+      layers: 4
+      hidden_dim: 1024
+      epochs: 80
+      batch_size: 128
+      lr: 0.001
+      samples_per_list_train: 120
+      samples_per_list_eval: 120
+      patience: 16
