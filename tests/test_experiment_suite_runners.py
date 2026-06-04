@@ -170,7 +170,7 @@ def test_ac_runner_supports_unseen_jobs() -> None:
     assert all(row["family"] == "AC" for row in rows)
     assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
     assert {row["list_type"] for row in rows} == {"Unseen"}
-    assert {row["internal_steps"] for row in rows} == {2, 4}
+    assert {row["internal_steps"] for row in rows} == {1, 2, 3}
 
 
 def test_ac_runner_supports_proper_unseen_jobs() -> None:

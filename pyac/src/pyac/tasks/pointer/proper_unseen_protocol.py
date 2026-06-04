@@ -132,16 +132,25 @@ def build_proper_unseen_pointer_network(
     rng: np.random.Generator,
 ) -> tuple[Network, ProperUnseenPointerTask]:
     area_n = list_length * assembly_size
+    loop_n = (list_length + 1) * assembly_size  # hop counter: indices 0..list_length
     spec = NetworkSpec(
         areas=[
             AreaSpec(
                 name="cur",
                 n=area_n,
                 k=assembly_size,
-                dynamics_type="feedforward",
+                dynamics_type="recurrent",
+                p_recurrent=density,
             ),
             AreaSpec(name="src", n=area_n, k=assembly_size, dynamics_type="feedforward"),
             AreaSpec(name="dst", n=area_n, k=assembly_size, dynamics_type="feedforward"),
+            AreaSpec(
+                name="loop",
+                n=loop_n,
+                k=assembly_size,
+                dynamics_type="recurrent",
+                p_recurrent=density,
+            ),
             AreaSpec(name="readout", n=area_n, k=assembly_size, dynamics_type="feedforward"),
         ],
         fibers=[
@@ -149,19 +158,29 @@ def build_proper_unseen_pointer_network(
             FiberSpec(src="src", dst="dst", p_fiber=1.0),
             FiberSpec(src="dst", dst="cur", p_fiber=density),
             FiberSpec(src="dst", dst="readout", p_fiber=density),
+            FiberSpec(src="loop", dst="cur", p_fiber=density),
+            FiberSpec(src="cur", dst="loop", p_fiber=density),
         ],
-        beta=0.1,
+        beta=plasticity,
     )
     network = Network(spec, rng)
+
+    # Build hop-counter assemblies for the loop area (one per hop count 0..list_length)
+    hop_assemblies: dict[int, Assembly] = {}
+    for hop_idx in range(list_length + 1):
+        start = hop_idx * assembly_size
+        indices = np.arange(start, start + assembly_size, dtype=np.int64)
+        hop_assemblies[hop_idx] = Assembly(area_name="loop", indices=indices)
+
     task = ProperUnseenPointerTask(
         list_length=list_length,
         assembly_size=assembly_size,
-        area_map={"cur": "cur", "src": "src", "dst": "dst", "readout": "readout"},
+        area_map={"cur": "cur", "src": "src", "dst": "dst", "loop": "loop", "readout": "readout"},
         node_assemblies={
             area_name: _area_assemblies(area_name, list_length, assembly_size)
             for area_name in ["cur", "src", "dst", "readout"]
         },
-        hop_assemblies={},
+        hop_assemblies=hop_assemblies,
         memory_fiber=("src", "dst"),
         episodic_baseline=network.weights[("src", "dst")].copy(),
         controller_fibers=[("cur", "src"), ("dst", "cur"), ("dst", "readout")],
@@ -189,9 +208,6 @@ def train_proper_unseen_controller(
     train_time_budget: int = 10,
 ) -> list[dict[str, int | float | str]]:
     history: list[dict[str, int | float | str]] = []
-    
-    # Increase episodes to compensate for lower beta
-    episodes = episodes * 2
 
     for episode in range(episodes):
         pointer = np.asarray(training_lists[int(rng.integers(0, len(training_lists)))], dtype=np.int64)

@@ -8,10 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 EXPERIMENTS_DIR = ROOT / "experiments"
 VALID_FAMILIES = {
-    "seen_mlp",
     "unseen_mlp",
-    "seen_ac",
-    "unseen_ac",
+    "unseen_ac_proper",
 }
 VALID_SCALES = {"dev", "paper"}
 

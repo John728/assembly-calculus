@@ -1,0 +1,8 @@
+1. [[AC Mathematical Setup]]
+2. [[What Is “Time” in AC]]
+3. [[Static Tasks]]
+4. [[Temporal and Iterative Tasks]]
+5. [[Time–Size Tradeoff]]
+6. [[Error Accumulation]]
+7. [[Problem Classes]]
+8. [[Theory-to-Experiment Map]]

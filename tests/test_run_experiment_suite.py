@@ -166,8 +166,10 @@ def test_dev_and_paper_configs_share_artifact_contract(tmp_path: Path) -> None:
         assert (out_dir / "plots").exists()
 
 
-def test_python_nci_launcher_targets_existing_dev_and_paper_configs() -> None:
+def test_launcher_targets_existing_dev_and_paper_configs() -> None:
     root = Path(__file__).resolve().parents[1]
 
-    assert (root / "experiments" / "seen_mlp_dev.yaml").exists()
-    assert (root / "experiments" / "seen_mlp_paper.yaml").exists()
+    assert (root / "experiments" / "unseen_mlp_dev.yaml").exists()
+    assert (root / "experiments" / "unseen_mlp_paper.yaml").exists()
+    assert (root / "experiments" / "unseen_ac_proper_dev.yaml").exists()
+    assert (root / "experiments" / "unseen_ac_proper_paper.yaml").exists()

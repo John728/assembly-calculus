@@ -52,6 +52,7 @@ def build_pointer_network(
     density: float = 0.35,
     plasticity: float = 0.2,
     rng: np.random.Generator | None = None,
+    use_trans_area: bool = False,
 ) -> tuple[Network, PointerTask]:
     if num_lists <= 0:
         raise ValueError("num_lists must be > 0")
@@ -63,12 +64,27 @@ def build_pointer_network(
     input_n = num_tokens * assembly_size
     state_n = num_tokens * assembly_size
 
+    areas = [
+        AreaSpec(name="input", n=input_n, k=assembly_size, dynamics_type="feedforward"),
+        AreaSpec(name="state", n=state_n, k=assembly_size, p_recurrent=density, dynamics_type="recurrent"),
+    ]
+    fibers = [FiberSpec(src="input", dst="state", p_fiber=density)]
+    area_map = {"input": "input", "state": "state"}
+
+    if use_trans_area:
+        trans_n = num_tokens * assembly_size
+        areas.append(
+            AreaSpec(name="trans", n=trans_n, k=assembly_size, dynamics_type="refracted"),
+        )
+        fibers.extend([
+            FiberSpec(src="state", dst="trans", p_fiber=density),
+            FiberSpec(src="trans", dst="state", p_fiber=density),
+        ])
+        area_map["trans"] = "trans"
+
     spec = NetworkSpec(
-        areas=[
-            AreaSpec(name="input", n=input_n, k=assembly_size, dynamics_type="feedforward"),
-            AreaSpec(name="state", n=state_n, k=assembly_size, p_recurrent=density, dynamics_type="recurrent"),
-        ],
-        fibers=[FiberSpec(src="input", dst="state", p_fiber=density)],
+        areas=areas,
+        fibers=fibers,
         beta=plasticity,
     )
     network = Network(spec, rng)
@@ -91,7 +107,7 @@ def build_pointer_network(
         num_lists=num_lists,
         list_length=list_length,
         assembly_size=assembly_size,
-        area_map={"input": "input", "state": "state"},
+        area_map=area_map,
         token_to_key=token_to_key,
         input_assemblies=input_assemblies,
         state_assemblies=state_assemblies,
@@ -110,9 +126,16 @@ def train_node_assemblies(
     input_n = network.areas_by_name[input_area].n
     state_n = network.areas_by_name[state_area].n
 
+    # Inhibit trans during node assembly training (if present)
+    has_trans = "trans" in task.area_map
+    if has_trans:
+        network.inhibit(task.area_map["trans"])
+
     for _ in range(presentation_rounds):
         for key in _all_state_keys(task):
             _reset_network(network)
+            if has_trans:
+                network.inhibit(task.area_map["trans"])
             input_assembly = task.input_assemblies[key]
             state_assembly = task.state_assemblies[key]
             input_stimulus = _stimulus_from_indices(input_n, input_assembly.indices)
@@ -131,6 +154,9 @@ def train_node_assemblies(
     state_weights.eliminate_zeros()
     network.normalize(state_area)
 
+    if has_trans:
+        network.disinhibit(task.area_map["trans"])
+
     return task.state_assemblies
 
 
@@ -141,9 +167,11 @@ def train_seen_transitions(
     transition_rounds: int = 12,
     association_steps: int = 3,
     teacher_strength: float = 12.0,
+    steps_per_hop: int = 1,
 ) -> None:
     state_area = task.area_map["state"]
     state_n = network.areas_by_name[state_area].n
+    has_trans = "trans" in task.area_map
 
     if not task.state_assemblies:
         raise ValueError("train_node_assemblies must run before transition training")
@@ -161,14 +189,31 @@ def train_seen_transitions(
                 for _ in range(association_steps):
                     _reset_network(network)
                     network.inhibit(task.area_map["input"])
-                    network.activations[state_area] = src_assembly.indices.copy()
-                    network.step(external_stimuli={state_area: dst_stimulus}, plasticity_on=True)
+
+                    if has_trans:
+                        # Encode/decode protocol (like DFA arc area)
+                        network.activations[state_area] = src_assembly.indices.copy()
+                        # Encode step: state → trans
+                        network.step(plasticity_on=True)
+                        # Decode steps: trans inhibited, teacher on state
+                        network.inhibit(task.area_map["trans"])
+                        for _ in range(max(1, steps_per_hop - 1)):
+                            network.step(external_stimuli={state_area: dst_stimulus}, plasticity_on=True)
+                        network.disinhibit(task.area_map["trans"])
+                    else:
+                        # Original single-step protocol
+                        network.activations[state_area] = src_assembly.indices.copy()
+                        network.step(external_stimuli={state_area: dst_stimulus}, plasticity_on=True)
+
                     network.disinhibit(task.area_map["input"])
 
         weights = network.weights[(state_area, state_area)]
         weights.setdiag(0.0)
         weights.eliminate_zeros()
         network.normalize(state_area)
+        if has_trans:
+            trans_area = task.area_map["trans"]
+            network.normalize(trans_area)
 
 
 def _decode_node(task: PointerTask, list_idx: int, final_assembly: Assembly) -> int:
@@ -191,21 +236,45 @@ def rollout_pointer(
     start_node: int,
     hops: int,
     settle_steps: int = 1,
+    steps_per_hop: int = 1,
 ) -> int:
     input_area = task.area_map["input"]
     state_area = task.area_map["state"]
+    has_trans = "trans" in task.area_map
     key = task.key_for(list_idx, start_node)
     start_assembly = task.state_assemblies[key]
     state_stimulus = _stimulus_from_indices(network.areas_by_name[state_area].n, start_assembly.indices)
 
     _reset_network(network)
     network.inhibit(input_area)
+    if has_trans:
+        network.inhibit(task.area_map["trans"])
+
+    # Settle: clamp start assembly
     for step_idx in range(settle_steps):
         ext = {state_area: state_stimulus} if step_idx == 0 else None
         network.step(external_stimuli=ext, plasticity_on=False)
 
-    for _ in range(hops):
-        network.step(plasticity_on=False)
+    if has_trans:
+        network.disinhibit(task.area_map["trans"])
+        trans_area = task.area_map["trans"]
+
+        for _ in range(hops):
+            # Clear trans from previous hop
+            network.activations[trans_area] = np.array([], dtype=np.int64)
+            # Encode: state → trans (1 step)
+            network.step(plasticity_on=False)
+            # Decode: trans frozen, state settles (steps_per_hop - 1 steps)
+            network.inhibit(trans_area)
+            for _ in range(steps_per_hop - 1):
+                network.step(plasticity_on=False)
+            network.disinhibit(trans_area)
+    else:
+        # Original direct-recurrence rollout
+        for _ in range(hops):
+            for _ in range(steps_per_hop):
+                network.step(plasticity_on=False)
+
     network.disinhibit(input_area)
 
     final_assembly = network.get_assembly(state_area)
@@ -220,6 +289,7 @@ def evaluate_seen_lists(
     k: int,
     rng: np.random.Generator,
     settle_steps: int = 1,
+    steps_per_hop: int = 1,
 ) -> float:
     examples = sample_pointer_examples(lists, samples_per_list=samples_per_list, k=k, rng=rng)
     correct = 0
@@ -231,6 +301,7 @@ def evaluate_seen_lists(
             start_node=int(example["start"]),
             hops=int(example["k"]),
             settle_steps=settle_steps,
+            steps_per_hop=steps_per_hop,
         )
         target = follow_pointer(np.asarray(example["pointer"], dtype=np.int64), start=int(example["start"]), hops=int(example["k"]))
         correct += int(prediction == target)

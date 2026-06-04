@@ -6,6 +6,12 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.claude
+.claude/
+.codex
+.codex/
+.agents
+.agents/
 
 # Python caches
 __pycache__/
@@ -33,4 +39,11 @@ htmlcov/
 
 # Local orchestration artifacts
 .sisyphus/
-weights/*
+outputs/
+data/
+weights/
+Thesis_A_Report/
+Thesis_B_Report/
+CLAUDE.md
+plan.md
+scratch.py
