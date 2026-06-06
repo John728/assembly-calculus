@@ -67,6 +67,7 @@ def train_mnist_assemblies(
     labels: np.ndarray,
     presentation_rounds: int = 1,
     settle_steps: int = 1,
+    renormalize_every: int = 50,
 ) -> None:
     if presentation_rounds <= 0:
         raise ValueError("presentation_rounds must be > 0")
@@ -86,6 +87,7 @@ def train_mnist_assemblies(
     sensory_n = network.areas_by_name[sensory_area].n
     coding_area_spec = network.areas_by_name[coding_area]
     label_counts: dict[int, np.ndarray] = {}
+    example_index = 0
 
     for _ in range(presentation_rounds):
         for image, label in zip(images, labels):
@@ -113,13 +115,37 @@ def train_mnist_assemblies(
             )
             counts[network.activations[coding_area]] += 1
 
+            example_index += 1
+            if hasattr(network, "normalize") and example_index % renormalize_every == 0:
+                network.normalize(coding_area)
+
+        if hasattr(network, "normalize") and example_index % renormalize_every != 0:
+            network.normalize(coding_area)
+
     task.class_assemblies.clear()
-    for digit, counts in label_counts.items():
-        prototype_indices = np.argsort(-counts, kind="stable")[: coding_area_spec.k]
+    assigned: set[int] = set()
+    for digit in sorted(label_counts):
+        counts = label_counts[digit]
+        order = np.argsort(-counts, kind="stable")
+        prototype_indices: list[int] = []
+        for idx in order:
+            neuron = int(idx)
+            if neuron not in assigned:
+                prototype_indices.append(neuron)
+                assigned.add(neuron)
+            if len(prototype_indices) >= coding_area_spec.k:
+                break
+        if len(prototype_indices) < coding_area_spec.k:
+            remaining = [int(i) for i in range(coding_area_spec.n) if i not in assigned]
+            prototype_indices.extend(remaining[: coding_area_spec.k - len(prototype_indices)])
+            assigned.update(prototype_indices)
         task.class_assemblies[digit] = Assembly(
             area_name=coding_area,
-            indices=prototype_indices.astype(np.int64, copy=False),
+            indices=np.array(prototype_indices, dtype=np.int64),
         )
+
+    if hasattr(network, "normalize"):
+        network.normalize(coding_area)
 
     task.presentation_rounds = presentation_rounds
     task.settle_steps = settle_steps

@@ -150,7 +150,7 @@ def test_mnist_full_pipeline_produces_outputs(tmp_path: Path, monkeypatch) -> No
         "      train_limit: 24\n"
         "      test_limit: 16\n"
         "      t_values: [0, 1, 2, 4, 8]\n"
-        "      n: 64\n"
+        "      n: 100\n"
         "      k: 8\n"
         "      p: 0.1\n"
         "      beta: 0.1\n"

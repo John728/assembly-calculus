@@ -14,15 +14,15 @@ models:
   MNIST_AC:
     - model_name: MNIST-AC-Dev
       data_dir: data/mnist
-      train_limit: 1000
-      test_limit: 200
+      train_limit: 5000
+      test_limit: 500
       t_values: [0, 1, 2, 4, 8, 12, 16, 20]
       n: 1000
       k: 100
       p: 0.1
-      beta: 0.1
+      beta: 1.0
       active_pixels: 64
       pool_size: 8
-      presentation_rounds: 1
+      presentation_rounds: 3
       settle_steps: 1
       stimulus_mode: held
