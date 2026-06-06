@@ -1,0 +1,6 @@
+# Ignore generated experiment outputs inside results/
+**/dev/
+**/paper/
+**/plots/
+*.csv
+*.yaml

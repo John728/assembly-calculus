@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 import csv
+import json
 import shutil
 from pathlib import Path
 from typing import Any
+
+
+def _serialize_csv_cell(value: Any) -> Any:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, sort_keys=True, separators=(",", ":"))
+    return value
 
 
 def write_raw_results(rows: list[dict[str, Any]], output_dir: Path) -> Path:
@@ -18,7 +25,10 @@ def write_raw_results(rows: list[dict[str, Any]], output_dir: Path) -> Path:
         if fieldnames:
             writer = csv.DictWriter(handle, fieldnames=fieldnames)
             writer.writeheader()
-            writer.writerows(rows)
+            writer.writerows(
+                {key: _serialize_csv_cell(value) for key, value in row.items()}
+                for row in rows
+            )
     return path
 
 

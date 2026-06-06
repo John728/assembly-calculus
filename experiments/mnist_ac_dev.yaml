@@ -1,0 +1,28 @@
+suite_name: mnist-ac-dev
+output_dir: results/mnist/dev
+seeds: [1]
+conditions:
+  - list_type: MNIST
+    N: 10
+    num_train_lists: 60000
+    num_test_lists: 10000
+    k_train_min: 1
+    k_train_max: 1
+    k_test_min: 0
+    k_test_max: 2
+models:
+  MNIST_AC:
+    - model_name: MNIST-AC-Dev
+      data_dir: data/mnist
+      train_limit: 1000
+      test_limit: 200
+      t_values: [0, 1, 2, 4, 8, 12, 16, 20]
+      n: 1000
+      k: 100
+      p: 0.1
+      beta: 0.1
+      active_pixels: 64
+      pool_size: 8
+      presentation_rounds: 1
+      settle_steps: 1
+      stimulus_mode: held

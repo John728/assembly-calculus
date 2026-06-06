@@ -19,6 +19,10 @@ def _dispatch_job(job):
         from experiment_suite.runners.ac_runner import run_ac_job_with_artifacts
 
         return run_ac_job_with_artifacts(job)
+    if job.family == "MNIST_AC":
+        from experiment_suite.runners.mnist_ac_runner import run_mnist_ac_job
+
+        return run_mnist_ac_job(job), None
     raise ValueError(f"Unsupported family: {job.family}")
 
 
@@ -33,6 +37,17 @@ def _generate_plots(rows: list[dict[str, object]], output_dir: Path) -> None:
         return
 
     families = {str(row["family"]) for row in rows}
+    experiments = {str(row.get("experiment", "")) for row in rows}
+    if "mnist" in experiments or "MNIST_AC" in families:
+        from experiment_suite import plots as suite_plots
+
+        raw_results_csv = output_dir / "raw_results.csv"
+        plots_dir = output_dir / "plots"
+        if plots_dir.exists():
+            shutil.rmtree(plots_dir)
+        suite_plots.generate_mnist_ac_plots(raw_results_csv, plots_dir)
+        return
+
     list_types = {str(row["list_type"]) for row in rows}
     if len(list_types) != 1:
         return

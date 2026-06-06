@@ -3,6 +3,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "run_experiment_suite.py"
@@ -164,6 +166,34 @@ def test_dev_and_paper_configs_share_artifact_contract(tmp_path: Path) -> None:
         assert (out_dir / "summary.csv").exists()
         assert (out_dir / "config_snapshot.yaml").exists()
         assert (out_dir / "plots").exists()
+
+
+def test_generate_plots_dispatches_mnist_ac_before_pointer_list_type_logic(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_module()
+    from experiment_suite import plots as suite_plots
+
+    calls = []
+
+    def fake_generate_mnist_ac_plots(raw_results_csv: Path, plots_dir: Path) -> None:
+        calls.append((raw_results_csv, plots_dir))
+
+    monkeypatch.setattr(suite_plots, "generate_mnist_ac_plots", fake_generate_mnist_ac_plots)
+
+    module._generate_plots(
+        [
+            {
+                "experiment": "mnist",
+                "family": "MNIST_AC",
+                "model_name": "Tiny-MNIST-AC",
+                "seed": 1,
+            }
+        ],
+        tmp_path,
+    )
+
+    assert calls == [(tmp_path / "raw_results.csv", tmp_path / "plots")]
 
 
 def test_launcher_targets_existing_dev_and_paper_configs() -> None:

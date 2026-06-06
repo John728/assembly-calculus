@@ -33,6 +33,12 @@ def _format_params_short(value: Any) -> str:
     return str(params)
 
 
+def _coerce_bool_series(series: pd.Series) -> pd.Series:
+    if pd.api.types.is_bool_dtype(series):
+        return series.astype(bool)
+    return series.astype(str).str.strip().str.lower().isin({"1", "true", "yes"})
+
+
 def _build_suite_comparison_df(raw_results_csv: str | Path, list_type: str) -> pd.DataFrame:
     df = pd.read_csv(raw_results_csv)
     frame = pd.DataFrame(df[df["list_type"] == list_type].copy())
@@ -306,6 +312,162 @@ def generate_seen_suite_plots(raw_results_csv: str | Path, output_dir: str | Pat
         _save_ac_time_tradeoff(comparison_df, output_path),
         _save_paper_panel(comparison_df, output_path),
     ]
+
+
+def _pick_best_t(accuracy_df: pd.DataFrame) -> int:
+    best = accuracy_df.loc[accuracy_df["accuracy"].idxmax()]
+    return int(best["t"])
+
+
+def _confusion_matrix_image(df_slice: pd.DataFrame, output_path: Path, t_label: str) -> Path:
+    labels = sorted(set(df_slice["target"].tolist()) | set(df_slice["prediction"].tolist()))
+    confusion = pd.crosstab(
+        df_slice["target"], df_slice["prediction"],
+        rownames=["True"], colnames=["Predicted"],
+        dropna=False,
+    ).reindex(index=labels, columns=labels, fill_value=0)
+
+    plt.figure(figsize=(7.5, 6.5))
+    sns.heatmap(confusion, annot=True, fmt="d", cmap="Blues", vmin=0)
+    plt.title(f"MNIST Confusion Matrix (t={t_label})")
+    plt.tight_layout()
+    path = output_path / f"mnist_confusion_{t_label}.png"
+    plt.savefig(path, dpi=200)
+    plt.close()
+    return path
+
+
+def _pair_drift_image(mnist_df: pd.DataFrame, output_path: Path) -> list[Path]:
+    known_pairs = [(7, 9), (3, 5), (4, 9)]
+    paths: list[Path] = []
+
+    for a, b in known_pairs:
+        pair_mask = mnist_df["target"].isin([a, b])
+        if not pair_mask.any():
+            continue
+        pair_df = pd.DataFrame(mnist_df.loc[pair_mask].copy())
+        pair_df["correct"] = _coerce_bool_series(pair_df["correct"])
+        pair_acc = pd.DataFrame(
+            pair_df.groupby(["t", "target"], as_index=False)["correct"].mean()
+        ).rename(columns={"correct": "accuracy"})
+
+        plt.figure(figsize=(7, 4.8))
+        sns.lineplot(data=pair_acc, x="t", y="accuracy", hue="target", marker="o", palette={a: "#E24A33", b: "#348ABD"})
+        plt.title(f"MNIST Pair Drift: {a}/{b}")
+        plt.xlabel("t")
+        plt.ylabel("Accuracy")
+        plt.ylim(-0.02, 1.05)
+        plt.tight_layout()
+        pair_path = output_path / f"mnist_pair_drift_{a}_{b}.png"
+        plt.savefig(pair_path, dpi=200)
+        plt.close()
+        paths.append(pair_path)
+
+    return paths
+
+
+def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) -> list[Path]:
+    sns.set_theme(style="whitegrid", context="talk")
+    output_path = Path(plots_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    df = pd.read_csv(raw_results_csv)
+    required_columns = {"t", "target", "correct", "margin",
+                        "correct_overlap", "strongest_wrong_overlap", "prediction"}
+    missing_columns = required_columns.difference(df.columns)
+    if missing_columns:
+        missing = ", ".join(sorted(missing_columns))
+        raise ValueError(f"MNIST raw results missing required columns: {missing}")
+
+    mnist_df = pd.DataFrame(df.copy())
+    mnist_df["t"] = pd.to_numeric(mnist_df["t"])
+    mnist_df["target"] = pd.to_numeric(mnist_df["target"]).astype(int)
+    mnist_df["prediction"] = pd.to_numeric(mnist_df["prediction"]).astype(int)
+    mnist_df["correct"] = _coerce_bool_series(mnist_df["correct"])
+    mnist_df["margin"] = pd.to_numeric(mnist_df["margin"])
+    mnist_df["correct_overlap"] = pd.to_numeric(mnist_df["correct_overlap"])
+    mnist_df["strongest_wrong_overlap"] = pd.to_numeric(mnist_df["strongest_wrong_overlap"])
+
+    accuracy_df = pd.DataFrame(mnist_df.groupby("t", as_index=False)["correct"].mean()).rename(columns={"correct": "accuracy"})
+    margin_df = pd.DataFrame(mnist_df.groupby("t", as_index=False)["margin"].mean())
+    overlap_df = pd.DataFrame(mnist_df.groupby("t", as_index=False).agg(
+        correct_overlap=("correct_overlap", "mean"),
+        strongest_wrong_overlap=("strongest_wrong_overlap", "mean"),
+    ))
+    per_class_df = pd.DataFrame(mnist_df.groupby(["t", "target"], as_index=False)["correct"].mean()).rename(columns={"correct": "accuracy"})
+
+    all_paths: list[Path] = []
+
+    # --- Accuracy vs t ---
+    plt.figure(figsize=(8.5, 5.2))
+    sns.lineplot(data=accuracy_df, x="t", y="accuracy", marker="o")
+    plt.title("MNIST AC: Accuracy vs t")
+    plt.xlabel("t")
+    plt.ylabel("Accuracy")
+    plt.ylim(-0.02, 1.05)
+    plt.tight_layout()
+    accuracy_path = output_path / "mnist_accuracy_vs_t.png"
+    plt.savefig(accuracy_path, dpi=200)
+    plt.close()
+    all_paths.append(accuracy_path)
+
+    # --- Per-class accuracy vs t ---
+    plt.figure(figsize=(10.5, 6.0))
+    sns.lineplot(data=per_class_df, x="t", y="accuracy", hue="target", marker="o", palette="tab10")
+    plt.title("MNIST AC: Per-Class Accuracy vs t")
+    plt.xlabel("t")
+    plt.ylabel("Accuracy")
+    plt.ylim(-0.02, 1.05)
+    plt.tight_layout()
+    per_class_path = output_path / "mnist_per_class_accuracy_vs_t.png"
+    plt.savefig(per_class_path, dpi=200)
+    plt.close()
+    all_paths.append(per_class_path)
+
+    # --- Overlap vs t (correct overlap and strongest wrong overlap) ---
+    plt.figure(figsize=(8.5, 5.2))
+    sns.lineplot(data=overlap_df, x="t", y="correct_overlap", marker="o", label="Correct Overlap")
+    sns.lineplot(data=overlap_df, x="t", y="strongest_wrong_overlap", marker="s", label="Strongest Wrong Overlap")
+    plt.title("MNIST AC: Overlap vs t")
+    plt.xlabel("t")
+    plt.ylabel("Mean Overlap")
+    plt.ylim(-0.02, 1.05)
+    plt.tight_layout()
+    overlap_path = output_path / "mnist_overlap_vs_t.png"
+    plt.savefig(overlap_path, dpi=200)
+    plt.close()
+    all_paths.append(overlap_path)
+
+    # --- Margin vs t ---
+    plt.figure(figsize=(8.5, 5.2))
+    sns.lineplot(data=margin_df, x="t", y="margin", marker="o")
+    plt.title("MNIST AC: Mean Margin vs t")
+    plt.xlabel("t")
+    plt.ylabel("Mean Margin")
+    plt.tight_layout()
+    margin_path = output_path / "mnist_margin_vs_t.png"
+    plt.savefig(margin_path, dpi=200)
+    plt.close()
+    all_paths.append(margin_path)
+
+    # --- Confusion matrices: early, best, late ---
+    t_values = sorted(mnist_df["t"].unique().tolist())
+    if len(t_values) >= 1:
+        early_t = t_values[0]
+        all_paths.append(_confusion_matrix_image(mnist_df[mnist_df["t"] == early_t], output_path, "early"))
+
+    if len(t_values) >= 2:
+        best_t = _pick_best_t(accuracy_df)
+        all_paths.append(_confusion_matrix_image(mnist_df[mnist_df["t"] == best_t], output_path, "best"))
+
+    if len(t_values) >= 3:
+        late_t = t_values[-1]
+        all_paths.append(_confusion_matrix_image(mnist_df[mnist_df["t"] == late_t], output_path, "late"))
+
+    # --- Pair drift ---
+    all_paths.extend(_pair_drift_image(mnist_df, output_path))
+
+    return all_paths
 
 
 def generate_seen_mlp_plots(raw_results_csv: str | Path, output_dir: str | Path) -> list[Path]:
