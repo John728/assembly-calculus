@@ -48,3 +48,10 @@ CLAUDE.md
 plan.md
 scratch.py
 learning-with-assemblies/
+
+data/mnist/
+learning-with-assemblies/
+results/mnist/dev/
+results/mnist/plots/
+results/mnist/*.csv
+results/mnist/*.yaml

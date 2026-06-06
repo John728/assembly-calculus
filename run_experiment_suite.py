@@ -23,6 +23,26 @@ def _dispatch_job(job):
         from experiment_suite.runners.mnist_ac_runner import run_mnist_ac_job
 
         return run_mnist_ac_job(job), None
+    if job.family == "MNIST_NB":
+        from experiment_suite.runners.mnist_nb_runner import run_mnist_nb_full
+
+        mv = job.model.values
+        rows = run_mnist_nb_full(
+            data_dir=str(mv.get("data_dir", "data/mnist")),
+            seed=job.seed,
+            t_max=int(mv.get("t_max", 10)),
+            train_limit=int(mv.get("train_limit", 5000)),
+            test_limit=int(mv.get("test_limit", 2000)),
+            n_neurons=int(mv.get("n_neurons", 2000)),
+            cap_size=int(mv.get("cap_size", 200)),
+            sparsity=float(mv.get("sparsity", 0.1)),
+            beta=float(mv.get("beta", 1.0)),
+            n_rounds=int(mv.get("n_rounds", 5)),
+            recurrent=bool(mv.get("recurrent", True)),
+            stimulus_mode=str(mv.get("stimulus_mode", "held")),
+            model_name=str(mv.get("model_name", job.model.model_name)),
+        )
+        return rows, None
     raise ValueError(f"Unsupported family: {job.family}")
 
 
@@ -38,7 +58,7 @@ def _generate_plots(rows: list[dict[str, object]], output_dir: Path) -> None:
 
     families = {str(row["family"]) for row in rows}
     experiments = {str(row.get("experiment", "")) for row in rows}
-    if "mnist" in experiments or "MNIST_AC" in families:
+    if "mnist" in experiments or "MNIST_AC" in families or "MNIST_NB" in families:
         from experiment_suite import plots as suite_plots
 
         raw_results_csv = output_dir / "raw_results.csv"

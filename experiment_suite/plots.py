@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -366,6 +367,59 @@ def _pair_drift_image(mnist_df: pd.DataFrame, output_path: Path) -> list[Path]:
     return paths
 
 
+def _seed_aggregated_accuracy(df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate accuracy by seed first, then across seeds (Theory Map §3)."""
+    if "seed" not in df.columns:
+        return pd.DataFrame(df.groupby("t", as_index=False)["correct"].agg(
+            accuracy="mean", se=lambda x: x.std() / np.sqrt(len(x))
+        ))
+    per_seed = pd.DataFrame(df.groupby(["seed", "t"], as_index=False)["correct"].mean())
+    return pd.DataFrame(per_seed.groupby("t", as_index=False)["correct"].agg(
+        accuracy="mean", se=lambda x: x.std() / np.sqrt(len(x))
+    ))
+
+
+def _seed_aggregated_margin(df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate margin by seed first, including lower quantile (Theory Map §6)."""
+    if "seed" not in df.columns:
+        return pd.DataFrame(df.groupby("t", as_index=False).agg(
+            margin_mean=("margin", "mean"),
+            margin_q10=("margin", lambda x: x.quantile(0.1)),
+        ))
+    per_seed = pd.DataFrame(
+        df.groupby(["seed", "t"], as_index=False).agg(
+            margin_mean=("margin", "mean"),
+            margin_q10=("margin", lambda x: x.quantile(0.1)),
+        )
+    )
+    return pd.DataFrame(per_seed.groupby("t", as_index=False).agg(
+        margin_mean=("margin_mean", "mean"),
+        margin_q10=("margin_q10", "mean"),
+        se=("margin_mean", lambda x: x.std() / np.sqrt(len(x))),
+    ))
+
+
+def _seed_aggregated_overlap(df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate o_y and max_wrong by seed first."""
+    if "seed" not in df.columns:
+        return pd.DataFrame(df.groupby("t", as_index=False).agg(
+            correct_overlap=("correct_overlap", "mean"),
+            strongest_wrong_overlap=("strongest_wrong_overlap", "mean"),
+        ))
+    per_seed = pd.DataFrame(
+        df.groupby(["seed", "t"], as_index=False).agg(
+            correct_overlap=("correct_overlap", "mean"),
+            strongest_wrong_overlap=("strongest_wrong_overlap", "mean"),
+        )
+    )
+    return pd.DataFrame(per_seed.groupby("t", as_index=False).agg(
+        correct_overlap=("correct_overlap", "mean"),
+        strongest_wrong_overlap=("strongest_wrong_overlap", "mean"),
+        se_correct=("correct_overlap", lambda x: x.std() / np.sqrt(len(x))),
+        se_wrong=("strongest_wrong_overlap", lambda x: x.std() / np.sqrt(len(x))),
+    ))
+
+
 def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) -> list[Path]:
     sns.set_theme(style="whitegrid", context="talk")
     output_path = Path(plots_dir)
@@ -388,20 +442,23 @@ def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) 
     mnist_df["correct_overlap"] = pd.to_numeric(mnist_df["correct_overlap"])
     mnist_df["strongest_wrong_overlap"] = pd.to_numeric(mnist_df["strongest_wrong_overlap"])
 
-    accuracy_df = pd.DataFrame(mnist_df.groupby("t", as_index=False)["correct"].mean()).rename(columns={"correct": "accuracy"})
-    margin_df = pd.DataFrame(mnist_df.groupby("t", as_index=False)["margin"].mean())
-    overlap_df = pd.DataFrame(mnist_df.groupby("t", as_index=False).agg(
-        correct_overlap=("correct_overlap", "mean"),
-        strongest_wrong_overlap=("strongest_wrong_overlap", "mean"),
-    ))
-    per_class_df = pd.DataFrame(mnist_df.groupby(["t", "target"], as_index=False)["correct"].mean()).rename(columns={"correct": "accuracy"})
+    # Seed-first aggregation (§3)
+    acc_df = _seed_aggregated_accuracy(mnist_df)
+    mar_df = _seed_aggregated_margin(mnist_df)
+    ov_df = _seed_aggregated_overlap(mnist_df)
 
     all_paths: list[Path] = []
 
-    # --- Accuracy vs t ---
+    has_se = "se" in acc_df.columns
+
+    # --- §12: Accuracy vs t (global, with SE bands from seed aggregation) ---
     plt.figure(figsize=(8.5, 5.2))
-    sns.lineplot(data=accuracy_df, x="t", y="accuracy", marker="o")
-    plt.title("MNIST AC: Accuracy vs t")
+    if has_se:
+        plt.errorbar(acc_df["t"], acc_df["accuracy"], yerr=acc_df["se"],
+                     fmt="o-", capsize=4, capthick=1.5, linewidth=2, label="Accuracy")
+    else:
+        sns.lineplot(data=acc_df, x="t", y="accuracy", marker="o")
+    plt.title("MNIST: Accuracy vs t (mean ± SE over seeds)")
     plt.xlabel("t")
     plt.ylabel("Accuracy")
     plt.ylim(-0.02, 1.05)
@@ -411,10 +468,12 @@ def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) 
     plt.close()
     all_paths.append(accuracy_path)
 
-    # --- Per-class accuracy vs t ---
+    # --- §6: Per-class accuracy vs t ---
     plt.figure(figsize=(10.5, 6.0))
-    sns.lineplot(data=per_class_df, x="t", y="accuracy", hue="target", marker="o", palette="tab10")
-    plt.title("MNIST AC: Per-Class Accuracy vs t")
+    sns.lineplot(data=mnist_df, x="t", y="correct", hue="target",
+                 marker="o", palette="tab10",
+                 estimator="mean", errorbar=("ci", 68) if has_se else None)
+    plt.title("MNIST: Per-Class Accuracy vs t")
     plt.xlabel("t")
     plt.ylabel("Accuracy")
     plt.ylim(-0.02, 1.05)
@@ -424,30 +483,42 @@ def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) 
     plt.close()
     all_paths.append(per_class_path)
 
-    # --- Overlap vs t (correct overlap and strongest wrong overlap) ---
-    plt.figure(figsize=(8.5, 5.2))
-    sns.lineplot(data=overlap_df, x="t", y="correct_overlap", marker="o", label="Correct Overlap")
-    sns.lineplot(data=overlap_df, x="t", y="strongest_wrong_overlap", marker="s", label="Strongest Wrong Overlap")
-    plt.title("MNIST AC: Overlap vs t")
-    plt.xlabel("t")
-    plt.ylabel("Mean Overlap")
-    plt.ylim(-0.02, 1.05)
-    plt.tight_layout()
-    overlap_path = output_path / "mnist_overlap_vs_t.png"
-    plt.savefig(overlap_path, dpi=200)
-    plt.close()
-    all_paths.append(overlap_path)
+    # --- §12: Combined margin figure: o_y(t), max_{z≠y} o_z(t), m_y(t) ---
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5.2))
 
-    # --- Margin vs t ---
-    plt.figure(figsize=(8.5, 5.2))
-    sns.lineplot(data=margin_df, x="t", y="margin", marker="o")
-    plt.title("MNIST AC: Mean Margin vs t")
-    plt.xlabel("t")
-    plt.ylabel("Mean Margin")
-    plt.tight_layout()
+    # Left: overlaps
+    if has_se and "se_correct" in ov_df.columns:
+        ax1.errorbar(ov_df["t"], ov_df["correct_overlap"], yerr=ov_df["se_correct"],
+                     fmt="o-", capsize=3, label=r"$o_y(t)$ Correct Overlap", linewidth=2)
+        ax1.errorbar(ov_df["t"], ov_df["strongest_wrong_overlap"], yerr=ov_df["se_wrong"],
+                     fmt="s--", capsize=3, label=r"$\max_{z\neq y} o_z(t)$ Strongest Wrong", linewidth=2)
+    else:
+        ax1.plot(ov_df["t"], ov_df["correct_overlap"], "o-", label=r"$o_y(t)$")
+        ax1.plot(ov_df["t"], ov_df["strongest_wrong_overlap"], "s--", label=r"$\max_{z\neq y} o_z(t)$")
+    ax1.set_title("Overlap vs t")
+    ax1.set_xlabel("t")
+    ax1.set_ylabel("Overlap")
+    ax1.set_ylim(-0.02, 1.05)
+    ax1.legend()
+
+    # Right: margin with mean + lower quantile (§6)
+    ax2.plot(mar_df["t"], mar_df["margin_mean"], "o-", label=r"$\mathbb{E}[m_y(t)]$ Mean Margin", linewidth=2)
+    if "margin_q10" in mar_df.columns:
+        ax2.plot(mar_df["t"], mar_df["margin_q10"], "s--", label=r"$Q_{0.1}[m_y(t)]$ Lower Quantile", linewidth=2)
+    if "se" in mar_df.columns:
+        ax2.fill_between(mar_df["t"],
+                         mar_df["margin_mean"] - mar_df["se"],
+                         mar_df["margin_mean"] + mar_df["se"],
+                         alpha=0.2, label="±1 SE")
+    ax2.set_title("Margin vs t")
+    ax2.set_xlabel("t")
+    ax2.set_ylabel("Margin")
+    ax2.legend()
+    fig.suptitle("MNIST: Overlap and Margin vs t (§12 Theory-to-Experiment Map)", fontsize=14)
+    fig.tight_layout()
     margin_path = output_path / "mnist_margin_vs_t.png"
-    plt.savefig(margin_path, dpi=200)
-    plt.close()
+    fig.savefig(margin_path, dpi=200)
+    plt.close(fig)
     all_paths.append(margin_path)
 
     # --- Confusion matrices: early, best, late ---
@@ -457,14 +528,14 @@ def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) 
         all_paths.append(_confusion_matrix_image(mnist_df[mnist_df["t"] == early_t], output_path, "early"))
 
     if len(t_values) >= 2:
-        best_t = _pick_best_t(accuracy_df)
+        best_t = _pick_best_t(acc_df)
         all_paths.append(_confusion_matrix_image(mnist_df[mnist_df["t"] == best_t], output_path, "best"))
 
     if len(t_values) >= 3:
         late_t = t_values[-1]
         all_paths.append(_confusion_matrix_image(mnist_df[mnist_df["t"] == late_t], output_path, "late"))
 
-    # --- Pair drift ---
+    # --- Pair drift (§12) ---
     all_paths.extend(_pair_drift_image(mnist_df, output_path))
 
     return all_paths

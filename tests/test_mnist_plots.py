@@ -36,7 +36,6 @@ def test_generate_mnist_ac_plots_writes_all_required_pngs_from_raw_rows(tmp_path
     expected_names = {
         "mnist_accuracy_vs_t.png",
         "mnist_per_class_accuracy_vs_t.png",
-        "mnist_overlap_vs_t.png",
         "mnist_margin_vs_t.png",
         "mnist_confusion_early.png",
         "mnist_confusion_best.png",

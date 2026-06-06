@@ -228,13 +228,12 @@ def test_mnist_full_pipeline_produces_outputs(tmp_path: Path, monkeypatch) -> No
     plots_dir = out_dir / "plots"
     assert plots_dir.is_dir()
     required_plots = [
-        "mnist_accuracy_vs_t.png",
-        "mnist_per_class_accuracy_vs_t.png",
-        "mnist_overlap_vs_t.png",
-        "mnist_margin_vs_t.png",
-        "mnist_confusion_early.png",
-        "mnist_confusion_best.png",
-        "mnist_confusion_late.png",
-    ]
+            "mnist_accuracy_vs_t.png",
+            "mnist_per_class_accuracy_vs_t.png",
+            "mnist_margin_vs_t.png",
+            "mnist_confusion_early.png",
+            "mnist_confusion_best.png",
+            "mnist_confusion_late.png",
+        ]
     for plot_name in required_plots:
         assert (plots_dir / plot_name).exists(), f"Missing plot: {plot_name}"
