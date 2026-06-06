@@ -77,12 +77,5 @@ def normalize_weights(
     for key in incoming_keys:
         mat = weights[key]
         col_sums = np.asarray(mat.sum(axis=0)).ravel()
-        col_sums_safe = col_sums.copy()
-        col_sums_safe[col_sums_safe == 0.0] = 1.0
-        
-        new_data = mat.data.copy()
-        for i, val in enumerate(mat.data):
-            col_idx = mat.indices[i]
-            new_data[i] = val / col_sums_safe[col_idx]
-        
-        weights[key].data = new_data
+        col_sums_safe = np.where(col_sums == 0.0, 1.0, col_sums)
+        weights[key].data = mat.data / col_sums_safe[mat.indices]

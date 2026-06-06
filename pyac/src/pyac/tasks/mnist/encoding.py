@@ -41,3 +41,32 @@ class PixelAssemblyEncoder:
         active_pixel_indices = np.argsort(-flat, kind="stable")[: self.active_pixels]
         indices = np.unique(self.pixel_indices[active_pixel_indices].reshape(-1))
         return Assembly(area_name=self.area_name, indices=indices)
+
+
+class RawPixelEncoder:
+    """Encode an MNIST image as top-k active pixels after 3x3 convolution.
+
+    Matches the Dabagia/Papadimitriou notebook approach: applies a 3x3
+    box filter, then selects top-k pixels as the X assembly.
+
+    The X area has exactly 784 neurons (one per image pixel).
+    """
+
+    def __init__(self, k: int = 200, area_name: str = "X") -> None:
+        if k <= 0 or k > 784:
+            raise ValueError("k must be in [1, 784]")
+        self.k = k
+        self.area_name = area_name
+
+    def encode(self, image: np.ndarray) -> Assembly:
+        from scipy.signal import convolve
+
+        flat = np.asarray(image, dtype=np.float64).reshape(-1)
+        if flat.size != 784:
+            raise ValueError(f"expected 784 pixels, got {flat.size}")
+
+        # 3x3 box convolution (matches notebook)
+        img_2d = flat.reshape(28, 28)
+        convolved = convolve(img_2d, np.ones((3, 3)), mode='same').reshape(-1)
+        indices = np.argsort(-convolved, kind="stable")[: self.k]
+        return Assembly(area_name=self.area_name, indices=indices.astype(np.int64))

@@ -1,5 +1,5 @@
 from pyac.tasks.mnist.data import MnistSplit, load_mnist_split
-from pyac.tasks.mnist.encoding import PixelAssemblyEncoder
+from pyac.tasks.mnist.encoding import PixelAssemblyEncoder, RawPixelEncoder
 from pyac.tasks.mnist.protocol import (
     MnistTask,
     build_mnist_network,
@@ -13,6 +13,7 @@ __all__ = [
     "MnistSplit",
     "MnistTask",
     "PixelAssemblyEncoder",
+    "RawPixelEncoder",
     "build_mnist_network",
     "decode_mnist_class",
     "evaluate_mnist_example",

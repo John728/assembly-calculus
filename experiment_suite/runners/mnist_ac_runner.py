@@ -15,6 +15,7 @@ if str(PYAC_SRC) not in sys.path:
 
 from pyac.tasks.mnist import (  # noqa: E402
     PixelAssemblyEncoder,
+    RawPixelEncoder,
     build_mnist_network,
     evaluate_mnist_t_sweep,
     load_mnist_split,
@@ -78,12 +79,19 @@ def run_mnist_ac_job(job: ExperimentJob) -> list[dict[str, object]]:
     test_labels = _limited(test_split.labels, test_limit)
 
     rng = np.random.default_rng(job.seed)
-    encoder = PixelAssemblyEncoder(
-        active_pixels=_as_int(model_values.get("active_pixels"), 64),
-        neurons_per_pixel=_as_int(model_values.get("pool_size"), 8),
-        rng=rng,
-        area_name="X",
-    )
+    encoder_type = str(model_values.get("encoder_type", "pool"))
+    if encoder_type == "raw":
+        encoder = RawPixelEncoder(
+            k=_as_int(model_values.get("raw_k"), 200),
+            area_name="X",
+        )
+    else:
+        encoder = PixelAssemblyEncoder(
+            active_pixels=_as_int(model_values.get("active_pixels"), 64),
+            neurons_per_pixel=_as_int(model_values.get("pool_size"), 8),
+            rng=rng,
+            area_name="X",
+        )
     network, task = build_mnist_network(
         n=_as_int(model_values.get("n"), 1000),
         k=_as_int(model_values.get("k"), 100),
@@ -96,6 +104,7 @@ def run_mnist_ac_job(job: ExperimentJob) -> list[dict[str, object]]:
 
     presentation_rounds = _as_int(model_values.get("presentation_rounds"), 1)
     settle_steps = _as_int(model_values.get("settle_steps"), 1)
+    class_organized = str(model_values.get("class_organized", "true")).lower() in ("true", "1", "yes")
     train_mnist_assemblies(
         network,
         task,
@@ -103,6 +112,7 @@ def run_mnist_ac_job(job: ExperimentJob) -> list[dict[str, object]]:
         train_labels,
         presentation_rounds=presentation_rounds,
         settle_steps=settle_steps,
+        class_organized=class_organized,
     )
 
     t_values = _as_int_list(model_values.get("t_values"), [0])

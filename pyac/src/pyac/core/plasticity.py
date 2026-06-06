@@ -33,10 +33,17 @@ def hebbian_update(
     if np.any(post_indices < 0) or np.any(post_indices >= n_cols):
         raise IndexError("post_firing indices out of bounds")
 
-    index = np.ix_(pre_indices, post_indices)
-    submatrix = weights[index]
-    if submatrix.nnz == 0:
-        return
+    # Reconstruct row indices from CSR indptr (vectorized, no copy)
+    nnz = weights.data.size
+    row_indices = np.empty(nnz, dtype=np.int64)
+    if nnz > 0:
+        diff = np.diff(weights.indptr)
+        row_indices = np.repeat(np.arange(n_rows, dtype=np.int64), diff)
 
-    submatrix.data *= 1.0 + beta
-    weights[index] = submatrix
+    # Mask: row is in pre_indices AND column is in post_indices
+    row_mask = np.isin(row_indices, pre_indices)
+    col_mask = np.isin(weights.indices, post_indices)
+    mask = row_mask & col_mask
+
+    if mask.any():
+        weights.data[mask] *= 1.0 + beta

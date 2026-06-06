@@ -1,0 +1,45 @@
+suite_name: mnist-ac-legit
+output_dir: results/mnist
+seeds: [42, 43]
+conditions:
+  - list_type: MNIST
+    N: 10
+    num_train_lists: 50000
+    num_test_lists: 10000
+    k_train_min: 1
+    k_train_max: 1
+    k_test_min: 0
+    k_test_max: 20
+models:
+  MNIST_AC:
+    - model_name: MNIST-AC-Held
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 5000
+      test_limit: 200
+      t_values: [0, 1, 2, 4, 8, 12, 16, 20]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 1.0
+      presentation_rounds: 50
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held
+
+    - model_name: MNIST-AC-CueOnly
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 5000
+      test_limit: 200
+      t_values: [0, 1, 2, 4, 8, 12, 16, 20]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 1.0
+      presentation_rounds: 50
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: transient

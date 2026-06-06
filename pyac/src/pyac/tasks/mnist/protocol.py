@@ -7,7 +7,7 @@ import numpy as np
 from pyac.core.network import Network
 from pyac.core.types import AreaSpec, Assembly, FiberSpec, NetworkSpec
 from pyac.measures.overlap import class_overlap_vector, correct_class_margin
-from pyac.tasks.mnist.encoding import PixelAssemblyEncoder
+from pyac.tasks.mnist.encoding import PixelAssemblyEncoder, RawPixelEncoder
 
 
 @dataclass
@@ -30,14 +30,19 @@ def build_mnist_network(
     beta: float,
     rng: np.random.Generator,
     *,
-    encoder: PixelAssemblyEncoder | None = None,
+    encoder: PixelAssemblyEncoder | RawPixelEncoder | None = None,
 ) -> tuple[Network, MnistTask]:
-    encoder = encoder or PixelAssemblyEncoder(rng=rng, area_name="X")
+    if encoder is None:
+        encoder = PixelAssemblyEncoder(rng=rng, area_name="X")
     if encoder.area_name != "X":
         raise ValueError("encoder area_name must be 'X'")
 
-    sensory_n = encoder.num_pixels * encoder.neurons_per_pixel
-    sensory_k = encoder.active_pixels * encoder.neurons_per_pixel
+    if isinstance(encoder, RawPixelEncoder):
+        sensory_n = 784
+        sensory_k = encoder.k
+    else:
+        sensory_n = encoder.num_pixels * encoder.neurons_per_pixel
+        sensory_k = encoder.active_pixels * encoder.neurons_per_pixel
 
     spec = NetworkSpec(
         areas=[
@@ -68,6 +73,7 @@ def train_mnist_assemblies(
     presentation_rounds: int = 1,
     settle_steps: int = 1,
     renormalize_every: int = 50,
+    class_organized: bool = False,
 ) -> None:
     if presentation_rounds <= 0:
         raise ValueError("presentation_rounds must be > 0")
@@ -87,40 +93,72 @@ def train_mnist_assemblies(
     sensory_n = network.areas_by_name[sensory_area].n
     coding_area_spec = network.areas_by_name[coding_area]
     label_counts: dict[int, np.ndarray] = {}
-    example_index = 0
 
-    for _ in range(presentation_rounds):
-        for image, label in zip(images, labels):
-            sensory_assembly = task.encoder.encode(image)
-            if sensory_assembly.area_name != sensory_area:
-                raise ValueError(
-                    f"encoded assembly belongs to '{sensory_assembly.area_name}', "
-                    f"expected '{sensory_area}'"
+    if class_organized:
+        # Match notebook: train class-by-class with normalization between classes
+        for digit in range(10):
+            mask = labels_array == digit
+            digit_images = images[mask][:presentation_rounds]
+            for image in digit_images:
+                sensory_assembly = task.encoder.encode(image)
+                if sensory_assembly.area_name != sensory_area:
+                    raise ValueError(
+                        f"encoded assembly belongs to '{sensory_assembly.area_name}', "
+                        f"expected '{sensory_area}'"
+                    )
+                stimulus = np.zeros(sensory_n, dtype=np.float64)
+                stimulus[sensory_assembly.indices] = 1.0
+
+                network.activations[sensory_area] = np.array([], dtype=np.int64)
+                network.activations[coding_area] = np.array([], dtype=np.int64)
+
+                for _ in range(settle_steps):
+                    network.step(
+                        external_stimuli={sensory_area: stimulus},
+                        plasticity_on=True,
+                    )
+
+                counts = label_counts.setdefault(
+                    digit, np.zeros(coding_area_spec.n, dtype=np.int64)
                 )
-            stimulus = np.zeros(sensory_n, dtype=np.float64)
-            stimulus[sensory_assembly.indices] = 1.0
+                counts[network.activations[coding_area]] += 1
 
-            network.activations[sensory_area] = np.array([], dtype=np.int64)
-            network.activations[coding_area] = np.array([], dtype=np.int64)
-
-            for _ in range(settle_steps):
-                network.step(
-                    external_stimuli={sensory_area: stimulus},
-                    plasticity_on=True,
-                )
-
-            digit = int(label)
-            counts = label_counts.setdefault(
-                digit, np.zeros(coding_area_spec.n, dtype=np.int64)
-            )
-            counts[network.activations[coding_area]] += 1
-
-            example_index += 1
-            if hasattr(network, "normalize") and example_index % renormalize_every == 0:
+            if hasattr(network, "normalize"):
                 network.normalize(coding_area)
+    else:
+        example_index = 0
+        for _ in range(presentation_rounds):
+            for image, label in zip(images, labels):
+                sensory_assembly = task.encoder.encode(image)
+                if sensory_assembly.area_name != sensory_area:
+                    raise ValueError(
+                        f"encoded assembly belongs to '{sensory_assembly.area_name}', "
+                        f"expected '{sensory_area}'"
+                    )
+                stimulus = np.zeros(sensory_n, dtype=np.float64)
+                stimulus[sensory_assembly.indices] = 1.0
 
-        if hasattr(network, "normalize") and example_index % renormalize_every != 0:
-            network.normalize(coding_area)
+                network.activations[sensory_area] = np.array([], dtype=np.int64)
+                network.activations[coding_area] = np.array([], dtype=np.int64)
+
+                for _ in range(settle_steps):
+                    network.step(
+                        external_stimuli={sensory_area: stimulus},
+                        plasticity_on=True,
+                    )
+
+                d = int(label)
+                counts = label_counts.setdefault(
+                    d, np.zeros(coding_area_spec.n, dtype=np.int64)
+                )
+                counts[network.activations[coding_area]] += 1
+
+                example_index += 1
+                if hasattr(network, "normalize") and example_index % renormalize_every == 0:
+                    network.normalize(coding_area)
+
+            if hasattr(network, "normalize") and example_index % renormalize_every != 0:
+                network.normalize(coding_area)
 
     task.class_assemblies.clear()
     assigned: set[int] = set()
