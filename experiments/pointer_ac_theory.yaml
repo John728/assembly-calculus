@@ -1,0 +1,25 @@
+suite_name: pointer-ac-theory
+output_dir: results/pointer/theory
+seeds: [1, 2, 3]
+
+conditions:
+  - list_type: Unseen
+    N: 6
+    num_train_lists: 12
+    num_test_lists: 6
+    k_train_min: 1
+    k_train_max: 3
+    k_test_min: 1
+    k_test_max: 3
+
+models:
+  AC:
+    - model_name: Pointer-AC-Theory
+      assembly_size: 12
+      density: 0.45
+      plasticity: 0.3
+      train_episodes: 24
+      samples_per_list_eval: 16
+      time_budgets: [0, 1, 2, 3, 4, 6, 8, 10]
+      c_values: [1, 2, 4, 8]
+      theory_pointer: true

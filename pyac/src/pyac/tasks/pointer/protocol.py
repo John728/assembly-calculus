@@ -306,3 +306,137 @@ def evaluate_seen_lists(
         target = follow_pointer(np.asarray(example["pointer"], dtype=np.int64), start=int(example["start"]), hops=int(example["k"]))
         correct += int(prediction == target)
     return correct / max(len(examples), 1)
+
+
+def rollout_seen_pointer_sequence(
+    network: Network,
+    task: PointerTask,
+    pointer: np.ndarray,
+    *,
+    list_idx: int,
+    start_node: int,
+    internal_steps: int,
+    settle_steps: int = 1,
+) -> list[int]:
+    input_area = task.area_map["input"]
+    state_area = task.area_map["state"]
+    key = task.key_for(list_idx, start_node)
+    start_assembly = task.state_assemblies[key]
+    state_stimulus = _stimulus_from_indices(network.areas_by_name[state_area].n, start_assembly.indices)
+
+    _reset_network(network)
+    network.inhibit(input_area)
+
+    for step_idx in range(settle_steps):
+        ext = {state_area: state_stimulus} if step_idx == 0 else None
+        network.step(external_stimuli=ext, plasticity_on=False)
+
+    decoded = [int(start_node)]
+    for _ in range(max(int(internal_steps), 0)):
+        network.step(plasticity_on=False)
+        decoded.append(_decode_node(task, list_idx, network.get_assembly(state_area)))
+
+    network.disinhibit(input_area)
+    return decoded
+
+
+def evaluate_seen_per_instance(
+    network: Network,
+    task: PointerTask,
+    pointers: list[np.ndarray],
+    *,
+    hops: int,
+    time_budget: int,
+    samples_per_list: int,
+    rng: np.random.Generator,
+    theta_id: str | None = None,
+    settle_steps: int = 1,
+) -> list[dict[str, object]]:
+    c = 1 if hops > 0 else 0
+    completed_hops = min(max(int(time_budget), 0), max(int(hops), 0))
+    readout_step = completed_hops * c
+    rows: list[dict[str, object]] = []
+
+    for list_idx, pointer in enumerate(pointers):
+        pointer_arr = np.asarray(pointer, dtype=np.int64)
+        for sample_idx in range(samples_per_list):
+            start_node = int(rng.integers(0, task.list_length))
+            target = int(follow_pointer(pointer_arr, start=start_node, hops=hops))
+            decoded_sequence = rollout_seen_pointer_sequence(
+                network,
+                task,
+                pointer_arr,
+                list_idx=list_idx,
+                start_node=start_node,
+                internal_steps=time_budget,
+                settle_steps=settle_steps,
+            )
+            trajectory = _seen_path_trajectory(decoded_sequence, hops=hops)
+            true_trajectory = _seen_true_pointer_path(pointer_arr, start_node=start_node, hops=hops)
+            prediction = _seen_prediction_at_readout(decoded_sequence, readout_step)
+            rows.append(
+                {
+                    "experiment": "pointer_chasing",
+                    "pointer_variant": "seen",
+                    "theta_id": theta_id,
+                    "N": task.list_length,
+                    "L": hops,
+                    "t": time_budget,
+                    "c": c,
+                    "completed_hops": completed_hops,
+                    "readout_step": readout_step,
+                    "instance_id": f"{theta_id or 'seen'}-{list_idx}-{sample_idx}-{start_node}-{hops}-{time_budget}",
+                    "list_idx": list_idx,
+                    "sample_idx": sample_idx,
+                    "start_node": start_node,
+                    "target": target,
+                    "prediction": prediction,
+                    "correct": prediction == target,
+                    "true_trajectory": true_trajectory,
+                    "trajectory": trajectory,
+                    "path_accuracy": _seen_path_accuracy(trajectory, true_trajectory),
+                    "first_error_index": _seen_first_error_index(trajectory, true_trajectory),
+                    "plasticity_on": False,
+                }
+            )
+    return rows
+
+
+def _seen_path_trajectory(decoded_sequence: list[int], *, hops: int) -> list[int | None]:
+    trajectory: list[int | None] = []
+    for hop_idx in range(hops + 1):
+        if hop_idx < len(decoded_sequence):
+            trajectory.append(int(decoded_sequence[hop_idx]))
+        else:
+            trajectory.append(None)
+    return trajectory
+
+
+def _seen_true_pointer_path(pointer: np.ndarray, *, start_node: int, hops: int) -> list[int]:
+    path = [int(start_node)]
+    current = int(start_node)
+    for _ in range(hops):
+        current = int(pointer[current])
+        path.append(current)
+    return path
+
+
+def _seen_prediction_at_readout(decoded_sequence: list[int], readout_step: int) -> int:
+    if not decoded_sequence:
+        return 0
+    step = min(max(int(readout_step), 0), len(decoded_sequence) - 1)
+    return int(decoded_sequence[step])
+
+
+def _seen_path_accuracy(decoded_path: list[int | None], true_path: list[int]) -> float:
+    if not true_path:
+        return 1.0
+    matches = sum(1 for decoded, true in zip(decoded_path, true_path) if decoded == true)
+    return matches / len(true_path)
+
+
+def _seen_first_error_index(decoded_path: list[int | None], true_path: list[int]) -> int | None:
+    for idx, (decoded, true) in enumerate(zip(decoded_path, true_path)):
+        if decoded != true:
+            return idx
+    return None

@@ -1,0 +1,61 @@
+suite_name: mnist-ac-scale-probe
+output_dir: results/mnist/probes/scale
+seeds: [42]
+conditions:
+  - list_type: MNIST
+    N: 10
+    num_train_lists: 50000
+    num_test_lists: 500
+    k_train_min: 1
+    k_train_max: 1
+    k_test_min: 0
+    k_test_max: 10
+models:
+  MNIST_AC:
+    - model_name: MNIST-AC-Parity-n2000-k200
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50000
+      test_limit: 500
+      t_values: [0, 1, 2, 4, 8, 10]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 1.0
+      presentation_rounds: 5
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held
+
+    - model_name: MNIST-AC-Scaled-n5000-k500
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50000
+      test_limit: 500
+      t_values: [0, 1, 2, 4, 8, 10]
+      n: 5000
+      k: 500
+      p: 0.1
+      beta: 1.0
+      presentation_rounds: 5
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held
+
+    - model_name: MNIST-AC-Scaled-n5000-k200
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50000
+      test_limit: 500
+      t_values: [0, 1, 2, 4, 8, 10]
+      n: 5000
+      k: 200
+      p: 0.1
+      beta: 1.0
+      presentation_rounds: 5
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held

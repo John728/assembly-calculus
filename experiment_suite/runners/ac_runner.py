@@ -49,7 +49,9 @@ def run_ac_job_with_artifacts(job: ExperimentJob) -> tuple[list[dict[str, object
     accuracy_vs_hop = pointer_module.accuracy_vs_hop
     build_pointer_network = pointer_module.build_pointer_network
     build_proper_unseen_pointer_network = pointer_module.build_proper_unseen_pointer_network
+    evaluate_proper_unseen_per_instance = pointer_module.evaluate_proper_unseen_per_instance
     evaluate_proper_unseen_rollout = pointer_module.evaluate_proper_unseen_rollout
+    evaluate_seen_per_instance = pointer_module.evaluate_seen_per_instance
     generate_unique_lists = pointer_module.generate_unique_lists
     train_proper_unseen_controller = pointer_module.train_proper_unseen_controller
     train_node_assemblies = pointer_module.train_node_assemblies
@@ -86,45 +88,82 @@ def run_ac_job_with_artifacts(job: ExperimentJob) -> tuple[list[dict[str, object
         rows: list[dict[str, object]] = []
         time_budgets_raw = model_values.get("time_budgets")
         max_budget = max([_as_int(v, 10) for v in time_budgets_raw]) if isinstance(time_budgets_raw, list) else 10
-        
-        for hop in range(job.condition.k_test_min, job.condition.k_test_max + 1):
-            # For accuracy measurement, internal_steps MUST match hop
-            accuracy = evaluate_proper_unseen_rollout(
-                network,
-                task,
-                test_lists,
-                hops=hop,
-                internal_steps=hop,
-                samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
-                rng=eval_rng,
-            )
-            raw_row = {
-                "List Type": "Unseen",
-                "Model": str(model_values.get("model_name", job.model.model_name)),
-                "N": job.condition.N,
-                "Num Lists": job.condition.num_test_lists,
-                "k": hop,
-                "Accuracy": accuracy,
-                "Internal Steps": hop,
-                "Assembly Size": _as_int(model_values.get("assembly_size"), 32),
-                "Density": _as_float(model_values.get("density"), 0.2),
-                "Plasticity": _as_float(model_values.get("plasticity"), 0.1),
-                "Transition Rounds": None,
-                "Association Steps": None,
-            }
-            rows.append(
-                standardize_ac_row(
-                    raw_row,
-                    suite=job.suite_name,
-                    seed=job.seed,
-                    N=job.condition.N,
-                    num_train_lists=job.condition.num_train_lists,
-                    num_test_lists=job.condition.num_test_lists,
-                    k_train_min=job.condition.k_train_min,
-                    k_train_max=job.condition.k_train_max,
+
+        theory_pointer = bool(model_values.get("theory_pointer", False))
+
+        if theory_pointer:
+            c_values_raw = model_values.get("c_values")
+            c_values = [_as_int(v, 1) for v in c_values_raw] if isinstance(c_values_raw, list) else [1]
+            for hop in range(job.condition.k_test_min, job.condition.k_test_max + 1):
+                for t_budget in time_budgets:
+                    for c_val in c_values:
+                        instance_rows = evaluate_proper_unseen_per_instance(
+                            network,
+                            task,
+                            test_lists,
+                            hops=hop,
+                            time_budget=t_budget,
+                            c=c_val,
+                            samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
+                            rng=eval_rng,
+                            theta_id=f"{job.seed}-{job.model.model_name}",
+                        )
+                        for ir in instance_rows:
+                            ir["suite"] = job.suite_name
+                            ir["seed"] = job.seed
+                            ir["family"] = "AC"
+                            ir["model_name"] = str(model_values.get("model_name", job.model.model_name))
+                            ir["list_type"] = "Unseen"
+                            ir["num_train_lists"] = job.condition.num_train_lists
+                            ir["num_test_lists"] = job.condition.num_test_lists
+                            ir["k_train_min"] = job.condition.k_train_min
+                            ir["k_train_max"] = job.condition.k_train_max
+                            ir["k_test"] = ir.get("L")
+                            ir["accuracy"] = 1.0 if ir.get("correct") else 0.0
+                            ir["internal_steps"] = ir.get("t")
+                            ir["presentation_rounds"] = _as_int(model_values.get("presentation_rounds"), 0)
+                            ir["settle_steps"] = 0
+                            ir["train_limit"] = None
+                            ir["test_limit"] = None
+                            rows.append(ir)
+        else:
+            for hop in range(job.condition.k_test_min, job.condition.k_test_max + 1):
+                accuracy = evaluate_proper_unseen_rollout(
+                    network,
+                    task,
+                    test_lists,
+                    hops=hop,
+                    internal_steps=hop,
+                    samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
+                    rng=eval_rng,
                 )
-            )
-            
+                raw_row = {
+                    "List Type": "Unseen",
+                    "Model": str(model_values.get("model_name", job.model.model_name)),
+                    "N": job.condition.N,
+                    "Num Lists": job.condition.num_test_lists,
+                    "k": hop,
+                    "Accuracy": accuracy,
+                    "Internal Steps": hop,
+                    "Assembly Size": _as_int(model_values.get("assembly_size"), 32),
+                    "Density": _as_float(model_values.get("density"), 0.2),
+                    "Plasticity": _as_float(model_values.get("plasticity"), 0.1),
+                    "Transition Rounds": None,
+                    "Association Steps": None,
+                }
+                rows.append(
+                    standardize_ac_row(
+                        raw_row,
+                        suite=job.suite_name,
+                        seed=job.seed,
+                        N=job.condition.N,
+                        num_train_lists=job.condition.num_train_lists,
+                        num_test_lists=job.condition.num_test_lists,
+                        k_train_min=job.condition.k_train_min,
+                        k_train_max=job.condition.k_train_max,
+                    )
+                )
+
         mechanism_trace = rollout_proper_unseen_pointer(
             network,
             task,
@@ -167,37 +206,74 @@ def run_ac_job_with_artifacts(job: ExperimentJob) -> tuple[list[dict[str, object
         teacher_strength=_as_float(model_values.get("teacher_strength"), 12.0),
     )
 
-    raw_rows = accuracy_vs_hop(
-        network,
-        task,
-        lists,
-        k_values=list(range(job.condition.k_test_min, job.condition.k_test_max + 1)),
-        samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
-        rng=eval_rng,
-        model_name=str(model_values.get("model_name", job.model.model_name)),
-        settle_steps=1,
-    )
-
     rows: list[dict[str, object]] = []
-    for raw_row in raw_rows:
-        enriched_row = dict(raw_row)
-        enriched_row["Assembly Size"] = _as_int(model_values.get("assembly_size"), 16)
-        enriched_row["Density"] = _as_float(model_values.get("density"), 0.15)
-        enriched_row["Plasticity"] = _as_float(model_values.get("plasticity"), 0.25)
-        enriched_row["Transition Rounds"] = _as_int(model_values.get("transition_rounds"), 12)
-        enriched_row["Association Steps"] = _as_int(model_values.get("association_steps"), 2)
-        rows.append(
-            standardize_ac_row(
-                enriched_row,
-                suite=job.suite_name,
-                seed=job.seed,
-                N=job.condition.N,
-                num_train_lists=job.condition.num_train_lists,
-                num_test_lists=job.condition.num_test_lists,
-                k_train_min=job.condition.k_train_min,
-                k_train_max=job.condition.k_train_max,
-            )
+    time_budgets_raw = model_values.get("time_budgets")
+    time_budgets = [_as_int(v, 10) for v in time_budgets_raw] if isinstance(time_budgets_raw, list) else [10]
+    theory_pointer = bool(model_values.get("theory_pointer", False))
+
+    if theory_pointer:
+        for hop in range(job.condition.k_test_min, job.condition.k_test_max + 1):
+            for t_budget in time_budgets:
+                instance_rows = evaluate_seen_per_instance(
+                    network,
+                    task,
+                    lists,
+                    hops=hop,
+                    time_budget=t_budget,
+                    samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
+                    rng=eval_rng,
+                    theta_id=f"{job.seed}-{job.model.model_name}",
+                    settle_steps=_as_int(model_values.get("settle_steps"), 1),
+                )
+                for ir in instance_rows:
+                    ir["suite"] = job.suite_name
+                    ir["seed"] = job.seed
+                    ir["family"] = "AC"
+                    ir["model_name"] = str(model_values.get("model_name", job.model.model_name))
+                    ir["list_type"] = "Seen"
+                    ir["num_train_lists"] = job.condition.num_train_lists
+                    ir["num_test_lists"] = job.condition.num_test_lists
+                    ir["k_train_min"] = job.condition.k_train_min
+                    ir["k_train_max"] = job.condition.k_train_max
+                    ir["k_test"] = ir.get("L")
+                    ir["accuracy"] = 1.0 if ir.get("correct") else 0.0
+                    ir["internal_steps"] = ir.get("t")
+                    ir["presentation_rounds"] = _as_int(model_values.get("presentation_rounds"), 4)
+                    ir["settle_steps"] = _as_int(model_values.get("settle_steps"), 1)
+                    ir["train_limit"] = None
+                    ir["test_limit"] = None
+                    rows.append(ir)
+    else:
+        raw_rows = accuracy_vs_hop(
+            network,
+            task,
+            lists,
+            k_values=list(range(job.condition.k_test_min, job.condition.k_test_max + 1)),
+            samples_per_list=_as_int(model_values.get("samples_per_list_eval"), 64),
+            rng=eval_rng,
+            model_name=str(model_values.get("model_name", job.model.model_name)),
+            settle_steps=1,
         )
+
+        for raw_row in raw_rows:
+            enriched_row = dict(raw_row)
+            enriched_row["Assembly Size"] = _as_int(model_values.get("assembly_size"), 16)
+            enriched_row["Density"] = _as_float(model_values.get("density"), 0.15)
+            enriched_row["Plasticity"] = _as_float(model_values.get("plasticity"), 0.25)
+            enriched_row["Transition Rounds"] = _as_int(model_values.get("transition_rounds"), 12)
+            enriched_row["Association Steps"] = _as_int(model_values.get("association_steps"), 2)
+            rows.append(
+                standardize_ac_row(
+                    enriched_row,
+                    suite=job.suite_name,
+                    seed=job.seed,
+                    N=job.condition.N,
+                    num_train_lists=job.condition.num_train_lists,
+                    num_test_lists=job.condition.num_test_lists,
+                    k_train_min=job.condition.k_train_min,
+                    k_train_max=job.condition.k_train_max,
+                )
+            )
     artifacts = {
         "network": network,
         "task": task,

@@ -17,6 +17,7 @@ from pyac.tasks.mnist import (  # noqa: E402
     PixelAssemblyEncoder,
     RawPixelEncoder,
     build_mnist_network,
+    evaluate_mnist_sequence,
     evaluate_mnist_t_sweep,
     load_mnist_split,
     train_mnist_assemblies,
@@ -114,6 +115,58 @@ def run_mnist_ac_job(job: ExperimentJob) -> list[dict[str, object]]:
         settle_steps=settle_steps,
         class_organized=class_organized,
     )
+
+    if "sequence_digits" in model_values:
+        sequence_digits = _as_int_list(model_values.get("sequence_digits"), [])
+        if "steps_per_digit_values" in model_values:
+            hold_values = _as_int_list(model_values.get("steps_per_digit_values"), [])
+        else:
+            hold_values = [_as_int(model_values.get("steps_per_digit"), 3)]
+
+        rows: list[dict[str, object]] = []
+        base_model_name = str(model_values.get("model_name", job.model.model_name))
+        for steps_per_digit in hold_values:
+            raw_rows = evaluate_mnist_sequence(
+                network,
+                task,
+                test_images,
+                test_labels,
+                sequence_digits=sequence_digits,
+                steps_per_digit=steps_per_digit,
+                instance_ids=list(range(len(test_images))),
+            )
+            model_name = base_model_name
+            if "steps_per_digit_values" in model_values:
+                model_name = f"{base_model_name}-Hold-{steps_per_digit}"
+            for raw_row in raw_rows:
+                row = dict(raw_row)
+                sequence_step = _as_int(row.get("sequence_step", row.get("t", 0)), 0)
+                row.update(
+                    {
+                        "suite": job.suite_name,
+                        "seed": job.seed,
+                        "family": "MNIST_AC",
+                        "model_name": model_name,
+                        "list_type": job.condition.list_type,
+                        "N": job.condition.N,
+                        "num_train_lists": len(train_images),
+                        "num_test_lists": len(test_images),
+                        "k_train_min": job.condition.k_train_min,
+                        "k_train_max": job.condition.k_train_max,
+                        "k_test": sequence_step,
+                        "accuracy": 1.0 if bool(row.get("correct")) else 0.0,
+                        "internal_steps": sequence_step,
+                        "hold_steps": steps_per_digit,
+                        "params": None,
+                        "runtime_ms": None,
+                        "train_limit": train_limit,
+                        "test_limit": test_limit,
+                        "presentation_rounds": presentation_rounds,
+                        "settle_steps": settle_steps,
+                    }
+                )
+                rows.append(row)
+        return rows
 
     t_values = _as_int_list(model_values.get("t_values"), [0])
     raw_rows = evaluate_mnist_t_sweep(

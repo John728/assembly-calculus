@@ -1,27 +1,27 @@
-suite_name: mnist-ac-legit
-output_dir: results/mnist
+suite_name: mnist-ac-t100
+output_dir: results/mnist/probes/t100_full
 seeds: [42, 43, 44, 45, 46]
 conditions:
   - list_type: MNIST
     N: 10
-    num_train_lists: 1000
+    num_train_lists: 50000
     num_test_lists: 500
     k_train_min: 1
     k_train_max: 1
     k_test_min: 0
-    k_test_max: 20
+    k_test_max: 100
 models:
   MNIST_AC:
-    - model_name: MNIST-AC-Dense
+    - model_name: MNIST-AC-Tuned-Held-t100
       data_dir: data/mnist
       encoder_type: raw
       raw_k: 200
-      train_limit: 1000
+      train_limit: 50000
       test_limit: 500
-      t_values: [0, 1, 2, 4, 8]
+      t_values: [0, 1, 2, 4, 8, 10, 20, 40, 60, 80, 100]
       n: 2000
       k: 200
-      p: 1.0
+      p: 0.1
       beta: 1.0
       presentation_rounds: 100
       settle_steps: 1

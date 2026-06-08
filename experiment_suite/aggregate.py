@@ -37,14 +37,20 @@ def write_summary(rows: list[dict[str, Any]], output_dir: Path) -> Path:
     path = output_dir / "summary.csv"
     grouped: dict[tuple[object, ...], dict[str, Any]] = {}
     for row in rows:
-        key = (row["family"], row["model_name"], row["list_type"], row["k_test"])
+        summary_dimensions = {
+            "family": row["family"],
+            "model_name": row["model_name"],
+            "list_type": row["list_type"],
+            "k_test": row["k_test"],
+        }
+        if row.get("experiment") == "pointer_chasing":
+            summary_dimensions["t"] = row.get("t")
+
+        key = tuple(summary_dimensions.values())
         entry = grouped.setdefault(
             key,
             {
-                "family": row["family"],
-                "model_name": row["model_name"],
-                "list_type": row["list_type"],
-                "k_test": row["k_test"],
+                **summary_dimensions,
                 "mean_accuracy": 0.0,
                 "num_rows": 0,
             },
@@ -61,9 +67,15 @@ def write_summary(rows: list[dict[str, Any]], output_dir: Path) -> Path:
             }
         )
 
+    fieldnames: list[str] = []
+    for row in summary_rows:
+        for key in row.keys():
+            if key not in fieldnames:
+                fieldnames.append(key)
+
     with path.open("w", newline="", encoding="utf-8") as handle:
         if summary_rows:
-            writer = csv.DictWriter(handle, fieldnames=list(summary_rows[0].keys()))
+            writer = csv.DictWriter(handle, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(summary_rows)
     return path

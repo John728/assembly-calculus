@@ -257,13 +257,107 @@ def test_evaluate_mnist_t_sweep_rejects_bool_labels():
         )
 
 
+def test_evaluate_mnist_sequence_rejects_bool_labels():
+    from pyac.tasks.mnist.protocol import evaluate_mnist_sequence
+
+    network, task, images, _labels = _trained_tiny_model()
+
+    with pytest.raises(ValueError, match="labels must be MNIST digits"):
+        evaluate_mnist_sequence(
+            network,
+            task,
+            images[:1],
+            np.array([True], dtype=np.bool_),
+            sequence_digits=[1],
+            steps_per_digit=1,
+        )
+
+
+def test_mnist_sequence_keeps_state_across_digit_changes():
+    from types import SimpleNamespace
+
+    from pyac.tasks.mnist.protocol import evaluate_mnist_sequence
+
+    class MarkerEncoder:
+        area_name = "X"
+
+        def encode(self, image):
+            return Assembly("X", np.array([int(image[0, 0])], dtype=np.int64))
+
+    class RecordingNetwork:
+        def __init__(self):
+            self.areas_by_name = {
+                "X": SimpleNamespace(n=10, k=1),
+                "Y": SimpleNamespace(n=10, k=1),
+            }
+            self.activations = {
+                "X": np.array([9], dtype=np.int64),
+                "Y": np.array([9], dtype=np.int64),
+            }
+            self.step_count = 99
+            self.had_previous_y: list[bool] = []
+            self.plasticity_calls: list[bool] = []
+
+        def step(self, external_stimuli=None, plasticity_on=True, biases=None):
+            self.had_previous_y.append(self.activations["Y"].size > 0)
+            self.plasticity_calls.append(bool(plasticity_on))
+            stimulus = external_stimuli["X"]
+            active = int(np.flatnonzero(stimulus)[0])
+            self.activations["X"] = np.array([active], dtype=np.int64)
+            self.activations["Y"] = np.array([active], dtype=np.int64)
+            self.step_count += 1
+
+        def get_assembly(self, area_name):
+            return Assembly(area_name, self.activations[area_name])
+
+    network = RecordingNetwork()
+    task = SimpleNamespace(
+        encoder=MarkerEncoder(),
+        area_map={"sensory": "X", "coding": "Y"},
+        class_assemblies={digit: Assembly("Y", np.array([digit], dtype=np.int64)) for digit in range(10)},
+        n=10,
+        k=1,
+        p=0.1,
+        beta=1.0,
+        coding_bias=np.zeros(10, dtype=np.float64),
+        seed=7,
+    )
+    images = np.zeros((2, 28, 28), dtype=np.float64)
+    images[0, 0, 0] = 0
+    images[1, 0, 0] = 1
+    labels = np.array([0, 1], dtype=np.int64)
+
+    rows = evaluate_mnist_sequence(
+        network,
+        task,
+        images,
+        labels,
+        sequence_digits=[0, 1],
+        steps_per_digit=2,
+        instance_ids=["zero", "one"],
+    )
+
+    assert len(rows) == 4
+    assert [row["phase_digit"] for row in rows] == [0, 0, 1, 1]
+    assert [row["step_in_phase"] for row in rows] == [0, 1, 0, 1]
+    assert [row["sequence_step"] for row in rows] == [0, 1, 2, 3]
+    assert [row["instance_id"] for row in rows] == ["zero", "zero", "one", "one"]
+    assert network.had_previous_y == [False, True, True, True]
+    assert network.plasticity_calls == [False, False, False, False]
+    assert all(row["plasticity_on"] is False for row in rows)
+    assert all(len(row["overlaps"]) == 10 for row in rows)
+    assert all(len(row["trajectory"]) == row["sequence_step"] + 1 for row in rows)
+
+
 def test_mnist_package_exports_evaluation_helpers():
     from pyac.tasks.mnist import (
         decode_mnist_class,
         evaluate_mnist_example,
+        evaluate_mnist_sequence,
         evaluate_mnist_t_sweep,
     )
 
     assert decode_mnist_class is not None
     assert evaluate_mnist_example is not None
+    assert evaluate_mnist_sequence is not None
     assert evaluate_mnist_t_sweep is not None

@@ -21,6 +21,7 @@ class MnistTask:
     beta: float = 0.0
     presentation_rounds: int = 0
     settle_steps: int = 0
+    coding_bias: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.float64))
 
 
 def build_mnist_network(
@@ -61,6 +62,7 @@ def build_mnist_network(
         k=k,
         p=p,
         beta=beta,
+        coding_bias=np.zeros(n, dtype=np.float64),
     )
     return network, task
 
@@ -94,11 +96,22 @@ def train_mnist_assemblies(
     coding_area_spec = network.areas_by_name[coding_area]
     label_counts: dict[int, np.ndarray] = {}
 
+    def step_with_optional_bias(stimulus: np.ndarray) -> None:
+        kwargs: dict[str, object] = {
+            "external_stimuli": {sensory_area: stimulus},
+            "plasticity_on": True,
+        }
+        if task.coding_bias.shape == (coding_area_spec.n,):
+            kwargs["biases"] = {coding_area: task.coding_bias}
+        network.step(**kwargs)
+
     if class_organized:
-        # Match notebook: train class-by-class with normalization between classes
+        # Match notebook: train class-by-class with normalization between classes.
+        # Within a class, X is refreshed per image but Y carries over (recurrent state).
         for digit in range(10):
             mask = labels_array == digit
             digit_images = images[mask][:presentation_rounds]
+            network.activations[coding_area] = np.array([], dtype=np.int64)
             for image in digit_images:
                 sensory_assembly = task.encoder.encode(image)
                 if sensory_assembly.area_name != sensory_area:
@@ -110,13 +123,9 @@ def train_mnist_assemblies(
                 stimulus[sensory_assembly.indices] = 1.0
 
                 network.activations[sensory_area] = np.array([], dtype=np.int64)
-                network.activations[coding_area] = np.array([], dtype=np.int64)
 
                 for _ in range(settle_steps):
-                    network.step(
-                        external_stimuli={sensory_area: stimulus},
-                        plasticity_on=True,
-                    )
+                    step_with_optional_bias(stimulus)
 
                 counts = label_counts.setdefault(
                     digit, np.zeros(coding_area_spec.n, dtype=np.int64)
@@ -125,6 +134,8 @@ def train_mnist_assemblies(
 
             if hasattr(network, "normalize"):
                 network.normalize(coding_area)
+            if network.activations[coding_area].size > 0:
+                task.coding_bias[network.activations[coding_area]] -= 1.0
     else:
         example_index = 0
         for _ in range(presentation_rounds):
@@ -142,10 +153,7 @@ def train_mnist_assemblies(
                 network.activations[coding_area] = np.array([], dtype=np.int64)
 
                 for _ in range(settle_steps):
-                    network.step(
-                        external_stimuli={sensory_area: stimulus},
-                        plasticity_on=True,
-                    )
+                    step_with_optional_bias(stimulus)
 
                 d = int(label)
                 counts = label_counts.setdefault(
@@ -266,7 +274,11 @@ def evaluate_mnist_example(
         if stimulus_mode == "held" or step_index == 0:
             stimuli = {sensory_area: stimulus}
 
-        network.step(external_stimuli=stimuli, plasticity_on=False)
+        network.step(
+            external_stimuli=stimuli,
+            plasticity_on=False,
+            biases={coding_area: task.coding_bias},
+        )
         active = network.get_assembly(coding_area)
         trajectory.append(decode_mnist_class(active, task))
         overlap_trajectory.append(_mnist_overlap_vector(active, task))
@@ -331,4 +343,98 @@ def evaluate_mnist_t_sweep(
                     stimulus_mode=stimulus_mode,
                 )
             )
+    return rows
+
+
+def evaluate_mnist_sequence(
+    network: Network,
+    task: MnistTask,
+    images: np.ndarray,
+    labels: np.ndarray,
+    sequence_digits: list[int],
+    steps_per_digit: int,
+    instance_ids: list[object] | None = None,
+) -> list[dict[str, object]]:
+    if len(images) != len(labels):
+        raise ValueError("images and labels must have the same length")
+    if instance_ids is not None and len(instance_ids) != len(images):
+        raise ValueError("instance_ids must have the same length as images")
+    if not sequence_digits:
+        raise ValueError("sequence_digits must not be empty")
+    if steps_per_digit <= 0:
+        raise ValueError("steps_per_digit must be > 0")
+
+    labels_array = np.asarray(labels)
+    if not np.issubdtype(labels_array.dtype, np.integer) or np.any(
+        (labels_array < 0) | (labels_array > 9)
+    ):
+        raise ValueError("labels must be MNIST digits in 0..9")
+    ids = instance_ids if instance_ids is not None else list(range(len(images)))
+    selected: list[tuple[int, np.ndarray, object]] = []
+    for digit in sequence_digits:
+        digit_value = _validate_mnist_evaluation_inputs(task, digit)
+        matches = np.flatnonzero(labels_array == digit_value)
+        if matches.size == 0:
+            raise ValueError(f"sequence digit {digit_value} is missing from labels")
+        index = int(matches[0])
+        selected.append((digit_value, images[index], ids[index]))
+
+    sensory_area = task.area_map["sensory"]
+    coding_area = task.area_map["coding"]
+    _reset_mnist_evaluation_state(network, task)
+
+    trajectory: list[int] = []
+    overlap_trajectory: list[list[float]] = []
+    rows: list[dict[str, object]] = []
+    sequence_step = 0
+
+    for phase_index, (digit, image, instance_id) in enumerate(selected):
+        stimulus = _mnist_stimulus(network, task, image)
+        for step_in_phase in range(steps_per_digit):
+            network.step(
+                external_stimuli={sensory_area: stimulus},
+                plasticity_on=False,
+                biases={coding_area: task.coding_bias},
+            )
+            active = network.get_assembly(coding_area)
+            prediction = decode_mnist_class(active, task)
+            overlaps = _mnist_overlap_vector(active, task)
+            trajectory.append(prediction)
+            overlap_trajectory.append(overlaps)
+
+            final_overlaps = np.asarray(overlaps, dtype=np.float64)
+            margin = correct_class_margin(final_overlaps, digit)
+            row = {
+                "experiment": "mnist_sequence",
+                "seed": getattr(task, "seed", None),
+                "theta_id": getattr(task, "theta_id", None),
+                "n": task.n,
+                "k": task.k,
+                "p": task.p,
+                "beta": task.beta,
+                "t": sequence_step,
+                "sequence_step": sequence_step,
+                "phase_index": phase_index,
+                "phase_digit": digit,
+                "step_in_phase": step_in_phase,
+                "steps_per_digit": steps_per_digit,
+                "sequence_digits": list(sequence_digits),
+                "instance_id": instance_id,
+                "target": digit,
+                "prediction": prediction,
+                "correct": prediction == digit,
+                "overlaps": final_overlaps.tolist(),
+                "correct_overlap": margin.correct_overlap,
+                "strongest_wrong_overlap": margin.strongest_wrong_overlap,
+                "margin": margin.margin,
+                "trajectory": list(trajectory),
+                "overlap_trajectory": list(overlap_trajectory),
+                "stimulus_mode": "sequence_held",
+                "plasticity_on": False,
+            }
+            if hasattr(task, "task_seed"):
+                row["task_seed"] = getattr(task, "task_seed")
+            rows.append(row)
+            sequence_step += 1
+
     return rows

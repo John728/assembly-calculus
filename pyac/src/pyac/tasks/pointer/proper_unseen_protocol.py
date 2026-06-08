@@ -132,25 +132,16 @@ def build_proper_unseen_pointer_network(
     rng: np.random.Generator,
 ) -> tuple[Network, ProperUnseenPointerTask]:
     area_n = list_length * assembly_size
-    loop_n = (list_length + 1) * assembly_size  # hop counter: indices 0..list_length
     spec = NetworkSpec(
         areas=[
             AreaSpec(
                 name="cur",
                 n=area_n,
                 k=assembly_size,
-                dynamics_type="recurrent",
-                p_recurrent=density,
+                dynamics_type="feedforward",
             ),
             AreaSpec(name="src", n=area_n, k=assembly_size, dynamics_type="feedforward"),
             AreaSpec(name="dst", n=area_n, k=assembly_size, dynamics_type="feedforward"),
-            AreaSpec(
-                name="loop",
-                n=loop_n,
-                k=assembly_size,
-                dynamics_type="recurrent",
-                p_recurrent=density,
-            ),
             AreaSpec(name="readout", n=area_n, k=assembly_size, dynamics_type="feedforward"),
         ],
         fibers=[
@@ -158,29 +149,19 @@ def build_proper_unseen_pointer_network(
             FiberSpec(src="src", dst="dst", p_fiber=1.0),
             FiberSpec(src="dst", dst="cur", p_fiber=density),
             FiberSpec(src="dst", dst="readout", p_fiber=density),
-            FiberSpec(src="loop", dst="cur", p_fiber=density),
-            FiberSpec(src="cur", dst="loop", p_fiber=density),
         ],
-        beta=plasticity,
+        beta=0.1,
     )
     network = Network(spec, rng)
-
-    # Build hop-counter assemblies for the loop area (one per hop count 0..list_length)
-    hop_assemblies: dict[int, Assembly] = {}
-    for hop_idx in range(list_length + 1):
-        start = hop_idx * assembly_size
-        indices = np.arange(start, start + assembly_size, dtype=np.int64)
-        hop_assemblies[hop_idx] = Assembly(area_name="loop", indices=indices)
-
     task = ProperUnseenPointerTask(
         list_length=list_length,
         assembly_size=assembly_size,
-        area_map={"cur": "cur", "src": "src", "dst": "dst", "loop": "loop", "readout": "readout"},
+        area_map={"cur": "cur", "src": "src", "dst": "dst", "readout": "readout"},
         node_assemblies={
             area_name: _area_assemblies(area_name, list_length, assembly_size)
             for area_name in ["cur", "src", "dst", "readout"]
         },
-        hop_assemblies=hop_assemblies,
+        hop_assemblies={},
         memory_fiber=("src", "dst"),
         episodic_baseline=network.weights[("src", "dst")].copy(),
         controller_fibers=[("cur", "src"), ("dst", "cur"), ("dst", "readout")],
@@ -208,6 +189,9 @@ def train_proper_unseen_controller(
     train_time_budget: int = 10,
 ) -> list[dict[str, int | float | str]]:
     history: list[dict[str, int | float | str]] = []
+
+    # Increase episodes to compensate for lower beta
+    episodes = episodes * 2
 
     for episode in range(episodes):
         pointer = np.asarray(training_lists[int(rng.integers(0, len(training_lists)))], dtype=np.int64)
@@ -613,6 +597,123 @@ def evaluate_proper_unseen_rollout(
     return correct / max(total, 1)
 
 
+def evaluate_proper_unseen_per_instance(
+    network: Network,
+    task: ProperUnseenPointerTask,
+    pointers: list[np.ndarray],
+    *,
+    hops: int,
+    time_budget: int,
+    c: int = 1,
+    samples_per_list: int,
+    rng: np.random.Generator,
+    theta_id: str | None = None,
+) -> list[dict[str, object]]:
+    completed_hops = _completed_hops(time_budget, hops, c)
+    readout_step = completed_hops * c
+    rows: list[dict[str, object]] = []
+    for list_idx, pointer_arr in enumerate(pointers):
+        pointer_arr = np.asarray(pointer_arr, dtype=np.int64)
+        for sample_idx in range(samples_per_list):
+            start_node = int(rng.integers(0, task.list_length))
+            target = int(follow_pointer(pointer_arr, start=start_node, hops=hops))
+            instance_id = f"{theta_id or 'ptr'}-{list_idx}-{sample_idx}-{start_node}-{hops}-{time_budget}-c{c}"
+            trace = rollout_proper_unseen_pointer(
+                network,
+                task,
+                pointer_arr,
+                start_node=start_node,
+                hops=hops,
+                internal_steps=time_budget,
+            )
+            decoded_sequence = [int(v) for v in trace["current_state_nodes"]]
+            sampled_trajectory = _sample_decoded_at_hop_boundaries(
+                decoded_sequence, hops=hops, c=c
+            )
+            true_trajectory = _true_pointer_path(pointer_arr, start_node=start_node, hops=hops)
+            path_acc = _path_accuracy(sampled_trajectory, true_trajectory)
+            first_err = _first_error_index(sampled_trajectory, true_trajectory)
+            final_prediction = _prediction_at_readout(decoded_sequence, readout_step)
+            rows.append({
+                "experiment": "pointer_chasing",
+                "pointer_variant": "proper_unseen",
+                "theta_id": theta_id,
+                "N": task.list_length,
+                "L": hops,
+                "t": time_budget,
+                "c": c,
+                "completed_hops": completed_hops,
+                "readout_step": readout_step,
+                "instance_id": instance_id,
+                "list_idx": list_idx,
+                "sample_idx": sample_idx,
+                "start_node": start_node,
+                "target": target,
+                "prediction": final_prediction,
+                "correct": final_prediction == target,
+                "true_trajectory": true_trajectory,
+                "trajectory": sampled_trajectory,
+                "path_accuracy": path_acc,
+                "first_error_index": first_err,
+                "plasticity_on": True,
+                "episodic_write_plasticity_on": True,
+                "rollout_plasticity_on": False,
+            })
+    return rows
+
+
+def _completed_hops(time_budget: int, hops: int, c: int) -> int:
+    if c <= 0:
+        return 0
+    return min(max(int(time_budget), 0) // c, max(int(hops), 0))
+
+
+def _sample_decoded_at_hop_boundaries(
+    decoded_sequence: list[int], *, hops: int, c: int
+) -> list[int | None]:
+    max_step = len(decoded_sequence) - 1
+    trajectory: list[int | None] = []
+    for hop_idx in range(hops + 1):
+        step = hop_idx * c
+        if step <= max_step:
+            trajectory.append(decoded_sequence[step])
+        else:
+            trajectory.append(None)
+    return trajectory
+
+
+def _prediction_at_readout(decoded_sequence: list[int], readout_step: int) -> int:
+    if not decoded_sequence:
+        return 0
+    step = min(max(int(readout_step), 0), len(decoded_sequence) - 1)
+    return int(decoded_sequence[step])
+
+
+def _true_pointer_path(
+    pointer: np.ndarray, *, start_node: int, hops: int
+) -> list[int]:
+    path = [start_node]
+    current = start_node
+    for _ in range(hops):
+        current = int(pointer[current])
+        path.append(current)
+    return path
+
+
+def _path_accuracy(decoded_path: list[int | None], true_path: list[int]) -> float:
+    if not true_path:
+        return 1.0
+    matches = sum(1 for d, t in zip(decoded_path, true_path) if d == t)
+    return matches / len(true_path)
+
+
+def _first_error_index(decoded_path: list[int | None], true_path: list[int]) -> int | None:
+    for idx, (d, t) in enumerate(zip(decoded_path, true_path)):
+        if d != t:
+            return idx
+    return None
+
+
 def evaluate_one_hop_composition(
     network: Network,
     task: ProperUnseenPointerTask,
@@ -649,4 +750,3 @@ def evaluate_one_hop_composition(
         "accuracy": float(accuracy),
         "memory_dependent": bool(memory_dependent),
     }
-

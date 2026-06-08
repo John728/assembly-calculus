@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+import json
 
 import matplotlib
 
@@ -420,6 +421,210 @@ def _seed_aggregated_overlap(df: pd.DataFrame) -> pd.DataFrame:
     ))
 
 
+def _parse_overlap_cell(value: Any) -> list[float]:
+    if isinstance(value, list):
+        return [float(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return [float(item) for item in value.tolist()]
+    parsed = json.loads(str(value))
+    if not isinstance(parsed, list):
+        raise ValueError("overlaps must serialize to a list")
+    return [float(item) for item in parsed]
+
+
+def _save_mnist_sequence_plots(mnist_df: pd.DataFrame, output_dir: Path) -> list[Path]:
+    required = {"sequence_step", "phase_digit", "step_in_phase", "prediction", "margin", "overlaps"}
+    missing = required.difference(mnist_df.columns)
+    if missing:
+        missing_text = ", ".join(sorted(missing))
+        raise ValueError(f"MNIST sequence raw results missing required columns: {missing_text}")
+
+    seq_df = pd.DataFrame(mnist_df.copy())
+    seq_df["sequence_step"] = pd.to_numeric(seq_df["sequence_step"]).astype(int)
+    seq_df["phase_digit"] = pd.to_numeric(seq_df["phase_digit"]).astype(int)
+    seq_df["step_in_phase"] = pd.to_numeric(seq_df["step_in_phase"]).astype(int)
+    seq_df = pd.DataFrame(seq_df.sort_values("sequence_step", kind="stable"))
+
+    paths: list[Path] = []
+    boundaries = pd.DataFrame(
+        seq_df.groupby("phase_digit", sort=False, as_index=False).agg(
+            start=("sequence_step", "min"),
+            end=("sequence_step", "max"),
+        )
+    )
+
+    fig, ax = plt.subplots(figsize=(12, 5.2))
+    ax.step(seq_df["sequence_step"], seq_df["phase_digit"], where="post", linewidth=2.5, label="Presented digit")
+    ax.plot(seq_df["sequence_step"], seq_df["prediction"], "o--", linewidth=2, label="Predicted digit")
+    for _, row in boundaries.iterrows():
+        ax.axvspan(float(row["start"]) - 0.5, float(row["end"]) + 0.5, alpha=0.08)
+    ax.set_title("MNIST Sequence Probe: Presented vs Predicted Digit")
+    ax.set_xlabel("Sequence step")
+    ax.set_ylabel("Digit")
+    ax.set_yticks(range(10))
+    ax.set_ylim(-0.5, 9.5)
+    ax.legend()
+    fig.tight_layout()
+    path = output_dir / "mnist_sequence_predictions_0_to_9.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    paths.append(path)
+
+    overlap_rows: list[dict[str, object]] = []
+    for _, row in seq_df.iterrows():
+        overlaps = _parse_overlap_cell(row["overlaps"])
+        for digit, overlap in enumerate(overlaps[:10]):
+            overlap_rows.append(
+                {
+                    "sequence_step": int(row["sequence_step"]),
+                    "digit": digit,
+                    "overlap": overlap,
+                }
+            )
+    overlap_df = pd.DataFrame(overlap_rows)
+    fig, ax = plt.subplots(figsize=(12.5, 6.0))
+    sns.lineplot(data=overlap_df, x="sequence_step", y="overlap", hue="digit", palette="tab10", marker="o", ax=ax)
+    for _, row in boundaries.iterrows():
+        ax.axvline(float(row["start"]) - 0.5, color="0.75", linestyle="--", linewidth=1)
+    ax.set_title("MNIST Sequence Probe: Class Overlaps Over Time")
+    ax.set_xlabel("Sequence step")
+    ax.set_ylabel("Overlap with class prototype")
+    ax.set_ylim(-0.02, 1.05)
+    ax.legend(title="Class", ncol=2)
+    fig.tight_layout()
+    path = output_dir / "mnist_sequence_overlaps_0_to_9.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    paths.append(path)
+
+    fig, ax = plt.subplots(figsize=(12, 5.2))
+    ax.axhline(0.0, color="black", linestyle="--", linewidth=1.2, label="Decision boundary")
+    ax.plot(seq_df["sequence_step"], seq_df["margin"], "o-", linewidth=2.2, label="Target margin")
+    for _, row in boundaries.iterrows():
+        ax.axvspan(float(row["start"]) - 0.5, float(row["end"]) + 0.5, alpha=0.08)
+    ax.set_title("MNIST Sequence Probe: Margin After Digit Switches")
+    ax.set_xlabel("Sequence step")
+    ax.set_ylabel("Margin for currently presented digit")
+    ax.legend()
+    fig.tight_layout()
+    path = output_dir / "mnist_sequence_margin_0_to_9.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    paths.append(path)
+
+    return paths
+
+
+def _save_mnist_sequence_hold_sweep_plots(sequence_df: pd.DataFrame, output_dir: Path) -> list[Path]:
+    required = {
+        "hold_steps",
+        "sequence_step",
+        "phase_digit",
+        "step_in_phase",
+        "prediction",
+        "correct",
+    }
+    missing = required.difference(sequence_df.columns)
+    if missing:
+        missing_text = ", ".join(sorted(missing))
+        raise ValueError(f"MNIST sequence hold sweep missing required columns: {missing_text}")
+
+    sweep_df = pd.DataFrame(sequence_df.copy())
+    sweep_df["hold_steps"] = pd.to_numeric(sweep_df["hold_steps"]).astype(int)
+    sweep_df["sequence_step"] = pd.to_numeric(sweep_df["sequence_step"]).astype(int)
+    sweep_df["phase_digit"] = pd.to_numeric(sweep_df["phase_digit"]).astype(int)
+    sweep_df["step_in_phase"] = pd.to_numeric(sweep_df["step_in_phase"]).astype(int)
+    sweep_df["prediction"] = pd.to_numeric(sweep_df["prediction"]).astype(int)
+    sweep_df["correct"] = _coerce_bool_series(sweep_df["correct"])
+    sweep_df = pd.DataFrame(sweep_df.sort_values(["hold_steps", "sequence_step"], kind="stable"))
+    sweep_df["phase_progress"] = sweep_df["phase_digit"] + sweep_df["step_in_phase"] / sweep_df["hold_steps"]
+
+    paths: list[Path] = []
+    run_columns = [
+        column
+        for column in ("model_name", "seed", "task_seed", "instance_id")
+        if column in sweep_df.columns
+    ]
+    run_phase_columns = [*run_columns, "hold_steps", "phase_digit"]
+
+    final_rows = pd.DataFrame(
+        sweep_df.sort_values("step_in_phase", kind="stable")
+        .groupby(run_phase_columns, as_index=False, observed=False)
+        .tail(1)
+    )
+    final_acc = pd.DataFrame(
+        final_rows.groupby("hold_steps", as_index=False, observed=False).agg(
+            final_accuracy=("correct", "mean")
+        )
+    )
+    fig, ax = plt.subplots(figsize=(8.5, 5.2))
+    sns.barplot(data=final_acc, x="hold_steps", y="final_accuracy", color="#4C72B0", ax=ax)
+    ax.set_title("MNIST Sequence Hold Sweep: Final Phase Accuracy")
+    ax.set_xlabel("Steps per digit")
+    ax.set_ylabel("Final-step accuracy")
+    ax.set_ylim(-0.02, 1.05)
+    fig.tight_layout()
+    path = output_dir / "mnist_sequence_hold_sweep_final_accuracy.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    paths.append(path)
+
+    latency_rows: list[dict[str, object]] = []
+    for key, group in sweep_df.groupby(run_phase_columns, observed=False):
+        if not isinstance(key, tuple):
+            key = (key,)
+        key_values = dict(zip(run_phase_columns, key, strict=True))
+        hold_steps = int(key_values["hold_steps"])
+        digit = int(key_values["phase_digit"])
+        correct_steps = pd.DataFrame(group[group["correct"]])
+        if correct_steps.empty:
+            latency = hold_steps
+            switched = False
+        else:
+            latency = int(correct_steps["step_in_phase"].min())
+            switched = True
+        row = {column: key_values[column] for column in run_columns}
+        row.update({"hold_steps": hold_steps, "phase_digit": digit, "latency": latency, "switched": switched})
+        latency_rows.append(row)
+    latency_df = pd.DataFrame(latency_rows)
+    fig, ax = plt.subplots(figsize=(10.5, 5.5))
+    sns.lineplot(data=latency_df, x="phase_digit", y="latency", hue="hold_steps", marker="o", palette="viridis", ax=ax)
+    ax.set_title("MNIST Sequence Hold Sweep: First Correct Step After Switch")
+    ax.set_xlabel("Presented digit")
+    ax.set_ylabel("First correct step in phase (hold length means never)")
+    ax.set_xticks(range(10))
+    fig.tight_layout()
+    path = output_dir / "mnist_sequence_hold_sweep_switch_latency.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    paths.append(path)
+
+    fig, ax = plt.subplots(figsize=(12.5, 6.0))
+    sns.lineplot(
+        data=sweep_df,
+        x="phase_progress",
+        y="prediction",
+        hue="hold_steps",
+        marker="o",
+        palette="viridis",
+        ax=ax,
+    )
+    ax.set_title("MNIST Sequence Hold Sweep: Prediction Timelines")
+    ax.set_xlabel("Presented digit + within-digit progress")
+    ax.set_ylabel("Predicted digit")
+    ax.set_xticks(range(10))
+    ax.set_yticks(range(10))
+    ax.set_ylim(-0.5, 9.5)
+    ax.legend(title="Steps per digit")
+    fig.tight_layout()
+    path = output_dir / "mnist_sequence_hold_sweep_predictions.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    paths.append(path)
+
+    return paths
+
+
 def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) -> list[Path]:
     sns.set_theme(style="whitegrid", context="talk")
     output_path = Path(plots_dir)
@@ -442,12 +647,26 @@ def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) 
     mnist_df["correct_overlap"] = pd.to_numeric(mnist_df["correct_overlap"])
     mnist_df["strongest_wrong_overlap"] = pd.to_numeric(mnist_df["strongest_wrong_overlap"])
 
+    all_paths: list[Path] = []
+
+    if "experiment" in mnist_df.columns and (mnist_df["experiment"].astype(str) == "mnist_sequence").any():
+        sequence_mask = mnist_df["experiment"].astype(str) == "mnist_sequence"
+        sequence_df = pd.DataFrame(mnist_df[sequence_mask].copy())
+        hold_column = "hold_steps" if "hold_steps" in sequence_df.columns else "steps_per_digit"
+        hold_count = pd.to_numeric(sequence_df[hold_column]).nunique() if hold_column in sequence_df.columns else 1
+        if hold_count > 1 and "hold_steps" in sequence_df.columns:
+            all_paths.extend(_save_mnist_sequence_hold_sweep_plots(sequence_df, output_path))
+        else:
+            all_paths.extend(_save_mnist_sequence_plots(sequence_df, output_path))
+        mnist_df = pd.DataFrame(mnist_df[~sequence_mask].copy())
+
+    if mnist_df.empty:
+        return all_paths
+
     # Seed-first aggregation (§3)
     acc_df = _seed_aggregated_accuracy(mnist_df)
     mar_df = _seed_aggregated_margin(mnist_df)
     ov_df = _seed_aggregated_overlap(mnist_df)
-
-    all_paths: list[Path] = []
 
     has_se = "se" in acc_df.columns
 
@@ -607,3 +826,134 @@ def generate_unseen_ac_plots(raw_results_csv: str | Path, output_dir: str | Path
         _save_ac_resource_tradeoff(ac_df, output_path, "size_tradeoff_unseen_ac.png", "Unseen AC: assembly size tradeoff"),
         _save_max_solved_hop(ac_df, output_path).rename(output_path / "max_solved_hop_unseen_ac.png"),
     ]
+
+
+def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) -> list[Path]:
+    sns.set_theme(style="whitegrid", context="talk")
+    output_path = Path(plots_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    df = pd.read_csv(raw_results_csv)
+    required = {"experiment", "L", "t", "correct", "path_accuracy", "first_error_index"}
+    missing = required.difference(df.columns)
+    if missing:
+        raise ValueError(f"Pointer results missing required columns: {', '.join(sorted(missing))}")
+
+    pdf = pd.DataFrame(df[df["experiment"].astype(str) == "pointer_chasing"].copy())
+    if pdf.empty:
+        return []
+
+    pdf["L"] = pd.to_numeric(pdf["L"]).astype(int)
+    pdf["t"] = pd.to_numeric(pdf["t"]).astype(int)
+    pdf["correct"] = _coerce_bool_series(pdf["correct"])
+    pdf["accuracy"] = pd.to_numeric(pdf["accuracy"], errors="coerce")
+    pdf["path_accuracy"] = pd.to_numeric(pdf["path_accuracy"], errors="coerce")
+    pdf["first_error_index"] = pd.to_numeric(pdf["first_error_index"], errors="coerce")
+
+    def _agg(df_sub: pd.DataFrame) -> pd.DataFrame:
+        if "seed" in df_sub.columns and df_sub["seed"].nunique() > 1:
+            seed_acc = df_sub.groupby(["L", "t", "seed"])["accuracy"].mean().reset_index()
+            acc_by_lt = seed_acc.groupby(["L", "t"])["accuracy"].mean().reset_index()
+            acc_by_lt = acc_by_lt.rename(columns={"accuracy": "accuracy_mean"})
+        else:
+            acc_by_lt = df_sub.groupby(["L", "t"])["accuracy"].mean().reset_index()
+            acc_by_lt = acc_by_lt.rename(columns={"accuracy": "accuracy_mean"})
+        return acc_by_lt
+
+    acc_df = _agg(pdf)
+
+    paths: list[Path] = []
+
+    # Heatmap Acc(L,t)
+    unique_L = sorted(acc_df["L"].unique())
+    unique_t = sorted(acc_df["t"].unique())
+    heatmap_data = np.full((len(unique_L), len(unique_t)), np.nan)
+    for i, L_val in enumerate(unique_L):
+        mask = acc_df["L"] == L_val
+        for j, t_val in enumerate(unique_t):
+            val = acc_df.loc[mask & (acc_df["t"] == t_val), "accuracy_mean"]
+            if len(val) > 0:
+                heatmap_data[i, j] = val.iloc[0]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    im = ax.imshow(heatmap_data, aspect="auto", origin="lower", cmap="viridis", vmin=0, vmax=1)
+    ax.set_xticks(range(len(unique_t)))
+    ax.set_xticklabels([str(t) for t in unique_t])
+    ax.set_yticks(range(len(unique_L)))
+    ax.set_yticklabels([str(L) for L in unique_L])
+    ax.set_xlabel("t (internal time)")
+    ax.set_ylabel("L (pointer depth)")
+    ax.set_title("Pointer Chasing: Accuracy Heatmap Acc(L,t)")
+    plt.colorbar(im, ax=ax, label="Mean Accuracy")
+    fig.tight_layout()
+    heatmap_path = output_path / "pointer_accuracy_heatmap_L_t.png"
+    fig.savefig(heatmap_path, dpi=200)
+    plt.close(fig)
+    paths.append(heatmap_path)
+
+    # Accuracy vs t by L
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for L_val in unique_L:
+        L_data = acc_df[acc_df["L"] == L_val]
+        ax.plot(L_data["t"], L_data["accuracy_mean"], marker="o", label=f"L={L_val}")
+    ax.set_xlabel("t (internal time)")
+    ax.set_ylabel("Mean Accuracy")
+    ax.set_title("Pointer Chasing: Accuracy vs t by Chain Length")
+    ax.legend(title="L")
+    ax.set_ylim(-0.05, 1.05)
+    fig.tight_layout()
+    t_path = output_path / "pointer_accuracy_vs_t_by_L.png"
+    fig.savefig(t_path, dpi=200)
+    plt.close(fig)
+    paths.append(t_path)
+
+    # Accuracy vs L by t
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for t_val in unique_t:
+        t_data = acc_df[acc_df["t"] == t_val]
+        ax.plot(t_data["L"], t_data["accuracy_mean"], marker="s", label=f"t={t_val}")
+    ax.set_xlabel("L (pointer depth)")
+    ax.set_ylabel("Mean Accuracy")
+    ax.set_title("Pointer Chasing: Accuracy vs Depth by Time Budget")
+    ax.legend(title="t")
+    ax.set_ylim(-0.05, 1.05)
+    fig.tight_layout()
+    L_path = output_path / "pointer_accuracy_vs_L_by_t.png"
+    fig.savefig(L_path, dpi=200)
+    plt.close(fig)
+    paths.append(L_path)
+
+    # Path accuracy vs L, preserving the time-budget dimension.
+    if pdf["path_accuracy"].notna().any():
+        path_acc_by_L_t = pdf.groupby(["L", "t"])["path_accuracy"].mean().reset_index()
+        fig, ax = plt.subplots(figsize=(8, 5))
+        for t_val in unique_t:
+            t_data = path_acc_by_L_t[path_acc_by_L_t["t"] == t_val]
+            ax.plot(t_data["L"], t_data["path_accuracy"], marker="o", label=f"t={t_val}")
+        ax.set_xlabel("L (pointer depth)")
+        ax.set_ylabel("Mean Path Accuracy")
+        ax.set_title("Pointer Chasing: Path Accuracy vs Depth by Time Budget")
+        ax.legend(title="t")
+        ax.set_ylim(-0.05, 1.05)
+        fig.tight_layout()
+        pa_path = output_path / "pointer_path_accuracy_vs_L.png"
+        fig.savefig(pa_path, dpi=200)
+        plt.close(fig)
+        paths.append(pa_path)
+
+    # First error histogram
+    first_err = pdf["first_error_index"].dropna()
+    if not first_err.empty:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.hist(first_err.astype(int), bins=range(int(first_err.max()) + 2), align="left",
+                edgecolor="black", alpha=0.7)
+        ax.set_xlabel("First Error Index")
+        ax.set_ylabel("Count")
+        ax.set_title("Pointer Chasing: First Error Index Distribution")
+        fig.tight_layout()
+        fe_path = output_path / "pointer_first_error_histogram.png"
+        fig.savefig(fe_path, dpi=200)
+        plt.close(fig)
+        paths.append(fe_path)
+
+    return paths

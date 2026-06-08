@@ -1,0 +1,29 @@
+suite_name: mnist-ac-sequence-0-to-9
+output_dir: results/mnist/probes/sequence_0_to_9
+seeds: [42]
+conditions:
+  - list_type: MNIST
+    N: 10
+    num_train_lists: 50000
+    num_test_lists: 200
+    k_train_min: 1
+    k_train_max: 1
+    k_test_min: 0
+    k_test_max: 29
+models:
+  MNIST_AC:
+    - model_name: MNIST-AC-Sequence-0-to-9
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50000
+      test_limit: 200
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 1.0
+      presentation_rounds: 100
+      settle_steps: 1
+      class_organized: true
+      sequence_digits: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      steps_per_digit: 3
