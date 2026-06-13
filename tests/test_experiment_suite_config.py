@@ -133,9 +133,6 @@ def test_kept_unseen_configs_use_expected_output_roots() -> None:
 
     root = Path(__file__).resolve().parents[1]
     config_expectations = {
-        root / "experiments" / "unseen_mlp_dev.yaml": "outputs/experiments/unseen-mlp-dev",
-        root / "experiments" / "unseen_mlp_paper.yaml": "outputs/experiments/unseen-mlp-paper",
-        root / "experiments" / "unseen_ac_proper_dev.yaml": "outputs/experiments/unseen-ac-proper-dev",
         root / "experiments" / "unseen_ac_proper_paper.yaml": "outputs/experiments/unseen-ac-proper-paper",
     }
 
@@ -144,76 +141,25 @@ def test_kept_unseen_configs_use_expected_output_roots() -> None:
         assert config.output_dir == expected_output
 
 
-def test_unseen_mlp_dev_and_paper_configs_preserve_story_ranges() -> None:
-    from experiment_suite.config import load_suite_config
-
-    root = Path(__file__).resolve().parents[1]
-    dev_cfg = load_suite_config(root / "experiments" / "unseen_mlp_dev.yaml")
-    paper_cfg = load_suite_config(root / "experiments" / "unseen_mlp_paper.yaml")
-
-    dev_condition = dev_cfg.conditions[0]
-    paper_condition = paper_cfg.conditions[0]
-
-    assert dev_condition.list_type == "Unseen"
-    assert paper_condition.list_type == "Unseen"
-    assert dev_condition.N == paper_condition.N
-    assert dev_condition.k_train_max == paper_condition.k_train_max
-    assert paper_condition.k_test_max >= dev_condition.k_test_max
-    assert len(paper_cfg.seeds) >= len(dev_cfg.seeds)
-    assert {model.model_name for model in dev_cfg.models["MLP"]}
-    assert {model.model_name for model in paper_cfg.models["MLP"]}
-
-
 def test_proper_unseen_ac_configs_enable_trace_examples() -> None:
     from experiment_suite.config import load_suite_config
 
     root = Path(__file__).resolve().parents[1]
-    dev_cfg = load_suite_config(root / "experiments" / "unseen_ac_proper_dev.yaml")
     paper_cfg = load_suite_config(root / "experiments" / "unseen_ac_proper_paper.yaml")
 
-    assert dev_cfg.trace_plots is not None
     assert paper_cfg.trace_plots is not None
-    assert dev_cfg.trace_plots["enabled"] is True
     assert paper_cfg.trace_plots["enabled"] is True
-    assert str(dev_cfg.trace_plots["hops"]) == "4"
-    assert str(paper_cfg.trace_plots["hops"]) == "4"
+    assert str(paper_cfg.trace_plots["hops"]) == "3"
 
 
-def test_only_kept_dev_and_paper_configs_exist() -> None:
+def test_proper_unseen_ac_paper_configs_use_fixed_time_budgets() -> None:
     from experiment_suite.config import load_suite_config
 
     root = Path(__file__).resolve().parents[1]
-    expected = {
-        "unseen_mlp": ("Unseen", "MLP", "outputs/experiments/unseen-mlp-dev", "outputs/experiments/unseen-mlp-paper"),
-        "unseen_ac_proper": ("Unseen", "AC", "outputs/experiments/unseen-ac-proper-dev", "outputs/experiments/unseen-ac-proper-paper"),
-    }
-
-    for stem, (list_type, family, dev_output, paper_output) in expected.items():
-        dev_cfg = load_suite_config(root / "experiments" / f"{stem}_dev.yaml")
-        paper_cfg = load_suite_config(root / "experiments" / f"{stem}_paper.yaml")
-
-        assert dev_cfg.conditions[0].list_type == list_type
-        assert paper_cfg.conditions[0].list_type == list_type
-        assert set(dev_cfg.models.keys()) == {family}
-        assert set(paper_cfg.models.keys()) == {family}
-        assert dev_cfg.output_dir == dev_output
-        assert paper_cfg.output_dir == paper_output
-
-
-def test_proper_unseen_ac_dev_and_paper_configs_use_fixed_time_budgets() -> None:
-    from experiment_suite.config import load_suite_config
-
-    root = Path(__file__).resolve().parents[1]
-    dev_cfg = load_suite_config(root / "experiments" / "unseen_ac_proper_dev.yaml")
     paper_cfg = load_suite_config(root / "experiments" / "unseen_ac_proper_paper.yaml")
 
-    assert dev_cfg.conditions[0].list_type == "Unseen"
     assert paper_cfg.conditions[0].list_type == "Unseen"
-    assert dev_cfg.output_dir == "outputs/experiments/unseen-ac-proper-dev"
     assert paper_cfg.output_dir == "outputs/experiments/unseen-ac-proper-paper"
-    assert all(model.values["protocol_variant"] == "proper_unseen" for model in dev_cfg.models["AC"])
     assert all(model.values["protocol_variant"] == "proper_unseen" for model in paper_cfg.models["AC"])
-    assert all(not bool(model.values.get("t_equals_k", True)) for model in dev_cfg.models["AC"])
     assert all(not bool(model.values.get("t_equals_k", True)) for model in paper_cfg.models["AC"])
-    assert all(len(model.values.get("time_budgets", [])) == 1 for model in dev_cfg.models["AC"])
     assert all(len(model.values.get("time_budgets", [])) == 1 for model in paper_cfg.models["AC"])
