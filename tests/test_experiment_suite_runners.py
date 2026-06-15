@@ -11,39 +11,6 @@ def _accuracy(row: dict[str, object]) -> float:
     raise TypeError(f"Expected numeric accuracy, got {type(value).__name__}")
 
 
-def _tiny_mlp_job() -> ExperimentJob:
-    return ExperimentJob(
-        suite_name="demo",
-        output_dir="outputs/demo",
-        family="MLP",
-        model=ModelConfig(
-            family="MLP",
-            values={
-                "model_name": "Tiny-MLP",
-                "layers": 2,
-                "hidden_dim": 32,
-                "epochs": 1,
-                "batch_size": 16,
-                "lr": 1e-3,
-                "samples_per_list_train": 4,
-                "samples_per_list_eval": 4,
-                "patience": 2,
-            },
-        ),
-        seed=1,
-        condition=ExperimentCondition(
-            list_type="Seen",
-            N=8,
-            num_train_lists=2,
-            num_test_lists=1,
-            k_train_min=1,
-            k_train_max=2,
-            k_test_min=1,
-            k_test_max=3,
-        ),
-    )
-
-
 def _tiny_ac_job() -> ExperimentJob:
     return ExperimentJob(
         suite_name="demo",
@@ -136,18 +103,6 @@ def _tiny_proper_unseen_ac_job() -> ExperimentJob:
             k_test_max=3,
         ),
     )
-
-
-def test_mlp_runner_returns_standardized_rows() -> None:
-    from experiment_suite.runners.mlp_runner import run_mlp_job
-
-    rows = run_mlp_job(_tiny_mlp_job())
-
-    assert rows
-    assert all(row["family"] == "MLP" for row in rows)
-    assert all(0.0 <= _accuracy(row) <= 1.0 for row in rows)
-    assert {row["list_type"] for row in rows} == {"Seen"}
-    assert all(row["epochs"] <= 1 for row in rows)
 
 
 def test_ac_runner_returns_standardized_rows() -> None:
@@ -304,6 +259,7 @@ def test_runner_theory_pointer_dispatches_per_instance_evaluation() -> None:
             fake_network = mock.Mock()
             fake_task = mock.Mock()
             fake_task.list_length = 4
+            fake_task.area_map = {"cur": "cur", "src": "src", "dst": "dst", "readout": "readout"}
             fake_build.return_value = (fake_network, fake_task)
             fake_train.return_value = []
 

@@ -1,0 +1,15 @@
+suite_name: "bs-ac"
+output_dir: "outputs/experiments/bs-ac"
+seeds: [42, 43, 44, 45, 46]
+conditions:
+  - list_type: BinarySearch
+    array_sizes: [4, 8, 16]
+models:
+  BS_AC:
+    - model_name: AC-BS-Explicit
+      assembly_size: 2
+      density: 1.0
+      plasticity: 0.1
+      samples_per_size: 15
+      c_values: [1, 2, 3]
+      rounds: -1

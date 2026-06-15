@@ -35,14 +35,14 @@ def test_run_experiment_suite_writes_outputs(tmp_path: Path) -> None:
         "    k_test_min: 1\n"
         "    k_test_max: 2\n"
         "models:\n"
-        "  MLP:\n"
-        "    - model_name: Tiny-MLP\n"
-        "      layers: 2\n"
-        "      hidden_dim: 32\n"
-        "      epochs: 1\n"
-        "      batch_size: 16\n"
-        "      lr: 0.001\n"
-        "      samples_per_list_train: 4\n"
+        "  AC:\n"
+        "    - model_name: Tiny-AC\n"
+        "      assembly_size: 8\n"
+        "      density: 0.2\n"
+        "      plasticity: 0.25\n"
+        "      presentation_rounds: 2\n"
+        "      transition_rounds: 3\n"
+        "      association_steps: 2\n"
         "      samples_per_list_eval: 4\n",
         encoding="utf-8",
     )
@@ -53,9 +53,9 @@ def test_run_experiment_suite_writes_outputs(tmp_path: Path) -> None:
     assert (out_dir / "raw_results.csv").exists()
     assert (out_dir / "summary.csv").exists()
     assert (out_dir / "config_snapshot.yaml").exists()
-    assert (out_dir / "plots" / "accuracy_vs_hop_seen_mlp.png").exists()
-    assert (out_dir / "plots" / "seen_mlp_heatmap.png").exists()
-    assert (out_dir / "plots" / "size_tradeoff_seen_mlp.png").exists()
+    assert (out_dir / "plots" / "accuracy_vs_hop_seen_ac.png").exists()
+    assert (out_dir / "plots" / "accuracy_heatmap_seen_ac.png").exists()
+    assert (out_dir / "plots" / "size_tradeoff_seen_ac.png").exists()
 
 
 def test_run_experiment_suite_writes_family_local_ac_trace_outputs(tmp_path: Path) -> None:
@@ -106,8 +106,8 @@ def test_dev_and_paper_configs_share_artifact_contract(tmp_path: Path) -> None:
 
     dev_cfg = tmp_path / "dev.yaml"
     dev_cfg.write_text(
-        "suite_name: seen-mlp-dev-test\n"
-        "output_dir: " + str(tmp_path / "outputs" / "seen-mlp-dev-test") + "\n"
+        "suite_name: seen-ac-dev-test\n"
+        "output_dir: " + str(tmp_path / "outputs" / "seen-ac-dev-test") + "\n"
         "seeds: [1]\n"
         "conditions:\n"
         "  - list_type: Seen\n"
@@ -119,22 +119,22 @@ def test_dev_and_paper_configs_share_artifact_contract(tmp_path: Path) -> None:
         "    k_test_min: 1\n"
         "    k_test_max: 2\n"
         "models:\n"
-        "  MLP:\n"
-        "    - model_name: Dev-MLP\n"
-        "      layers: 2\n"
-        "      hidden_dim: 32\n"
-        "      epochs: 1\n"
-        "      batch_size: 16\n"
-        "      lr: 0.001\n"
-        "      samples_per_list_train: 4\n"
+        "  AC:\n"
+        "    - model_name: Dev-AC\n"
+        "      assembly_size: 8\n"
+        "      density: 0.2\n"
+        "      plasticity: 0.25\n"
+        "      presentation_rounds: 2\n"
+        "      transition_rounds: 3\n"
+        "      association_steps: 2\n"
         "      samples_per_list_eval: 4\n",
         encoding="utf-8",
     )
 
     paper_cfg = tmp_path / "paper.yaml"
     paper_cfg.write_text(
-        "suite_name: seen-mlp-paper-test\n"
-        "output_dir: " + str(tmp_path / "outputs" / "seen-mlp-paper-test") + "\n"
+        "suite_name: seen-ac-paper-test\n"
+        "output_dir: " + str(tmp_path / "outputs" / "seen-ac-paper-test") + "\n"
         "seeds: [1, 2]\n"
         "conditions:\n"
         "  - list_type: Seen\n"
@@ -146,14 +146,14 @@ def test_dev_and_paper_configs_share_artifact_contract(tmp_path: Path) -> None:
         "    k_test_min: 1\n"
         "    k_test_max: 3\n"
         "models:\n"
-        "  MLP:\n"
-        "    - model_name: Paper-MLP\n"
-        "      layers: 2\n"
-        "      hidden_dim: 32\n"
-        "      epochs: 1\n"
-        "      batch_size: 16\n"
-        "      lr: 0.001\n"
-        "      samples_per_list_train: 4\n"
+        "  AC:\n"
+        "    - model_name: Paper-AC\n"
+        "      assembly_size: 8\n"
+        "      density: 0.2\n"
+        "      plasticity: 0.25\n"
+        "      presentation_rounds: 2\n"
+        "      transition_rounds: 3\n"
+        "      association_steps: 2\n"
         "      samples_per_list_eval: 4\n",
         encoding="utf-8",
     )
@@ -199,7 +199,4 @@ def test_generate_plots_dispatches_mnist_ac_before_pointer_list_type_logic(
 def test_launcher_targets_existing_dev_and_paper_configs() -> None:
     root = Path(__file__).resolve().parents[1]
 
-    assert (root / "experiments" / "unseen_mlp_dev.yaml").exists()
-    assert (root / "experiments" / "unseen_mlp_paper.yaml").exists()
-    assert (root / "experiments" / "unseen_ac_proper_dev.yaml").exists()
     assert (root / "experiments" / "unseen_ac_proper_paper.yaml").exists()

@@ -18,7 +18,7 @@ models:
       assembly_size: 12
       density: 0.45
       plasticity: 0.3
-      train_episodes: 24
+      train_episodes: 48
       samples_per_list_eval: 16
       time_budgets: [0, 1, 2, 3, 4, 6, 8, 10]
       c_values: [1, 2, 4, 8]

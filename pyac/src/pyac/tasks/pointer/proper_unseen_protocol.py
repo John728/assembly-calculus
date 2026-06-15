@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+import copy
 import numpy as np
 from scipy.sparse import csr_matrix
 
@@ -597,8 +598,9 @@ def evaluate_proper_unseen_rollout(
         pointer_arr = np.asarray(pointer, dtype=np.int64)
         for _ in range(samples_per_list):
             start_node = int(rng.integers(0, task.list_length))
+            net_copy = copy.deepcopy(network)
             trace = rollout_proper_unseen_pointer(
-                network,
+                net_copy,
                 task,
                 pointer_arr,
                 start_node=start_node,
@@ -634,8 +636,9 @@ def evaluate_proper_unseen_per_instance(
             start_node = int(rng.integers(0, task.list_length))
             target = int(follow_pointer(pointer_arr, start=start_node, hops=hops))
             instance_id = f"{theta_id or 'ptr'}-{list_idx}-{sample_idx}-{start_node}-{hops}-{time_budget}-c{c}"
+            net_copy = copy.deepcopy(network)
             trace = rollout_proper_unseen_pointer(
-                network,
+                net_copy,
                 task,
                 pointer_arr,
                 start_node=start_node,

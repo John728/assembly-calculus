@@ -19,6 +19,14 @@ def _dispatch_job(job):
         from experiment_suite.runners.mnist_ac_runner import run_mnist_ac_job
 
         return run_mnist_ac_job(job), None
+    if job.family == "DFA_AC":
+        from experiment_suite.runners.dfa_ac_runner import run_dfa_ac_job
+        
+        return run_dfa_ac_job(job), None
+    if job.family == "BS_AC":
+        from experiment_suite.runners.bs_ac_runner import run_bs_ac_job
+        
+        return run_bs_ac_job(job), None
     raise ValueError(f"Unsupported family: {job.family}")
 
 
@@ -44,7 +52,8 @@ def _generate_plots(rows: list[dict[str, object]], output_dir: Path) -> None:
         suite_plots.generate_mnist_ac_plots(raw_results_csv, plots_dir)
         return
 
-    if "pointer_chasing" in experiments:
+
+    if "pointer_chasing" in experiments or "dfa" in experiments or "binary_search" in experiments:
         from experiment_suite import plots as suite_plots
 
         raw_results_csv = output_dir / "raw_results.csv"

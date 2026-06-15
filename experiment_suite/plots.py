@@ -839,7 +839,7 @@ def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path
     if missing:
         raise ValueError(f"Pointer results missing required columns: {', '.join(sorted(missing))}")
 
-    pdf = pd.DataFrame(df[df["experiment"].astype(str) == "pointer_chasing"].copy())
+    pdf = pd.DataFrame(df[df["experiment"].astype(str).isin(["pointer_chasing", "dfa", "binary_search"])].copy())
     if pdf.empty:
         return []
 
@@ -882,7 +882,7 @@ def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path
     ax.set_yticks(range(len(unique_L)))
     ax.set_yticklabels([str(L) for L in unique_L])
     ax.set_xlabel("t (internal time)")
-    ax.set_ylabel("L (pointer depth)")
+    ax.set_ylabel("K (Hop Depth)")
     ax.set_title("Pointer Chasing: Accuracy Heatmap Acc(L,t)")
     plt.colorbar(im, ax=ax, label="Mean Accuracy")
     fig.tight_layout()
@@ -912,7 +912,7 @@ def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path
     for t_val in unique_t:
         t_data = acc_df[acc_df["t"] == t_val]
         ax.plot(t_data["L"], t_data["accuracy_mean"], marker="s", label=f"t={t_val}")
-    ax.set_xlabel("L (pointer depth)")
+    ax.set_xlabel("K (Hop Depth)")
     ax.set_ylabel("Mean Accuracy")
     ax.set_title("Pointer Chasing: Accuracy vs Depth by Time Budget")
     ax.legend(title="t")
@@ -930,16 +930,37 @@ def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path
         for t_val in unique_t:
             t_data = path_acc_by_L_t[path_acc_by_L_t["t"] == t_val]
             ax.plot(t_data["L"], t_data["path_accuracy"], marker="o", label=f"t={t_val}")
-        ax.set_xlabel("L (pointer depth)")
+        ax.set_xlabel("K (Hop Depth)")
         ax.set_ylabel("Mean Path Accuracy")
         ax.set_title("Pointer Chasing: Path Accuracy vs Depth by Time Budget")
         ax.legend(title="t")
         ax.set_ylim(-0.05, 1.05)
-        fig.tight_layout()
-        pa_path = output_path / "pointer_path_accuracy_vs_L.png"
-        fig.savefig(pa_path, dpi=200)
-        plt.close(fig)
-        paths.append(pa_path)
+        plt.tight_layout()
+        plt.savefig(output_path / "pointer_path_accuracy_vs_L.png", dpi=150)
+        plt.close()
+        paths.append(output_path / "pointer_path_accuracy_vs_L.png")
+
+    # NEW: Shortcut Ablation Plot
+    # We interpret specific Ls as shortcuts for a nominal depth of 8
+    shortcut_map = {8: "Standard (M)", 4: "M² Shortcuts", 2: "M⁴ Shortcuts", 1: "M⁸ Shortcuts"}
+    shortcut_df = acc_df[acc_df["L"].isin(shortcut_map.keys())].copy()
+    if not shortcut_df.empty:
+        plt.figure(figsize=(8, 6))
+        for L_val in sorted(shortcut_map.keys(), reverse=True):
+            sub_df = shortcut_df[shortcut_df["L"] == L_val].sort_values("t")
+            if not sub_df.empty:
+                plt.plot(sub_df["t"], sub_df["accuracy_mean"], marker="s", label=f"{shortcut_map[L_val]}")
+        
+        plt.axhline(0.95, color="gray", linestyle="--", alpha=0.7)
+        plt.title("Time-Size Tradeoff: Shortcuts vs Execution Time (Nominal Depth 8)")
+        plt.xlabel("Internal Execution Time (t)")
+        plt.ylabel("Accuracy")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(output_path / "pointer_shortcut_ablation.png", dpi=150)
+        plt.close()
+        paths.append(output_path / "pointer_shortcut_ablation.png")
 
     # First error histogram
     first_err = pdf["first_error_index"].dropna()

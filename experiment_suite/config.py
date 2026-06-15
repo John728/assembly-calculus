@@ -16,6 +16,7 @@ class ExperimentCondition:
     k_train_max: int = 1
     k_test_min: int = 1
     k_test_max: int = 1
+    extra: dict[str, object] = __import__('dataclasses').field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,8 @@ def _to_str(value: object, field_name: str) -> str:
 
 
 def _condition_from_mapping(mapping: dict[str, object]) -> ExperimentCondition:
+    known = {"list_type", "N", "num_train_lists", "num_test_lists", "k_train_min", "k_train_max", "k_test_min", "k_test_max"}
+    extra = {k: v for k, v in mapping.items() if k not in known}
     return ExperimentCondition(
         list_type=_to_str(mapping["list_type"], "list_type"),
         N=_to_int(mapping.get("N", 0), "N"),
@@ -68,6 +71,7 @@ def _condition_from_mapping(mapping: dict[str, object]) -> ExperimentCondition:
         k_train_max=_to_int(mapping.get("k_train_max", 1), "k_train_max"),
         k_test_min=_to_int(mapping.get("k_test_min", 1), "k_test_min"),
         k_test_max=_to_int(mapping.get("k_test_max", 1), "k_test_max"),
+        extra=extra,
     )
 
 

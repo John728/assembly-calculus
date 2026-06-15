@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import sys
 from importlib import import_module
 from pathlib import Path
@@ -98,8 +99,8 @@ def run_ac_job_with_artifacts(job: ExperimentJob) -> tuple[list[dict[str, object
                 for t_budget in time_budgets:
                     for c_val in c_values:
                         instance_rows = evaluate_proper_unseen_per_instance(
-                            network,
-                            task,
+                            copy.deepcopy(network),
+                            copy.deepcopy(task),
                             test_lists,
                             hops=hop,
                             time_budget=t_budget,
@@ -129,8 +130,8 @@ def run_ac_job_with_artifacts(job: ExperimentJob) -> tuple[list[dict[str, object
         else:
             for hop in range(job.condition.k_test_min, job.condition.k_test_max + 1):
                 accuracy = evaluate_proper_unseen_rollout(
-                    network,
-                    task,
+                    copy.deepcopy(network),
+                    copy.deepcopy(task),
                     test_lists,
                     hops=hop,
                     internal_steps=hop,

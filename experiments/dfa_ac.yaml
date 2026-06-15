@@ -1,0 +1,16 @@
+suite_name: dfa-ac
+output_dir: outputs/experiments/dfa-ac
+seeds: [1, 2, 3]
+conditions:
+  - list_type: DFA
+    num_states: 5
+    num_symbols: 2
+    sequence_lengths: [10, 20, 50, 100]
+models:
+  DFA_AC:
+    - model_name: AC-DFA-Explicit
+      assembly_size: 32
+      density: 1.0
+      plasticity: 0.1
+      samples_per_sequence: 10
+      c_values: [1, 2, 3, 4, 8]
