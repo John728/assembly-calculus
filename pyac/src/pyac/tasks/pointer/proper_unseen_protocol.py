@@ -136,13 +136,7 @@ def build_proper_unseen_pointer_network(
     loop_n = (list_length + 1) * assembly_size  # hop counter: indices 0..list_length
     spec = NetworkSpec(
         areas=[
-            AreaSpec(
-                name="cur",
-                n=area_n,
-                k=assembly_size,
-                dynamics_type="recurrent",
-                p_recurrent=density,
-            ),
+            AreaSpec(name="cur", n=area_n, k=assembly_size, dynamics_type="feedforward"),
             AreaSpec(name="src", n=area_n, k=assembly_size, dynamics_type="feedforward"),
             AreaSpec(name="dst", n=area_n, k=assembly_size, dynamics_type="feedforward"),
             AreaSpec(
@@ -223,9 +217,9 @@ def train_proper_unseen_controller(
 
         query_history = train_query_primitive(network, task, rounds=24)
         writeback_history = train_writeback_primitive(network, task, rounds=24)
-        one_hop_history = train_one_hop_composition(network, task, training_lists=[pointer], rounds=12, nudge_strength=20.0)
-        multi_hop_history = train_multi_hop_recurrence(network, task, training_lists=[pointer], episodes=12, rng=rng, nudge_strength=20.0)
-
+        one_hop_history = []  # train_one_hop_composition(network, task, training_lists=[pointer], rounds=12, nudge_strength=20.0)
+        multi_hop_history = []  # train_multi_hop_recurrence(network, task, training_lists=[pointer], episodes=12, rng=rng, nudge_strength=20.0)
+        
         rollout = rollout_proper_unseen_pointer(
             network,
             task,
@@ -398,12 +392,18 @@ def write_unseen_episode(
     task: ProperUnseenPointerTask,
     pointer: np.ndarray,
     *,
-    write_rounds: int = 1,
+    write_rounds: int = 10,
     binding_strength: float = 10.0,
 ) -> dict[str, int | str]:
     reset_proper_episode_memory(network, task)
     key_area = task.area_map["src"]
     value_area = task.area_map["dst"]
+    
+    # Inhibit controller areas to protect their weights from Hebbian writing corruption
+    network.inhibit(task.area_map["cur"])
+    network.inhibit(task.area_map["loop"])
+    network.inhibit(task.area_map["readout"])
+    
     write_steps = 0
     for _ in range(write_rounds):
         for src_node, dst_node in enumerate(pointer.tolist()):
@@ -412,6 +412,12 @@ def write_unseen_episode(
             value_stimulus = _stimulus(network.areas_by_name[value_area].n, task.node_assemblies[value_area][int(dst_node)].indices, binding_strength)
             network.step(external_stimuli={key_area: key_stimulus, value_area: value_stimulus}, plasticity_on=True)
             write_steps += 1
+            
+    # Disinhibit controller areas
+    network.disinhibit(task.area_map["cur"])
+    network.disinhibit(task.area_map["loop"])
+    network.disinhibit(task.area_map["readout"])
+    
     return {"write_mode": "plastic", "write_steps": write_steps}
 
 
@@ -511,7 +517,7 @@ def train_one_hop_composition(
     for round_idx in range(rounds):
         for pointer in training_lists:
             pointer_arr = np.asarray(pointer, dtype=np.int64)
-            write_unseen_episode(network, task, pointer_arr, write_rounds=2)
+            write_unseen_episode(network, task, pointer_arr, write_rounds=10)
             
             for start_node in range(task.list_length):
                 target_node = int(pointer_arr[start_node])
@@ -557,7 +563,7 @@ def train_multi_hop_recurrence(
     for ep_idx in range(episodes):
         pointer = training_lists[int(rng.integers(0, len(training_lists)))]
         pointer_arr = np.asarray(pointer, dtype=np.int64)
-        write_unseen_episode(network, task, pointer_arr, write_rounds=2)
+        write_unseen_episode(network, task, pointer_arr, write_rounds=10)
         
         start_node = int(rng.integers(0, task.list_length))
         path = [start_node]

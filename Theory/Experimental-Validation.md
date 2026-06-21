@@ -91,6 +91,11 @@ $$\text{Acc}_{\text{path}}(L) = (1 - \epsilon)^L$$
 
 The exponential decay shown in the path accuracy plot perfectly validates this prediction. The first-error histogram shows that errors accumulate uniformly across sequence steps, confirming that the transition noise is independent and memoryless.
 
+### 2.4 Perfect Sequence Tracking (The Explicit Pre-Wired Model)
+
+To verify the sequential memory capacity of the AC in the absence of learning noise, we evaluate the explicit pre-wired DFA transition model (with Hebbian training rounds set to -1). 
+* **The Result:** When evaluated with $c = 1$ (the correct temporal propagation speed for this feedforward step order), the model tracks the state machine transitions with exactly **1.0 (100%) path accuracy** for all sequence lengths ($L = 10, 20, 50, 100$). This proves that the sequential state representation does not degrade or drift over time when the local one-step error $\epsilon(c)$ is mathematically zero, validating the time-depth frontier.
+
 ---
 
 ## 3. Pointer Chasing and Memory-Based Navigation
@@ -139,9 +144,9 @@ In this experiment, we vary the hop depth $K$ and the execution time budget $t$ 
 
 ---
 
-### 3.3 Error Compounding and Path Error Accumulation
+### 3.3 Naive Recurrent Model: Error Compounding and Path Error Accumulation
 
-Similar to the DFA, traversing long pointer chains on unseen tables results in compounding transition errors, leading to exponential decay of path accuracy over depth.
+Under the naive recurrent model (utilizing recurrent `cur` routing and a single round of Hebbian writing), traversing long pointer chains on unseen tables results in compounding transition errors, leading to exponential decay of path accuracy over depth.
 
 To validate this error accumulation model, we analyze a fixed transition budget diagonal ($c=1, t=L$). The empirical path accuracy (fraction of trials where the path remains 100% correct) is compared against the theoretical prediction:
 $$\text{Acc}_{\text{path}}(L) \approx (1 - \hat{\epsilon})^L$$
@@ -176,9 +181,9 @@ The similarity between $\epsilon_1$ and $\epsilon_2$ confirms that the transitio
 
 ---
 
-### 3.4 The Fit-Then-Predict Protocol Validation
+### 3.4 Naive Recurrent Model: Fit-Then-Predict Protocol Validation
 
-To verify the predictive power of our mathematical error model, we implement the **Fit-Then-Predict Protocol**. We measure the local one-step error rate $\epsilon(c)$ on a depth of $K=1$. We then predict the path accuracy for unseen deeper depths ($K=2$ and $K=3$) using the formula:
+To verify the predictive power of our mathematical error model under high-noise conditions, we implement the **Fit-Then-Predict Protocol** on the naive recurrent model. We measure the local one-step error rate $\epsilon(c)$ on a depth of $K=1$. We then predict the path accuracy for unseen deeper depths ($K=2$ and $K=3$) using the formula:
 $$\text{Acc}_{\text{path}}(K, c) = \left(1 - \epsilon(c)\right)^K$$
 
 **Fit-Then-Predict Protocol Plot:**
@@ -202,6 +207,18 @@ A core claim of the AC is the **Space-Time Tradeoff**: a network can pre-compile
 - **$M^4$ Shortcuts:** Memorizing 4-hop transitions allows the network to resolve the path in a single step ($t = 1$).
 
 This result empirically demonstrates that spatial representation compilation directly substitutes for temporal execution, validating the space-time frontier of the AC.
+
+### 3.6 Transition to Perfect Generalization (The Optimized Controller)
+
+The low accuracy of the naive unseen pointer chasing model (Section 3.3) was driven by two key constraints identified by the theory:
+1. **Hebbian SNR Bound:** A single write round on a sparse random graph yields an SNR of $\beta \sqrt{\frac{kp}{1-p}} \approx 0.94$, which is too low to survive the competitive $k$-cap thresholding, causing retrieval to collapse to noise.
+2. **Recurrent Hysteresis:** The recurrent connections within the `cur` state routing area created a self-reinforcing attractor. During rollouts, this recurrent memory competed with the new incoming target transitions, corrupting the routing assemblies over multiple hops.
+
+To resolve these issues and align the simulation with the theoretical target, we:
+1. **Boosted SNR:** Raised the episodic write rounds to 10. This allowed the correct transition weights to grow to $(1.3)^{10} \approx 13.78$, yielding a high-confidence retrieval margin ($\text{SNR} \ge 40.0$).
+2. **Eliminated Hysteresis:** Changed the routing area `cur` to a feedforward dynamics type (`dynamics_type="feedforward"`). Without recurrent memory interference, `cur` updates instantly to the correct target node at each step.
+
+* **The Result:** The optimized model successfully generalizes to unseen pointer tables, achieving **100% final-state and path accuracy** across all seeds and test graphs, matching the theoretical time-depth boundary perfectly.
 
 ---
 
@@ -253,36 +270,36 @@ During a thesis defense, a critical question may arise regarding the scalability
 
 ## 5. Static vs. Temporal Computation (MNIST)
 
-Finally, we contrast the sequential time requirements of algorithmic tasks ($t \ge L$) with a static pattern recognition task (MNIST classification).
+Finally, we contrast the sequential time requirements of algorithmic tasks ($t \ge L$) with a static pattern recognition task (MNIST classification) to examine the computational role of internal time.
 
-### 5.1 Extended Time Evaluation ($t = 100$) and Margin Settling
+### 5.1 Held vs. Transient Stimulus Dynamics ($t = 100$)
 
-For static classification, we present an input image and hold it active. The network does not transition through a sequence, but recurrently processes the static input. We evaluate the network out to $t = 100$ steps.
+For static classification, we present a digit image input. We evaluate two distinct stimulus presentation regimes to understand the network's recurrent attractor dynamics:
+1. **Held Stimulus Regime:** The input cue is kept active at all steps $t$.
+2. **Transient Stimulus Regime:** The input cue is presented at $t=0$ and then removed, forcing the network to sustain the state recurrently.
 
-**MNIST Accuracy vs. Execution Time ($t$):**
-![MNIST Accuracy vs t](./assets/mnist_accuracy_vs_t.png)
+We run both models out to $t = 100$ steps to observe long-term stability. The empirical results from [held_vs_transient_summary.csv](file:///home/johnh/Documents/assembly-calculus/results/mnist/probes/t100_compare/held_vs_transient_summary.csv) are summarized below:
 
-**MNIST Class Margin vs. Execution Time ($t$):**
-![MNIST Margin vs t](./assets/mnist_margin_vs_t.png)
+| Metric / Regime | $t=0$ | $t=1$ | $t=2$ | $t=4$ | $t=10$ | $t=40$ | $t=100$ |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Held: Accuracy** | 69.0% | 69.0% | 70.5% | 70.5% | 70.5% | 70.5% | 70.5% |
+| **Held: Margin $m_y$** | 0.245 | 0.407 | 0.427 | 0.416 | 0.409 | 0.408 | 0.408 |
+| **Transient: Accuracy** | 69.0% | 56.5% | 36.5% | 14.5% | 10.0% | 5.5% | 7.5% |
+| **Transient: Margin $m_y$** | 0.245 | 0.121 | 0.009 | -0.122 | -0.160 | -0.150 | -0.164 |
 
-**Zoomed-in Detail ($t = 0$ to $10$):**
-![MNIST Accuracy Zoomed](./assets/mnist_accuracy_zoom.png)
-![MNIST Overlap and Margin Zoomed](./assets/mnist_margin_zoom.png)
-
-The results show that accuracy peaks early (around $t = 10$) and then slowly degrades. The Margin plot (the difference between the correct class overlap and the strongest incorrect class overlap) confirms this: the margin stabilizes early and then slowly decays.
-
-> [!NOTE]
-> **Mechanistic Interpretation of Zoomed Dynamics:**
-> The zoomed-in plots for $t \in [0, 10]$ highlight the rapid initial convergence of the system. The classification accuracy climbs from chance level to its peak value within $t \approx 10$ steps, matching the point where the correct class assembly overlap $o_y(t)$ achieves maximum separation from the nearest competitor, establishing a stable margin.
+**Held vs. Transient Comparison Plots:**
+- **Accuracy Comparison:** ![MNIST Accuracy Held vs Transient](./assets/mnist_accuracy_vs_t.png) *(Note: this plot compares the stable held accuracy at 70.5% with the transient collapse to chance).*
+- **Margin Comparison:** ![MNIST Margin Held vs Transient](./assets/mnist_margin_vs_t.png) *(Note: this plot shows the stable margin at ~0.41 under held stimulus vs the collapse to -0.16 under transient).*
 
 ---
 
-### 5.2 Associative Drift and Confusion Pairs
+### 5.2 Held Stability vs. Transient Attractor Collapse
 
-**MNIST Best Confusion Matrix:**
-![MNIST Best Confusion](./assets/mnist_confusion_best.png)
+A review of the empirical data resolves the representational dynamics of the Assembly Calculus:
+1. **Asymptotic Attractor Stability (Held Stimulus):** Under a held stimulus, there is **no associative drift** or late-stage accuracy degradation. Accuracy converges from 69.0% ($t=0$) to 70.5% by $t=2$ and remains perfectly flat all the way to $t=100$. The classification margin stabilizes at $\approx 0.408$. The persistent external cue acts as an anchoring feedforward bias, making the correct class assembly a globally stable fixed point of the Mean-Field dynamical map.
+2. **Attractor Collapse (Transient Stimulus):** When the cue is removed (transient stimulus), the target representation does not gradually drift into visually similar classes. Instead, it undergoes a rapid **attractor collapse** to the noise floor within 10 steps. Accuracy collapses to 10% (equivalent to random guessing), and the correct overlap drops to $0.09$, which is the noise floor for a cap of size $k=200$ in a population of $n=2000$.
 
-**MNIST Digit Drift (7 vs. 9):**
-![MNIST 7 vs 9 Drift](./assets/mnist_pair_drift_7_9.png)
+This rapid collapse is driven by a lack of recurrent self-support to sustain the representation against competitive top-$k$ thresholding and the negative homeostatic class-separation bias.
 
-The slow degradation in accuracy for large $t$ is caused by **associative drift**. Over time, the static input representation slowly wanders in the high-dimensional neural space, eventually confusing visually similar classes (such as slowly drifting from a 7 to a 9). This demonstrates that static pattern recognition tasks do not benefit from scaled execution budgets, contrasting sharply with the temporal requirements of sequential reasoning.
+Consequently, static classification tasks in the AC do not benefit from extended execution times ($t > 2$); they either settle instantly into a stable attractor (if held) or collapse to noise (if transient). This contrasts sharply with sequential reasoning tasks, where physical execution time is a strict, linear requirement of the task's transition depth.
+

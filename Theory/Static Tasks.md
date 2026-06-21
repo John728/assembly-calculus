@@ -1,16 +1,21 @@
-**Purpose:** derive how internal time should affect non-iterative tasks, especially static classification.
+**Purpose:** Derive how internal time should affect non-iterative tasks, especially static classification.
 
-This note studies tasks of the form
+## 1. Static Tasks and Setup
 
+### 1.1 Defining the Static Task Regime
+
+A static task is a direct mapping:
 $$
 q \mapsto y,
 $$
+where the input $q$ is a fixed, non-sequential sensory pattern (or cue) and the target label $y$ is a single discrete class. 
 
-where the input $q$ is supplied once and the target label $y$ does not require a sequence of external transitions. MNIST classification is the motivating example.
+### 1.2 Why MNIST is a Static Task
+MNIST digit classification is a classic example of a static task. The input $q$ is a static pixel image (represented in Assembly Calculus as a fixed set of active input sensory neurons), and the target $y$ is a static class label (represented by a pre-formed target assembly $S_c$ in the coding area). 
 
-The derivations below are a mean-field theory of AC behaviour. They are not exact theorems for every random graph realisation. Their purpose is to predict measurable trends that can be checked in plots.
+Unlike sequential sequence tracking (such as DFA path tracking) or iterative memory traversal (such as pointer chasing), classifying an MNIST digit does not require the network to transition through a sequence of intermediate states. The computation has a temporal dependency depth of $L = 0$. Consequently, the role of internal recurrent time $t$ in a static task is not to process sequential transitions, but to act as a **settling resource** to resolve input noise, complete pattern features, or recruit the correct assembly representation under the network's recurrent dynamics.
 
-## 1. Static Task Setup
+### 1.3 Mathematical Setup
 
 Let $\mathcal C=\{1,\dots,C\}$ be the set of classes. For each class $c\in\mathcal C$, assume training has produced a class assembly
 
@@ -600,9 +605,15 @@ $$
 
 when $\Delta_y,\Delta_z>0$ and the expression is positive and finite. This predicts inverted-U behaviour: time first helps, then hurts.
 
-![Margin regimes](<Images/Static Tasks/margin_regimes.png>)
-
 *Figure: three possible margin regimes produced by the same two-overlap model: rise-and-plateau, fall after drift, and inverted-U behaviour.*
+
+### 6.4 Empirical Stimulus Regimes: Held vs. Transient
+
+In practical evaluations (such as the MNIST classification experiments in [[Experimental-Validation]]), the stimulus presentation protocol determines which regime dominates:
+
+1. **Held Stimulus (Stable Attractor):** When the input cue is held active across all updates, it acts as a constant feedforward drive. This drive stabilizes the target assembly's attractor basin, preventing the theoretical "drift" or "inverted-U" degradation. Empirically, accuracy rises early (from $69.0\%$ to $70.5\%$) and remains perfectly flat and stable all the way to $t=100$.
+2. **Transient Stimulus (Attractor Collapse):** When the cue is only presented at $t=0$ and then removed, the network must rely purely on recurrent feedback. Because recurrent self-support is weak and homeostatic class-separation bias is high, the system does not gradually drift to a competitor; rather, the correct representation suffers a rapid **attractor collapse** to the noise floor (accuracy dropping to $10.0\%$ by $t=10$, with correct overlap collapsing to $0.09$).
+
 
 ## 7. Why Similar Classes Degrade First
 

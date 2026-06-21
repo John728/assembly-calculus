@@ -76,9 +76,8 @@ def test_proper_unseen_network_uses_canonical_cur_src_dst_loop_areas() -> None:
     }
     cur = network.areas_by_name[task.area_map["cur"]]
     loop = network.areas_by_name[task.area_map["loop"]]
-    assert cur.dynamics_type == "recurrent"
+    assert cur.dynamics_type == "feedforward"
     assert loop.dynamics_type == "recurrent"
-    assert cur.p_recurrent > 0.0
     assert loop.p_recurrent > 0.0
     assert task.memory_fiber == ("src", "dst")
     assert ("cur", "src") in task.controller_fibers
@@ -206,10 +205,10 @@ def test_proper_unseen_training_records_query_supervision_and_updates_only_contr
     network, task = build_proper_unseen_pointer_network(list_length=6, assembly_size=8, density=0.35, plasticity=0.2, rng=net_rng)
 
     before_controller = {
-        fiber: float(network.weights[fiber].sum())
+        fiber: network.weights[fiber].copy()
         for fiber in task.controller_fibers
     }
-    before_episodic = float(network.weights[task.memory_fiber].sum())
+    before_episodic = network.weights[task.memory_fiber].copy()
 
     history = train_proper_unseen_controller(
         network,
@@ -232,13 +231,13 @@ def test_proper_unseen_training_records_query_supervision_and_updates_only_contr
     assert int(first["controller_update_steps"]) >= (2 * int(first["query_hops"])) + 1
 
     after_controller = {
-        fiber: float(network.weights[fiber].sum())
+        fiber: network.weights[fiber].copy()
         for fiber in task.controller_fibers
     }
-    after_episodic = float(network.weights[task.memory_fiber].sum())
+    after_episodic = network.weights[task.memory_fiber].copy()
 
-    assert any(after_controller[fiber] != before_controller[fiber] for fiber in task.controller_fibers)
-    assert after_episodic == before_episodic
+    assert any(np.any(after_controller[fiber].toarray() != before_controller[fiber].toarray()) for fiber in task.controller_fibers)
+    assert np.all(after_episodic.toarray() == before_episodic.toarray())
 
 
 def test_controller_query_primitive_transfers_cur_to_src() -> None:
