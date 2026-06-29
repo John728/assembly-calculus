@@ -104,11 +104,12 @@ def build_dfa_network(
     return network, task
 
 
-def train_dfa_transitions(
+def train_dfa(
     network: Network,
     task: DfaTask,
     rounds: int,
     rng: np.random.Generator,
+    normalization_on: bool = True,
 ) -> None:
     sym_area = task.area_map["sym"]
     cur_area = task.area_map["cur"]
@@ -164,7 +165,8 @@ def train_dfa_transitions(
                     }
                     network.step(external_stimuli=stimuli, plasticity_on=True)
 
-    network.normalize()
+    if normalization_on:
+        network.normalize()
         
     # Wire dst -> cur explicitly to be an identity copy
     for s in range(task.n_states):

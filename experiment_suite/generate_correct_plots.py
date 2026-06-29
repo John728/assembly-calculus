@@ -189,9 +189,16 @@ def generate_pointer_plots():
     # Ensure correct columns and types
     df["L"] = df["L"].astype(int)
     df["t"] = df["t"].astype(int)
+    if "c" not in df.columns:
+        df["c"] = 1
+    df["c"] = pd.to_numeric(df["c"], errors="coerce").fillna(1).astype(int).clip(lower=1)
+    c_values = sorted(df["c"].unique())
+    primary_c = 1 if 1 in c_values else int(c_values[0])
     
-    # Group and aggregate
-    grouped = df.groupby(["L", "t"])["accuracy"].mean().reset_index()
+    # Group and aggregate. Legacy filenames are filtered to one c value; do not
+    # average transition costs together.
+    grouped_all = df.groupby(["c", "L", "t"])["accuracy"].mean().reset_index()
+    grouped = grouped_all[grouped_all["c"] == primary_c].copy()
     
     # 1. Heatmap Acc(K,t)
     unique_L = sorted(grouped["L"].unique())
@@ -212,7 +219,7 @@ def generate_pointer_plots():
     ax.set_yticklabels([str(L) for L in unique_L])
     ax.set_xlabel("Execution Time Budget (t)")
     ax.set_ylabel("Hop Depth (K)")
-    ax.set_title("Pointer Chasing: Accuracy Heatmap Acc(K, t)")
+    ax.set_title(f"Pointer Chasing: Accuracy Heatmap Acc(K, t), c={primary_c}")
     plt.colorbar(im, ax=ax, label="Mean Accuracy")
     fig.tight_layout()
     fig.savefig(OUT_DIR / "pointer_heatmap.png", dpi=150)
@@ -226,7 +233,7 @@ def generate_pointer_plots():
         plt.plot(sub["t"], sub["accuracy"], marker="o", label=f"K={L_val}")
     plt.xlabel("Execution Time Budget (t)")
     plt.ylabel("Mean Accuracy")
-    plt.title("Pointer Chasing: Accuracy vs Time Budget")
+    plt.title(f"Pointer Chasing: Accuracy vs Time Budget, c={primary_c}")
     plt.ylim(-0.05, 1.05)
     plt.legend(title="Hop Depth (K)")
     plt.tight_layout()
@@ -241,7 +248,7 @@ def generate_pointer_plots():
             plt.plot(sub["L"], sub["accuracy"], marker="s", label=f"t={t_val}")
     plt.xlabel("Hop Depth (K)")
     plt.ylabel("Mean Accuracy")
-    plt.title("Pointer Chasing: Accuracy vs Hop Depth")
+    plt.title(f"Pointer Chasing: Accuracy vs Hop Depth, c={primary_c}")
     plt.ylim(-0.05, 1.05)
     plt.legend(title="Time Budget (t)")
     plt.tight_layout()
@@ -250,7 +257,8 @@ def generate_pointer_plots():
     
     # 4. pointer_path_accuracy_vs_L.png
     if "path_accuracy" in df.columns:
-        path_grouped = df.groupby(["L", "t"])["path_accuracy"].mean().reset_index()
+        path_grouped_all = df.groupby(["c", "L", "t"])["path_accuracy"].mean().reset_index()
+        path_grouped = path_grouped_all[path_grouped_all["c"] == primary_c].copy()
         plt.figure(figsize=(8, 5))
         for t_val in [1, 2, 3, 4, 6]:
             if t_val in unique_t:
@@ -258,7 +266,7 @@ def generate_pointer_plots():
                 plt.plot(sub["L"], sub["path_accuracy"], marker="o", label=f"t={t_val}")
         plt.xlabel("Hop Depth (K)")
         plt.ylabel("Mean Path Accuracy")
-        plt.title("Pointer Chasing: Path Accuracy vs Hop Depth")
+        plt.title(f"Pointer Chasing: Path Accuracy vs Hop Depth, c={primary_c}")
         plt.ylim(-0.05, 1.05)
         plt.legend(title="Time Budget (t)")
         plt.tight_layout()
@@ -267,28 +275,37 @@ def generate_pointer_plots():
         
     # 5. pointer_first_error_histogram.png
     if "first_error_index" in df.columns:
-        first_err = df["first_error_index"].dropna()
+        first_err = df[df["c"] == primary_c]["first_error_index"].dropna()
         if not first_err.empty:
             plt.figure(figsize=(8, 5))
             plt.hist(first_err.astype(int), bins=range(int(first_err.max()) + 2), align="left",
                      edgecolor="black", color="purple", alpha=0.8)
             plt.xlabel("First Error Hop Index")
             plt.ylabel("Count")
-            plt.title("Pointer Chasing: First Error Hop Index Distribution")
+            plt.title(f"Pointer Chasing: First Error Hop Index Distribution, c={primary_c}")
             plt.tight_layout()
             plt.savefig(OUT_DIR / "pointer_first_error_histogram.png", dpi=150)
             plt.close()
             
     # 6. pointer_shortcut_ablation.png & pointer_shortcuts.png
-    shortcut_map = {4: "Standard (M)", 2: "M² Shortcuts", 1: "M⁴ Shortcuts"}
-    shortcut_df = grouped[grouped["L"].isin(shortcut_map.keys())].copy()
+    # Only generate this figure from an explicit shortcut/operator experiment.
+    label_column = None
+    for candidate in ("shortcut_operator", "shortcut_label", "operator"):
+        if candidate in df.columns:
+            label_column = candidate
+            break
+    if label_column is not None:
+        shortcut_df = df[df[label_column].notna()].copy()
+    else:
+        shortcut_df = pd.DataFrame()
     if not shortcut_df.empty:
+        shortcut_grouped = shortcut_df.groupby([label_column, "t"])["accuracy"].mean().reset_index()
         plt.figure(figsize=(8, 6))
-        for L_val in sorted(shortcut_map.keys(), reverse=True):
-            sub = shortcut_df[shortcut_df["L"] == L_val].sort_values("t")
-            plt.plot(sub["t"], sub["accuracy"], marker="s", label=f"{shortcut_map[L_val]}")
+        for label in sorted(shortcut_grouped[label_column].astype(str).unique()):
+            sub = shortcut_grouped[shortcut_grouped[label_column].astype(str) == label].sort_values("t")
+            plt.plot(sub["t"], sub["accuracy"], marker="s", label=label)
         plt.axhline(0.95, color="gray", linestyle="--", alpha=0.7)
-        plt.title("Time-Size Tradeoff: Shortcuts vs Execution Time (K=4)")
+        plt.title("Time-Size Tradeoff: Explicit Shortcuts vs Execution Time")
         plt.xlabel("Execution Time Budget (t)")
         plt.ylabel("Accuracy")
         plt.legend()

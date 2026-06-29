@@ -1,0 +1,27 @@
+suite_name: pointer-ac-canonical-seen
+output_dir: results/pointer/canonical_seen
+seeds: [42, 43, 44, 45, 46]
+
+conditions:
+  - list_type: Seen
+    N: 10
+    num_train_lists: 10
+    num_test_lists: 0
+    k_train_min: 1
+    k_train_max: 8
+    k_test_min: 1
+    k_test_max: 8
+
+models:
+  AC:
+    - model_name: Pointer-AC-Canonical-Seen
+      assembly_size: 16
+      density: 0.35
+      plasticity: 0.25
+      presentation_rounds: 4
+      settle_steps: 1
+      transition_rounds: 12
+      association_steps: 3
+      samples_per_list_eval: 32
+      time_budgets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12]
+      theory_pointer: true

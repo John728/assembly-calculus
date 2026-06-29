@@ -1,0 +1,92 @@
+suite_name: dfa-ac-capacity-sweep
+output_dir: results/dfa/capacity_sweep
+seeds: [42, 43, 44]
+conditions:
+  - list_type: DFA
+    extra:
+      num_states: 10
+      num_symbols: 4
+      sequence_lengths: [20]
+models:
+  DFA_AC:
+    - model_name: AC-DFA-Norm-R1
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 1
+      normalization_on: true
+    - model_name: AC-DFA-Norm-R5
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 5
+      normalization_on: true
+    - model_name: AC-DFA-Norm-R10
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 10
+      normalization_on: true
+    - model_name: AC-DFA-Norm-R20
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 20
+      normalization_on: true
+    - model_name: AC-DFA-Norm-R50
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 50
+      normalization_on: true
+      
+    - model_name: AC-DFA-NoNorm-R1
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 1
+      normalization_on: false
+    - model_name: AC-DFA-NoNorm-R5
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 5
+      normalization_on: false
+    - model_name: AC-DFA-NoNorm-R10
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 10
+      normalization_on: false
+    - model_name: AC-DFA-NoNorm-R20
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 20
+      normalization_on: false
+    - model_name: AC-DFA-NoNorm-R50
+      assembly_size: 50
+      density: 0.1
+      plasticity: 0.1
+      samples_per_sequence: 5
+      c_values: [3]
+      rounds: 50
+      normalization_on: false

@@ -1,0 +1,144 @@
+suite_name: mnist-ac-retention-phase
+output_dir: /home/johnh/Documents/Notes/University/Elec/Thesis/Theory/assets/results/mnist/retention_phase
+seeds: [42, 43, 44]
+
+conditions:
+  - list_type: MNIST
+    N: 10
+    num_train_lists: 500
+    num_test_lists: 50
+    k_train_min: 1
+    k_train_max: 1
+    k_test_min: 0
+    k_test_max: 50
+
+models:
+  MNIST_AC:
+    - model_name: MNIST-Retention-Norm-Beta-0.5-R1
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 1
+      settle_steps: 1
+      class_organized: true
+      normalization_on: true
+    - model_name: MNIST-Retention-Norm-Beta-0.5-R10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 10
+      settle_steps: 1
+      class_organized: true
+      normalization_on: true
+    - model_name: MNIST-Retention-Norm-Beta-0.5-R100
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 100
+      settle_steps: 1
+      class_organized: true
+      normalization_on: true
+    - model_name: MNIST-Retention-NoNorm-Beta-0.5-R1
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 1
+      settle_steps: 1
+      class_organized: true
+      normalization_on: false
+    - model_name: MNIST-Retention-NoNorm-Beta-0.5-R10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 10
+      settle_steps: 1
+      class_organized: true
+      normalization_on: false
+    - model_name: MNIST-Retention-NoNorm-Beta-0.5-R100
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 100
+      settle_steps: 1
+      class_organized: true
+      normalization_on: false
+    - model_name: MNIST-Retention-Norm-Beta-0.1-R10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.1
+      presentation_rounds: 10
+      settle_steps: 1
+      class_organized: true
+      normalization_on: true
+    - model_name: MNIST-Retention-NoNorm-Beta-0.1-R10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 500
+      test_limit: 50
+      cue_duration_values: [1, 2, 4, 8]
+      retention_ell_values: [0, 1, 2, 4, 8, 10, 20, 50]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.1
+      presentation_rounds: 10
+      settle_steps: 1
+      class_organized: true
+      normalization_on: false

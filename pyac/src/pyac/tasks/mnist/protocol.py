@@ -76,6 +76,7 @@ def train_mnist_assemblies(
     settle_steps: int = 1,
     renormalize_every: int = 50,
     class_organized: bool = False,
+    normalization_on: bool = True,
 ) -> None:
     if presentation_rounds <= 0:
         raise ValueError("presentation_rounds must be > 0")
@@ -132,7 +133,7 @@ def train_mnist_assemblies(
                 )
                 counts[network.activations[coding_area]] += 1
 
-            if hasattr(network, "normalize"):
+            if normalization_on and hasattr(network, "normalize"):
                 network.normalize(coding_area)
             if network.activations[coding_area].size > 0:
                 task.coding_bias[network.activations[coding_area]] -= 1.0
@@ -162,10 +163,10 @@ def train_mnist_assemblies(
                 counts[network.activations[coding_area]] += 1
 
                 example_index += 1
-                if hasattr(network, "normalize") and example_index % renormalize_every == 0:
+                if normalization_on and hasattr(network, "normalize") and example_index % renormalize_every == 0:
                     network.normalize(coding_area)
 
-            if hasattr(network, "normalize") and example_index % renormalize_every != 0:
+            if normalization_on and hasattr(network, "normalize") and example_index % renormalize_every != 0:
                 network.normalize(coding_area)
 
     task.class_assemblies.clear()
@@ -343,6 +344,148 @@ def evaluate_mnist_t_sweep(
                     stimulus_mode=stimulus_mode,
                 )
             )
+    return rows
+
+
+def evaluate_mnist_retention_sweep(
+    network: Network,
+    task: MnistTask,
+    images: np.ndarray,
+    labels: np.ndarray,
+    cue_duration_values: list[int],
+    retention_ell_values: list[int],
+    instance_ids: list[object] | None = None,
+) -> list[dict[str, object]]:
+    if len(images) != len(labels):
+        raise ValueError("images and labels must have the same length")
+    if instance_ids is not None and len(instance_ids) != len(images):
+        raise ValueError("instance_ids must have the same length as images")
+    if not cue_duration_values:
+        raise ValueError("cue_duration_values must not be empty")
+    if not retention_ell_values:
+        raise ValueError("retention_ell_values must not be empty")
+
+    cue_values = [int(value) for value in cue_duration_values]
+    ell_values = sorted({int(value) for value in retention_ell_values})
+    if any(value <= 0 for value in cue_values):
+        raise ValueError("cue_duration_values must contain positive integers")
+    if any(value < 0 for value in ell_values):
+        raise ValueError("retention_ell_values must contain non-negative integers")
+
+    ids = instance_ids if instance_ids is not None else list(range(len(images)))
+    sensory_area = task.area_map["sensory"]
+    coding_area = task.area_map["coding"]
+    max_ell = max(ell_values)
+    rows: list[dict[str, object]] = []
+
+    for image, label, instance_id in zip(images, labels, ids):
+        target_digit = _validate_mnist_evaluation_inputs(task, label)
+        stimulus = _mnist_stimulus(network, task, image)
+
+        for cue_duration in cue_values:
+            _reset_mnist_evaluation_state(network, task)
+            cue_trajectory: list[int] = []
+            cue_overlap_trajectory: list[list[float]] = []
+
+            for _ in range(cue_duration):
+                network.step(
+                    external_stimuli={sensory_area: stimulus},
+                    plasticity_on=False,
+                    biases={coding_area: task.coding_bias},
+                )
+                active = network.get_assembly(coding_area)
+                cue_trajectory.append(decode_mnist_class(active, task))
+                cue_overlap_trajectory.append(_mnist_overlap_vector(active, task))
+
+            correct_at_t1 = cue_trajectory[0] == target_digit
+            retention_states: list[dict[str, object]] = []
+            post_trajectory: list[int] = []
+            post_overlap_trajectory: list[list[float]] = []
+
+            for ell in range(max_ell + 1):
+                if ell > 0:
+                    network.step(
+                        external_stimuli=None,
+                        plasticity_on=False,
+                        biases={coding_area: task.coding_bias},
+                    )
+
+                active = network.get_assembly(coding_area)
+                prediction = decode_mnist_class(active, task)
+                overlaps = _mnist_overlap_vector(active, task)
+                margin = correct_class_margin(np.asarray(overlaps, dtype=np.float64), target_digit)
+                post_trajectory.append(prediction)
+                post_overlap_trajectory.append(overlaps)
+                retention_states.append(
+                    {
+                        "ell": ell,
+                        "prediction": prediction,
+                        "overlaps": overlaps,
+                        "correct_overlap": margin.correct_overlap,
+                        "strongest_wrong_overlap": margin.strongest_wrong_overlap,
+                        "margin": margin.margin,
+                    }
+                )
+
+            first_error_index = next(
+                (
+                    int(state["ell"])
+                    for state in retention_states
+                    if float(state["margin"]) <= 0.0
+                ),
+                None,
+            )
+            retention_time = max_ell if first_error_index is None else first_error_index
+            retained_full_horizon = first_error_index is None
+
+            for ell in ell_values:
+                state = retention_states[ell]
+                prediction = int(state["prediction"])
+                current_correct = prediction == target_digit
+                total_t = cue_duration + ell
+                row = {
+                    "experiment": "mnist_retention",
+                    "seed": getattr(task, "seed", None),
+                    "theta_id": getattr(task, "theta_id", None),
+                    "n": task.n,
+                    "k": task.k,
+                    "p": task.p,
+                    "beta": task.beta,
+                    "t": total_t,
+                    "s": cue_duration,
+                    "cue_duration_s": cue_duration,
+                    "ell": ell,
+                    "retention_ell": ell,
+                    "instance_id": instance_id,
+                    "target": target_digit,
+                    "prediction": prediction,
+                    "correct": current_correct,
+                    "overlaps": list(state["overlaps"]),
+                    "correct_overlap": float(state["correct_overlap"]),
+                    "strongest_wrong_overlap": float(state["strongest_wrong_overlap"]),
+                    "correct_score": float(state["correct_overlap"]),
+                    "strongest_wrong_score": float(state["strongest_wrong_overlap"]),
+                    "margin": float(state["margin"]),
+                    "trajectory": [*cue_trajectory, *post_trajectory[: ell + 1]],
+                    "overlap_trajectory": [
+                        *cue_overlap_trajectory,
+                        *post_overlap_trajectory[: ell + 1],
+                    ],
+                    "cue_trajectory": list(cue_trajectory),
+                    "post_removal_trajectory": post_trajectory[: ell + 1],
+                    "stimulus_mode": "cue_then_off",
+                    "correct_at_t1": correct_at_t1,
+                    "stayed_correct": correct_at_t1 and current_correct,
+                    "became_correct_later": (not correct_at_t1) and current_correct,
+                    "first_error_index": first_error_index,
+                    "retention_time": retention_time,
+                    "retained_full_horizon": retained_full_horizon,
+                    "plasticity_on": False,
+                }
+                if hasattr(task, "task_seed"):
+                    row["task_seed"] = getattr(task, "task_seed")
+                rows.append(row)
+
     return rows
 
 

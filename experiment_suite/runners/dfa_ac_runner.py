@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from experiment_suite.jobs import ExperimentJob
-from pyac.tasks.dfa.dfa_protocol import build_dfa_network, evaluate_dfa_sequence, train_dfa_transitions
+from pyac.tasks.dfa.dfa_protocol import build_dfa_network, evaluate_dfa_sequence, train_dfa
 
 def run_dfa_ac_job(job: ExperimentJob) -> list[dict[str, object]]:
     rng = np.random.default_rng(job.seed)
@@ -17,6 +17,7 @@ def run_dfa_ac_job(job: ExperimentJob) -> list[dict[str, object]]:
     plasticity = float(job.model.values.get("plasticity", 0.1))
     samples_per_sequence = int(job.model.values.get("samples_per_sequence", 10))
     c_values = job.model.values.get("c_values", [1])
+    normalization_on = bool(job.model.values.get("normalization_on", True))
     
     network, task = build_dfa_network(
         n_states=n_states,
@@ -28,7 +29,7 @@ def run_dfa_ac_job(job: ExperimentJob) -> list[dict[str, object]]:
     )
     
     rounds = int(job.model.values.get("rounds", 15))
-    train_dfa_transitions(network, task, rounds=rounds, rng=rng)
+    train_dfa(network, task, rounds=rounds, rng=rng, normalization_on=normalization_on)
     
     rows = []
     

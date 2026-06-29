@@ -1,0 +1,25 @@
+suite_name: pointer-ac-canonical-proper-unseen
+output_dir: results/pointer/canonical_proper_unseen
+seeds: [42, 43, 44, 45, 46]
+
+conditions:
+  - list_type: Unseen
+    N: 8
+    num_train_lists: 16
+    num_test_lists: 8
+    k_train_min: 1
+    k_train_max: 4
+    k_test_min: 1
+    k_test_max: 5
+
+models:
+  AC:
+    - model_name: Pointer-AC-Canonical-Proper-Unseen
+      assembly_size: 14
+      density: 0.45
+      plasticity: 0.3
+      train_episodes: 64
+      samples_per_list_eval: 32
+      time_budgets: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12]
+      c_values: [1, 2, 4]
+      theory_pointer: true

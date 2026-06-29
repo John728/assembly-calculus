@@ -242,6 +242,73 @@ def test_evaluate_mnist_t_sweep_passes_stimulus_mode_through():
     assert {row["stimulus_mode"] for row in rows} == {"transient"}
 
 
+def test_evaluate_mnist_retention_sweep_records_cue_and_post_removal_metrics():
+    from pyac.tasks.mnist.protocol import evaluate_mnist_retention_sweep
+
+    network, task, images, labels = _trained_tiny_model()
+    before = {fiber: weights.copy() for fiber, weights in network.weights.items()}
+
+    rows = evaluate_mnist_retention_sweep(
+        network,
+        task,
+        images[:2],
+        labels[:2],
+        cue_duration_values=[1, 3],
+        retention_ell_values=[0, 2],
+        instance_ids=["a", "b"],
+    )
+
+    assert len(rows) == 2 * 2 * 2
+    assert {row["experiment"] for row in rows} == {"mnist_retention"}
+    assert {row["stimulus_mode"] for row in rows} == {"cue_then_off"}
+    assert {row["s"] for row in rows} == {1, 3}
+    assert {row["cue_duration_s"] for row in rows} == {1, 3}
+    assert {row["ell"] for row in rows} == {0, 2}
+    assert {row["retention_ell"] for row in rows} == {0, 2}
+    assert {row["instance_id"] for row in rows} == {"a", "b"}
+    for row in rows:
+        assert row["t"] == row["s"] + row["ell"]
+        assert row["correct_score"] == row["correct_overlap"]
+        assert row["strongest_wrong_score"] == row["strongest_wrong_overlap"]
+        assert row["margin"] == row["correct_score"] - row["strongest_wrong_score"]
+        assert isinstance(row["correct_at_t1"], bool)
+        assert isinstance(row["stayed_correct"], bool)
+        assert isinstance(row["became_correct_later"], bool)
+        assert row["retention_time"] >= 0
+        assert row["plasticity_on"] is False
+
+    for fiber, weights in network.weights.items():
+        diff = (weights != before[fiber]).nnz
+        assert diff == 0
+
+
+def test_evaluate_mnist_retention_sweep_rejects_invalid_horizons():
+    from pyac.tasks.mnist.protocol import evaluate_mnist_retention_sweep
+
+    network, task, images, labels = _trained_tiny_model()
+
+    with pytest.raises(ValueError, match="cue_duration_values"):
+        evaluate_mnist_retention_sweep(network, task, images[:1], labels[:1], [0], [0])
+    with pytest.raises(ValueError, match="retention_ell_values"):
+        evaluate_mnist_retention_sweep(network, task, images[:1], labels[:1], [1], [-1])
+
+
+def test_evaluate_mnist_retention_sweep_rejects_bool_labels():
+    from pyac.tasks.mnist.protocol import evaluate_mnist_retention_sweep
+
+    network, task, images, _labels = _trained_tiny_model()
+
+    with pytest.raises(ValueError, match="target must be an MNIST digit"):
+        evaluate_mnist_retention_sweep(
+            network,
+            task,
+            images[:1],
+            np.array([True], dtype=np.bool_),
+            cue_duration_values=[1],
+            retention_ell_values=[0],
+        )
+
+
 def test_evaluate_mnist_t_sweep_rejects_bool_labels():
     from pyac.tasks.mnist.protocol import evaluate_mnist_t_sweep
 
@@ -353,11 +420,13 @@ def test_mnist_package_exports_evaluation_helpers():
     from pyac.tasks.mnist import (
         decode_mnist_class,
         evaluate_mnist_example,
+        evaluate_mnist_retention_sweep,
         evaluate_mnist_sequence,
         evaluate_mnist_t_sweep,
     )
 
     assert decode_mnist_class is not None
     assert evaluate_mnist_example is not None
+    assert evaluate_mnist_retention_sweep is not None
     assert evaluate_mnist_sequence is not None
     assert evaluate_mnist_t_sweep is not None

@@ -171,6 +171,69 @@ def test_generate_mnist_ac_plots_filters_sequence_rows_from_mixed_results(tmp_pa
     assert all(path.exists() and path.stat().st_size > 0 for path in paths)
 
 
+def test_generate_mnist_ac_plots_writes_retention_pngs(tmp_path: Path) -> None:
+    from experiment_suite.plots import generate_mnist_ac_plots
+
+    raw_results = tmp_path / "mnist_retention_raw_results.csv"
+    rows = []
+    for model_name, rounds, beta, normalization_on in [
+        ("Norm-R1", 1, 0.5, True),
+        ("NoNorm-R10", 10, 0.5, False),
+    ]:
+        for seed in [1, 2]:
+            for instance_id, target in enumerate([0, 1]):
+                for s in [1, 2]:
+                    for ell in [0, 2]:
+                        prediction = target if ell == 0 else (target + seed) % 2
+                        correct = prediction == target
+                        correct_overlap = 0.8 if correct else 0.3
+                        wrong_overlap = 0.2 if correct else 0.7
+                        rows.append(
+                            {
+                                "experiment": "mnist_retention",
+                                "model_name": model_name,
+                                "seed": seed,
+                                "instance_id": instance_id,
+                                "t": s + ell,
+                                "s": s,
+                                "cue_duration_s": s,
+                                "ell": ell,
+                                "retention_ell": ell,
+                                "target": target,
+                                "prediction": prediction,
+                                "correct": correct,
+                                "margin": correct_overlap - wrong_overlap,
+                                "correct_overlap": correct_overlap,
+                                "strongest_wrong_overlap": wrong_overlap,
+                                "correct_score": correct_overlap,
+                                "strongest_wrong_score": wrong_overlap,
+                                "trajectory": "[0,0,1]" if target == 0 else "[1,1,0]",
+                                "retention_time": 2 if correct else 0,
+                                "presentation_rounds": rounds,
+                                "beta_train": beta,
+                                "normalization_on": normalization_on,
+                                "overlaps": "[0.8,0.2]" if correct else "[0.3,0.7]",
+                            }
+                        )
+    with raw_results.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    out_dir = tmp_path / "plots"
+    paths = generate_mnist_ac_plots(raw_results, out_dir)
+
+    expected_names = {
+        "mnist_retention_time_histogram.png",
+        "mnist_cue_duration_retention_heatmap.png",
+        "mnist_retention_flip_matrix.png",
+        "mnist_training_retention_phase_diagram.png",
+    }
+    actual_names = {path.name for path in paths}
+    assert expected_names.issubset(actual_names), f"Missing: {expected_names - actual_names}"
+    assert all((out_dir / name).stat().st_size > 0 for name in expected_names)
+
+
 def test_generate_mnist_ac_plots_writes_hold_sweep_pngs(tmp_path: Path) -> None:
     from experiment_suite.plots import generate_mnist_ac_plots
 

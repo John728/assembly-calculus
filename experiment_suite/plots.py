@@ -432,6 +432,175 @@ def _parse_overlap_cell(value: Any) -> list[float]:
     return [float(item) for item in parsed]
 
 
+def _parse_int_list_cell(value: Any) -> list[int]:
+    if isinstance(value, list):
+        return [int(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return [int(item) for item in value.tolist()]
+    if pd.isna(value):
+        return []
+    parsed = json.loads(str(value))
+    if not isinstance(parsed, list):
+        return []
+    return [int(item) for item in parsed]
+
+
+def _save_mnist_retention_time_histogram(retention_df: pd.DataFrame, output_dir: Path) -> Path:
+    group_columns = [
+        column
+        for column in ("model_name", "seed", "task_seed", "instance_id", "s", "cue_duration_s")
+        if column in retention_df.columns
+    ]
+    if group_columns:
+        base_df = pd.DataFrame(
+            retention_df.sort_values("ell", kind="stable")
+            .groupby(group_columns, as_index=False, observed=False)
+            .tail(1)
+        )
+    else:
+        base_df = retention_df
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.2))
+    sns.histplot(data=base_df, x="retention_time", hue="model_name" if "model_name" in base_df.columns else None, multiple="stack", bins=12, ax=ax)
+    ax.set_title("MNIST Retention: Time Until Margin Failure")
+    ax.set_xlabel(r"Retention time $T_{\mathrm{ret}}$ (censored at horizon)")
+    ax.set_ylabel("Count")
+    fig.tight_layout()
+    path = output_dir / "mnist_retention_time_histogram.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def _save_mnist_cue_duration_retention_heatmap(retention_df: pd.DataFrame, output_dir: Path) -> Path:
+    pivot_df = pd.DataFrame(
+        retention_df.pivot_table(
+            index="s",
+            columns="ell",
+            values="margin",
+            aggfunc="mean",
+            observed=False,
+        )
+    )
+    fig_w = max(8.5, 0.75 * len(pivot_df.columns) + 3.0)
+    fig_h = max(4.8, 0.6 * len(pivot_df.index) + 2.5)
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    sns.heatmap(pivot_df, annot=True, fmt=".2f", cmap="vlag", center=0.0, ax=ax)
+    ax.set_title("MNIST Retention: Mean Margin After Cue Removal")
+    ax.set_xlabel(r"Post-removal lag $\ell$")
+    ax.set_ylabel(r"Cue duration $s$")
+    fig.tight_layout()
+    path = output_dir / "mnist_cue_duration_retention_heatmap.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def _save_mnist_flip_matrix(retention_df: pd.DataFrame, output_dir: Path) -> Path:
+    group_columns = [
+        column
+        for column in ("model_name", "seed", "task_seed", "instance_id", "s", "cue_duration_s")
+        if column in retention_df.columns
+    ]
+    if "trajectory" not in retention_df.columns:
+        raise ValueError("MNIST retention flip matrix requires trajectory column")
+    if group_columns:
+        trajectory_df = pd.DataFrame(
+            retention_df.sort_values("ell", kind="stable")
+            .groupby(group_columns, as_index=False, observed=False)
+            .tail(1)
+        )
+    else:
+        trajectory_df = retention_df
+
+    counts = np.zeros((10, 10), dtype=np.float64)
+    for value in trajectory_df["trajectory"]:
+        trajectory = _parse_int_list_cell(value)
+        for current, next_prediction in zip(trajectory, trajectory[1:]):
+            if 0 <= current <= 9 and 0 <= next_prediction <= 9:
+                counts[current, next_prediction] += 1.0
+    row_totals = counts.sum(axis=1, keepdims=True)
+    probabilities = np.divide(counts, row_totals, out=np.zeros_like(counts), where=row_totals > 0)
+
+    fig, ax = plt.subplots(figsize=(8.2, 6.8))
+    sns.heatmap(probabilities, annot=True, fmt=".2f", cmap="Blues", vmin=0.0, vmax=1.0, ax=ax)
+    ax.set_title(r"MNIST Retention: Prediction Flip Matrix $P(\hat y_{t+1}=b|\hat y_t=a)$")
+    ax.set_xlabel("Next prediction b")
+    ax.set_ylabel("Current prediction a")
+    fig.tight_layout()
+    path = output_dir / "mnist_retention_flip_matrix.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def _save_mnist_training_retention_phase_diagram(retention_df: pd.DataFrame, output_dir: Path) -> Path:
+    phase_df = pd.DataFrame(retention_df.copy())
+    if "beta_train" not in phase_df.columns:
+        phase_df["beta_train"] = phase_df.get("beta", "")
+    if "normalization_on" not in phase_df.columns:
+        phase_df["normalization_on"] = ""
+    phase_df["train_regime"] = phase_df.apply(
+        lambda row: f"R={int(row['presentation_rounds'])}, beta={row['beta_train']}, norm={row['normalization_on']}",
+        axis=1,
+    )
+    group_columns = [
+        column
+        for column in ("train_regime", "model_name", "seed", "task_seed", "instance_id", "s")
+        if column in phase_df.columns
+    ]
+    if group_columns:
+        phase_df = pd.DataFrame(
+            phase_df.sort_values("ell", kind="stable")
+            .groupby(group_columns, as_index=False, observed=False)
+            .tail(1)
+        )
+    pivot_df = pd.DataFrame(
+        phase_df.pivot_table(
+            index="train_regime",
+            columns="s",
+            values="retention_time",
+            aggfunc="mean",
+            observed=False,
+        )
+    )
+    fig_w = max(8.5, 0.85 * len(pivot_df.columns) + 4.0)
+    fig_h = max(4.8, 0.65 * len(pivot_df.index) + 2.8)
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    sns.heatmap(pivot_df, annot=True, fmt=".1f", cmap="viridis", ax=ax)
+    ax.set_title("MNIST Retention Phase Diagram")
+    ax.set_xlabel(r"Cue duration $s$")
+    ax.set_ylabel("Training regime")
+    fig.tight_layout()
+    path = output_dir / "mnist_training_retention_phase_diagram.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def _save_mnist_retention_plots(mnist_df: pd.DataFrame, output_dir: Path) -> list[Path]:
+    retention_df = pd.DataFrame(mnist_df[mnist_df["experiment"].astype(str) == "mnist_retention"].copy())
+    if retention_df.empty:
+        return []
+    required = {"s", "ell", "margin", "retention_time", "trajectory", "presentation_rounds"}
+    missing = required.difference(retention_df.columns)
+    if missing:
+        missing_text = ", ".join(sorted(missing))
+        raise ValueError(f"MNIST retention raw results missing required columns: {missing_text}")
+
+    retention_df["s"] = pd.to_numeric(retention_df["s"]).astype(int)
+    retention_df["ell"] = pd.to_numeric(retention_df["ell"]).astype(int)
+    retention_df["retention_time"] = pd.to_numeric(retention_df["retention_time"])
+    retention_df["presentation_rounds"] = pd.to_numeric(retention_df["presentation_rounds"]).astype(int)
+
+    return [
+        _save_mnist_retention_time_histogram(retention_df, output_dir),
+        _save_mnist_cue_duration_retention_heatmap(retention_df, output_dir),
+        _save_mnist_flip_matrix(retention_df, output_dir),
+        _save_mnist_training_retention_phase_diagram(retention_df, output_dir),
+    ]
+
+
 def _save_mnist_sequence_plots(mnist_df: pd.DataFrame, output_dir: Path) -> list[Path]:
     required = {"sequence_step", "phase_digit", "step_in_phase", "prediction", "margin", "overlaps"}
     missing = required.difference(mnist_df.columns)
@@ -649,6 +818,9 @@ def generate_mnist_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) 
 
     all_paths: list[Path] = []
 
+    if "experiment" in mnist_df.columns and (mnist_df["experiment"].astype(str) == "mnist_retention").any():
+        all_paths.extend(_save_mnist_retention_plots(mnist_df, output_path))
+
     if "experiment" in mnist_df.columns and (mnist_df["experiment"].astype(str) == "mnist_sequence").any():
         sequence_mask = mnist_df["experiment"].astype(str) == "mnist_sequence"
         sequence_df = pd.DataFrame(mnist_df[sequence_mask].copy())
@@ -828,43 +1000,23 @@ def generate_unseen_ac_plots(raw_results_csv: str | Path, output_dir: str | Path
     ]
 
 
-def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) -> list[Path]:
-    sns.set_theme(style="whitegrid", context="talk")
-    output_path = Path(plots_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+def _seed_first_pointer_mean(df: pd.DataFrame, group_columns: list[str], value_column: str, output_column: str) -> pd.DataFrame:
+    if "seed" in df.columns and df["seed"].nunique() > 1:
+        seed_columns = [*group_columns, "seed"]
+        per_seed = pd.DataFrame(df.groupby(seed_columns, as_index=False, observed=False)[value_column].mean())
+        grouped = pd.DataFrame(per_seed.groupby(group_columns, as_index=False, observed=False)[value_column].mean())
+    else:
+        grouped = pd.DataFrame(df.groupby(group_columns, as_index=False, observed=False)[value_column].mean())
+    return grouped.rename(columns={value_column: output_column})
 
-    df = pd.read_csv(raw_results_csv)
-    required = {"experiment", "L", "t", "correct", "path_accuracy", "first_error_index"}
-    missing = required.difference(df.columns)
-    if missing:
-        raise ValueError(f"Pointer results missing required columns: {', '.join(sorted(missing))}")
 
-    pdf = pd.DataFrame(df[df["experiment"].astype(str).isin(["pointer_chasing", "dfa", "binary_search"])].copy())
-    if pdf.empty:
-        return []
+def _pointer_filename(prefix: str, c_value: int | None) -> str:
+    if c_value is None:
+        return f"{prefix}.png"
+    return f"{prefix}_c{c_value}.png"
 
-    pdf["L"] = pd.to_numeric(pdf["L"]).astype(int)
-    pdf["t"] = pd.to_numeric(pdf["t"]).astype(int)
-    pdf["correct"] = _coerce_bool_series(pdf["correct"])
-    pdf["accuracy"] = pd.to_numeric(pdf["accuracy"], errors="coerce")
-    pdf["path_accuracy"] = pd.to_numeric(pdf["path_accuracy"], errors="coerce")
-    pdf["first_error_index"] = pd.to_numeric(pdf["first_error_index"], errors="coerce")
 
-    def _agg(df_sub: pd.DataFrame) -> pd.DataFrame:
-        if "seed" in df_sub.columns and df_sub["seed"].nunique() > 1:
-            seed_acc = df_sub.groupby(["L", "t", "seed"])["accuracy"].mean().reset_index()
-            acc_by_lt = seed_acc.groupby(["L", "t"])["accuracy"].mean().reset_index()
-            acc_by_lt = acc_by_lt.rename(columns={"accuracy": "accuracy_mean"})
-        else:
-            acc_by_lt = df_sub.groupby(["L", "t"])["accuracy"].mean().reset_index()
-            acc_by_lt = acc_by_lt.rename(columns={"accuracy": "accuracy_mean"})
-        return acc_by_lt
-
-    acc_df = _agg(pdf)
-
-    paths: list[Path] = []
-
-    # Heatmap Acc(L,t)
+def _save_pointer_heatmap(acc_df: pd.DataFrame, output_path: Path, filename: str, title_suffix: str) -> Path:
     unique_L = sorted(acc_df["L"].unique())
     unique_t = sorted(acc_df["t"].unique())
     heatmap_data = np.full((len(unique_L), len(unique_t)), np.nan)
@@ -882,99 +1034,202 @@ def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path
     ax.set_yticks(range(len(unique_L)))
     ax.set_yticklabels([str(L) for L in unique_L])
     ax.set_xlabel("t (internal time)")
-    ax.set_ylabel("K (Hop Depth)")
-    ax.set_title("Pointer Chasing: Accuracy Heatmap Acc(L,t)")
+    ax.set_ylabel("L (task depth)")
+    ax.set_title(f"Pointer Chasing: Accuracy Acc(L,t){title_suffix}")
     plt.colorbar(im, ax=ax, label="Mean Accuracy")
     fig.tight_layout()
-    heatmap_path = output_path / "pointer_accuracy_heatmap_L_t.png"
-    fig.savefig(heatmap_path, dpi=200)
+    path = output_path / filename
+    fig.savefig(path, dpi=200)
     plt.close(fig)
-    paths.append(heatmap_path)
+    return path
 
-    # Accuracy vs t by L
+
+def _save_pointer_accuracy_vs_t(acc_df: pd.DataFrame, output_path: Path, filename: str, title_suffix: str) -> Path:
     fig, ax = plt.subplots(figsize=(10, 6))
-    for L_val in unique_L:
-        L_data = acc_df[acc_df["L"] == L_val]
+    for L_val in sorted(acc_df["L"].unique()):
+        L_data = acc_df[acc_df["L"] == L_val].sort_values("t")
         ax.plot(L_data["t"], L_data["accuracy_mean"], marker="o", label=f"L={L_val}")
     ax.set_xlabel("t (internal time)")
     ax.set_ylabel("Mean Accuracy")
-    ax.set_title("Pointer Chasing: Accuracy vs t by Chain Length")
+    ax.set_title(f"Pointer Chasing: Accuracy vs t by Depth{title_suffix}")
     ax.legend(title="L")
     ax.set_ylim(-0.05, 1.05)
     fig.tight_layout()
-    t_path = output_path / "pointer_accuracy_vs_t_by_L.png"
-    fig.savefig(t_path, dpi=200)
+    path = output_path / filename
+    fig.savefig(path, dpi=200)
     plt.close(fig)
-    paths.append(t_path)
+    return path
 
-    # Accuracy vs L by t
+
+def _save_pointer_accuracy_vs_L(acc_df: pd.DataFrame, output_path: Path, filename: str, title_suffix: str) -> Path:
     fig, ax = plt.subplots(figsize=(10, 6))
-    for t_val in unique_t:
-        t_data = acc_df[acc_df["t"] == t_val]
+    for t_val in sorted(acc_df["t"].unique()):
+        t_data = acc_df[acc_df["t"] == t_val].sort_values("L")
         ax.plot(t_data["L"], t_data["accuracy_mean"], marker="s", label=f"t={t_val}")
-    ax.set_xlabel("K (Hop Depth)")
+    ax.set_xlabel("L (task depth)")
     ax.set_ylabel("Mean Accuracy")
-    ax.set_title("Pointer Chasing: Accuracy vs Depth by Time Budget")
+    ax.set_title(f"Pointer Chasing: Accuracy vs Depth by Time Budget{title_suffix}")
     ax.legend(title="t")
     ax.set_ylim(-0.05, 1.05)
     fig.tight_layout()
-    L_path = output_path / "pointer_accuracy_vs_L_by_t.png"
-    fig.savefig(L_path, dpi=200)
+    path = output_path / filename
+    fig.savefig(path, dpi=200)
     plt.close(fig)
-    paths.append(L_path)
+    return path
+
+
+def _save_pointer_path_accuracy(path_df: pd.DataFrame, output_path: Path, filename: str, title_suffix: str) -> Path:
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for t_val in sorted(path_df["t"].unique()):
+        t_data = path_df[path_df["t"] == t_val].sort_values("L")
+        ax.plot(t_data["L"], t_data["path_accuracy_mean"], marker="o", label=f"t={t_val}")
+    ax.set_xlabel("L (task depth)")
+    ax.set_ylabel("Mean Path Accuracy")
+    ax.set_title(f"Pointer Chasing: Path Accuracy vs Depth{title_suffix}")
+    ax.legend(title="t")
+    ax.set_ylim(-0.05, 1.05)
+    fig.tight_layout()
+    path = output_path / filename
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def _save_pointer_accuracy_vs_c(acc_df: pd.DataFrame, output_path: Path) -> Path:
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    sns.lineplot(data=acc_df, x="c", y="accuracy_mean", hue="L", style="t", markers=True, dashes=False, ax=ax)
+    ax.set_xlabel("c (updates per symbolic transition)")
+    ax.set_ylabel("Mean Accuracy")
+    ax.set_title("Pointer Chasing: Accuracy by Transition Cost")
+    ax.set_ylim(-0.05, 1.05)
+    fig.tight_layout()
+    path = output_path / "pointer_accuracy_vs_c.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def _save_pointer_shortcut_ablation(pdf: pd.DataFrame, output_path: Path) -> Path | None:
+    label_column = None
+    for candidate in ("shortcut_operator", "shortcut_label", "operator"):
+        if candidate in pdf.columns:
+            label_column = candidate
+            break
+    if label_column is None:
+        return None
+
+    shortcut_df = pd.DataFrame(pdf[pdf[label_column].notna()].copy())
+    if shortcut_df.empty:
+        return None
+
+    shortcut_df[label_column] = shortcut_df[label_column].astype(str)
+    group_columns = [label_column, "t"]
+    shortcut_acc = _seed_first_pointer_mean(shortcut_df, group_columns, "accuracy", "accuracy_mean")
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.8))
+    sns.lineplot(data=shortcut_acc, x="t", y="accuracy_mean", hue=label_column, marker="o", ax=ax)
+    ax.axhline(0.95, color="gray", linestyle="--", alpha=0.7)
+    ax.set_title("Pointer Chasing: Explicit Shortcut Operators vs Execution Time")
+    ax.set_xlabel("t (internal execution time)")
+    ax.set_ylabel("Mean Accuracy")
+    ax.set_ylim(-0.05, 1.05)
+    fig.tight_layout()
+    path = output_path / "pointer_shortcut_ablation.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
+def generate_pointer_ac_plots(raw_results_csv: str | Path, plots_dir: str | Path) -> list[Path]:
+    sns.set_theme(style="whitegrid", context="talk")
+    output_path = Path(plots_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    df = pd.read_csv(raw_results_csv)
+    required = {"experiment", "L", "t", "correct", "path_accuracy", "first_error_index"}
+    missing = required.difference(df.columns)
+    if missing:
+        raise ValueError(f"Pointer results missing required columns: {', '.join(sorted(missing))}")
+
+    pdf = pd.DataFrame(df[df["experiment"].astype(str).isin(["pointer_chasing", "dfa", "binary_search"])].copy())
+    if pdf.empty:
+        return []
+
+    pdf["L"] = pd.to_numeric(pdf["L"]).astype(int)
+    pdf["t"] = pd.to_numeric(pdf["t"]).astype(int)
+    if "c" not in pdf.columns:
+        pdf["c"] = 1
+    pdf["c"] = pd.to_numeric(pdf["c"], errors="coerce").fillna(1).astype(int).clip(lower=1)
+    pdf["correct"] = _coerce_bool_series(pdf["correct"])
+    pdf["accuracy"] = pd.to_numeric(pdf["accuracy"], errors="coerce")
+    pdf["path_accuracy"] = pd.to_numeric(pdf["path_accuracy"], errors="coerce")
+    pdf["first_error_index"] = pd.to_numeric(pdf["first_error_index"], errors="coerce")
+
+    acc_df = _seed_first_pointer_mean(pdf, ["c", "L", "t"], "accuracy", "accuracy_mean")
+
+    paths: list[Path] = []
+    c_values = sorted(acc_df["c"].unique())
+    primary_c = 1 if 1 in c_values else int(c_values[0])
+
+    for c_value in c_values:
+        c_acc = pd.DataFrame(acc_df[acc_df["c"] == c_value].copy())
+        suffix = f" (c={c_value})"
+        paths.append(_save_pointer_heatmap(c_acc, output_path, _pointer_filename("pointer_accuracy_heatmap_L_t", c_value), suffix))
+        paths.append(_save_pointer_accuracy_vs_t(c_acc, output_path, _pointer_filename("pointer_accuracy_vs_t_by_L", c_value), suffix))
+        paths.append(_save_pointer_accuracy_vs_L(c_acc, output_path, _pointer_filename("pointer_accuracy_vs_L_by_t", c_value), suffix))
+
+    # Compatibility filenames are filtered to the primary c, never averaged across c.
+    primary_acc = pd.DataFrame(acc_df[acc_df["c"] == primary_c].copy())
+    primary_suffix = f" (c={primary_c})"
+    paths.append(_save_pointer_heatmap(primary_acc, output_path, "pointer_accuracy_heatmap_L_t.png", primary_suffix))
+    paths.append(_save_pointer_accuracy_vs_t(primary_acc, output_path, "pointer_accuracy_vs_t_by_L.png", primary_suffix))
+    paths.append(_save_pointer_accuracy_vs_L(primary_acc, output_path, "pointer_accuracy_vs_L_by_t.png", primary_suffix))
+
+    if len(c_values) > 1:
+        paths.append(_save_pointer_accuracy_vs_c(acc_df, output_path))
 
     # Path accuracy vs L, preserving the time-budget dimension.
     if pdf["path_accuracy"].notna().any():
-        path_acc_by_L_t = pdf.groupby(["L", "t"])["path_accuracy"].mean().reset_index()
-        fig, ax = plt.subplots(figsize=(8, 5))
-        for t_val in unique_t:
-            t_data = path_acc_by_L_t[path_acc_by_L_t["t"] == t_val]
-            ax.plot(t_data["L"], t_data["path_accuracy"], marker="o", label=f"t={t_val}")
-        ax.set_xlabel("K (Hop Depth)")
-        ax.set_ylabel("Mean Path Accuracy")
-        ax.set_title("Pointer Chasing: Path Accuracy vs Depth by Time Budget")
-        ax.legend(title="t")
-        ax.set_ylim(-0.05, 1.05)
-        plt.tight_layout()
-        plt.savefig(output_path / "pointer_path_accuracy_vs_L.png", dpi=150)
-        plt.close()
-        paths.append(output_path / "pointer_path_accuracy_vs_L.png")
+        path_acc_df = _seed_first_pointer_mean(pdf.dropna(subset=["path_accuracy"]), ["c", "L", "t"], "path_accuracy", "path_accuracy_mean")
+        for c_value in c_values:
+            c_path = pd.DataFrame(path_acc_df[path_acc_df["c"] == c_value].copy())
+            if c_path.empty:
+                continue
+            paths.append(_save_pointer_path_accuracy(c_path, output_path, _pointer_filename("pointer_path_accuracy_vs_L", c_value), f" (c={c_value})"))
+        primary_path = pd.DataFrame(path_acc_df[path_acc_df["c"] == primary_c].copy())
+        if not primary_path.empty:
+            paths.append(_save_pointer_path_accuracy(primary_path, output_path, "pointer_path_accuracy_vs_L.png", primary_suffix))
 
-    # NEW: Shortcut Ablation Plot
-    # We interpret specific Ls as shortcuts for a nominal depth of 8
-    shortcut_map = {8: "Standard (M)", 4: "M² Shortcuts", 2: "M⁴ Shortcuts", 1: "M⁸ Shortcuts"}
-    shortcut_df = acc_df[acc_df["L"].isin(shortcut_map.keys())].copy()
-    if not shortcut_df.empty:
-        plt.figure(figsize=(8, 6))
-        for L_val in sorted(shortcut_map.keys(), reverse=True):
-            sub_df = shortcut_df[shortcut_df["L"] == L_val].sort_values("t")
-            if not sub_df.empty:
-                plt.plot(sub_df["t"], sub_df["accuracy_mean"], marker="s", label=f"{shortcut_map[L_val]}")
-        
-        plt.axhline(0.95, color="gray", linestyle="--", alpha=0.7)
-        plt.title("Time-Size Tradeoff: Shortcuts vs Execution Time (Nominal Depth 8)")
-        plt.xlabel("Internal Execution Time (t)")
-        plt.ylabel("Accuracy")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig(output_path / "pointer_shortcut_ablation.png", dpi=150)
-        plt.close()
-        paths.append(output_path / "pointer_shortcut_ablation.png")
+    shortcut_path = _save_pointer_shortcut_ablation(pdf, output_path)
+    if shortcut_path is not None:
+        paths.append(shortcut_path)
 
     # First error histogram
-    first_err = pdf["first_error_index"].dropna()
+    primary_pdf = pd.DataFrame(pdf[pdf["c"] == primary_c].copy())
+    first_err = primary_pdf["first_error_index"].dropna()
     if not first_err.empty:
         fig, ax = plt.subplots(figsize=(8, 5))
         ax.hist(first_err.astype(int), bins=range(int(first_err.max()) + 2), align="left",
                 edgecolor="black", alpha=0.7)
         ax.set_xlabel("First Error Index")
         ax.set_ylabel("Count")
-        ax.set_title("Pointer Chasing: First Error Index Distribution")
+        ax.set_title(f"Pointer Chasing: First Error Index Distribution (c={primary_c})")
         fig.tight_layout()
         fe_path = output_path / "pointer_first_error_histogram.png"
         fig.savefig(fe_path, dpi=200)
         plt.close(fig)
         paths.append(fe_path)
+
+    if len(c_values) > 1 and pdf["first_error_index"].notna().any():
+        fig, ax = plt.subplots(figsize=(8.5, 5.5))
+        sns.histplot(data=pdf.dropna(subset=["first_error_index"]), x="first_error_index", hue="c", multiple="dodge", discrete=True, ax=ax)
+        ax.set_xlabel("First Error Index")
+        ax.set_ylabel("Count")
+        ax.set_title("Pointer Chasing: First Error Index by Transition Cost")
+        fig.tight_layout()
+        fe_by_c_path = output_path / "pointer_first_error_histogram_by_c.png"
+        fig.savefig(fe_by_c_path, dpi=200)
+        plt.close(fig)
+        paths.append(fe_by_c_path)
 
     return paths

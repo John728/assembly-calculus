@@ -1,0 +1,333 @@
+suite_name: mnist-ac-beta-sweep
+output_dir: results/mnist/beta_sweep
+seeds: [42]
+conditions:
+  - list_type: MNIST
+    N: 10
+    num_train_lists: 50
+    num_test_lists: 200
+    k_train_min: 1
+    k_train_max: 1
+    k_test_min: 0
+    k_test_max: 0
+models:
+  MNIST_AC:
+    # Beta 0.5
+    - model_name: AC-Beta-0.5-T1
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 5
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.5-T5
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 5
+      settle_steps: 5
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.5-T10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 5
+      settle_steps: 10
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.5-T20
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 5
+      settle_steps: 20
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.5-T50
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.5
+      presentation_rounds: 5
+      settle_steps: 50
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+
+    # Beta 0.1
+    - model_name: AC-Beta-0.1-T1
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.1
+      presentation_rounds: 5
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.1-T5
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.1
+      presentation_rounds: 5
+      settle_steps: 5
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.1-T10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.1
+      presentation_rounds: 5
+      settle_steps: 10
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.1-T20
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.1
+      presentation_rounds: 5
+      settle_steps: 20
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.1-T50
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.1
+      presentation_rounds: 5
+      settle_steps: 50
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+
+    # Beta 0.05
+    - model_name: AC-Beta-0.05-T1
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.05
+      presentation_rounds: 5
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.05-T5
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.05
+      presentation_rounds: 5
+      settle_steps: 5
+      class_organized: true
+      stimulus_mode: held
+      normalization_on: false
+    - model_name: AC-Beta-0.05-T10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.05
+      presentation_rounds: 5
+      settle_steps: 10
+      class_organized: true
+      stimulus_mode: held
+    - model_name: AC-Beta-0.05-T20
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.05
+      presentation_rounds: 5
+      settle_steps: 20
+      class_organized: true
+      stimulus_mode: held
+    - model_name: AC-Beta-0.05-T50
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.05
+      presentation_rounds: 5
+      settle_steps: 50
+      class_organized: true
+      stimulus_mode: held
+
+    # Beta 0.01
+    - model_name: AC-Beta-0.01-T1
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.01
+      presentation_rounds: 5
+      settle_steps: 1
+      class_organized: true
+      stimulus_mode: held
+    - model_name: AC-Beta-0.01-T5
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.01
+      presentation_rounds: 5
+      settle_steps: 5
+      class_organized: true
+      stimulus_mode: held
+    - model_name: AC-Beta-0.01-T10
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.01
+      presentation_rounds: 5
+      settle_steps: 10
+      class_organized: true
+      stimulus_mode: held
+    - model_name: AC-Beta-0.01-T20
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.01
+      presentation_rounds: 5
+      settle_steps: 20
+      class_organized: true
+      stimulus_mode: held
+    - model_name: AC-Beta-0.01-T50
+      data_dir: data/mnist
+      encoder_type: raw
+      raw_k: 200
+      train_limit: 50
+      test_limit: 200
+      t_values: [15]
+      n: 2000
+      k: 200
+      p: 0.1
+      beta: 0.01
+      presentation_rounds: 5
+      settle_steps: 50
+      class_organized: true
+      stimulus_mode: held

@@ -95,6 +95,28 @@ def _mnist_sequence_hold_sweep_job(data_dir: Path) -> ExperimentJob:
     )
 
 
+def _mnist_retention_job(data_dir: Path) -> ExperimentJob:
+    job = _mnist_job(data_dir)
+    values = dict(job.model.values)
+    values.pop("t_values")
+    values.update(
+        {
+            "model_name": "Tiny-MNIST-AC-Retention",
+            "cue_duration_values": [1, 2],
+            "retention_ell_values": [0, 3],
+            "normalization_on": False,
+        }
+    )
+    return ExperimentJob(
+        suite_name=job.suite_name,
+        output_dir=job.output_dir,
+        family=job.family,
+        model=ModelConfig(family="MNIST_AC", values=values),
+        seed=job.seed,
+        condition=job.condition,
+    )
+
+
 def test_mnist_runner_trains_once_then_evaluates_all_t_values(tmp_path: Path, monkeypatch) -> None:
     _write_mnist_idx_files(tmp_path)
     calls: list[tuple[str, object]] = []
@@ -104,9 +126,9 @@ def test_mnist_runner_trains_once_then_evaluates_all_t_values(tmp_path: Path, mo
         return object(), type("Task", (), {})()
 
     def fake_train_mnist_assemblies(
-        network, task, images, labels, presentation_rounds, settle_steps, class_organized
+        network, task, images, labels, presentation_rounds, settle_steps, class_organized, normalization_on=True
     ):
-        calls.append(("train", (len(images), labels.tolist(), presentation_rounds, settle_steps, class_organized)))
+        calls.append(("train", (len(images), labels.tolist(), presentation_rounds, settle_steps, class_organized, normalization_on)))
 
     def fake_evaluate_mnist_t_sweep(network, task, images, labels, t_values, instance_ids=None, stimulus_mode="held"):
         calls.append(("eval", (len(images), labels.tolist(), list(t_values), list(instance_ids), stimulus_mode)))
@@ -140,7 +162,7 @@ def test_mnist_runner_trains_once_then_evaluates_all_t_values(tmp_path: Path, mo
 
     assert [name for name, _ in calls] == ["build", "train", "eval"]
     assert calls[0][1] == (32, 4, 0.2, 0.1, 8, 2)
-    assert calls[1][1] == (10, list(range(10)), 1, 1, True)
+    assert calls[1][1] == (10, list(range(10)), 1, 1, True, True)
     assert calls[2][1] == (3, [0, 1, 2], [0, 2], [0, 1, 2], "transient")
     assert len(rows) == 6
     assert {row["family"] for row in rows} == {"MNIST_AC"}
@@ -148,6 +170,8 @@ def test_mnist_runner_trains_once_then_evaluates_all_t_values(tmp_path: Path, mo
     assert {row["k_test"] for row in rows} == {0, 2}
     assert {row["accuracy"] for row in rows} == {1.0}
     assert all(row["plasticity_on"] is False for row in rows)
+    assert all(row["normalization_on"] is True for row in rows)
+    assert all(row["beta_train"] == 0.1 for row in rows)
 
 
 def test_mnist_runner_dispatches_sequence_probe(tmp_path: Path, monkeypatch) -> None:
@@ -159,9 +183,9 @@ def test_mnist_runner_dispatches_sequence_probe(tmp_path: Path, monkeypatch) -> 
         return object(), type("Task", (), {})()
 
     def fake_train_mnist_assemblies(
-        network, task, images, labels, presentation_rounds, settle_steps, class_organized
+        network, task, images, labels, presentation_rounds, settle_steps, class_organized, normalization_on=True
     ):
-        calls.append(("train", (len(images), labels.tolist(), presentation_rounds, settle_steps, class_organized)))
+        calls.append(("train", (len(images), labels.tolist(), presentation_rounds, settle_steps, class_organized, normalization_on)))
 
     def fake_evaluate_mnist_sequence(
         network, task, images, labels, sequence_digits, steps_per_digit, instance_ids=None
@@ -219,9 +243,9 @@ def test_mnist_runner_dispatches_sequence_hold_sweep_after_one_training_run(tmp_
         return object(), type("Task", (), {})()
 
     def fake_train_mnist_assemblies(
-        network, task, images, labels, presentation_rounds, settle_steps, class_organized
+        network, task, images, labels, presentation_rounds, settle_steps, class_organized, normalization_on=True
     ):
-        calls.append(("train", (len(images), labels.tolist(), presentation_rounds, settle_steps, class_organized)))
+        calls.append(("train", (len(images), labels.tolist(), presentation_rounds, settle_steps, class_organized, normalization_on)))
 
     def fake_evaluate_mnist_sequence(
         network, task, images, labels, sequence_digits, steps_per_digit, instance_ids=None
@@ -271,6 +295,92 @@ def test_mnist_runner_dispatches_sequence_hold_sweep_after_one_training_run(tmp_
     }
     assert {row["hold_steps"] for row in rows} == {2, 4}
     assert {row["accuracy"] for row in rows} == {1.0}
+
+
+def test_mnist_runner_dispatches_retention_sweep(tmp_path: Path, monkeypatch) -> None:
+    _write_mnist_idx_files(tmp_path)
+    calls: list[tuple[str, object]] = []
+
+    def fake_build_mnist_network(n, k, p, beta, rng, *, encoder=None):
+        calls.append(("build", (n, k, p, beta)))
+        return object(), type("Task", (), {})()
+
+    def fake_train_mnist_assemblies(
+        network, task, images, labels, presentation_rounds, settle_steps, class_organized, normalization_on=True
+    ):
+        calls.append(("train", (len(images), labels.tolist(), presentation_rounds, settle_steps, class_organized, normalization_on)))
+
+    def fake_evaluate_mnist_retention_sweep(
+        network,
+        task,
+        images,
+        labels,
+        cue_duration_values,
+        retention_ell_values,
+        instance_ids=None,
+    ):
+        calls.append(
+            (
+                "retention",
+                (
+                    len(images),
+                    labels.tolist(),
+                    list(cue_duration_values),
+                    list(retention_ell_values),
+                    list(instance_ids),
+                ),
+            )
+        )
+        return [
+            {
+                "experiment": "mnist_retention",
+                "seed": None,
+                "n": 32,
+                "k": 4,
+                "p": 0.2,
+                "beta": 0.1,
+                "t": s + ell,
+                "s": s,
+                "cue_duration_s": s,
+                "ell": ell,
+                "retention_ell": ell,
+                "instance_id": instance_id,
+                "target": int(label),
+                "prediction": int(label),
+                "correct": True,
+                "correct_score": 0.8,
+                "strongest_wrong_score": 0.2,
+                "margin": 0.6,
+                "retention_time": 3,
+                "stayed_correct": True,
+                "became_correct_later": False,
+                "retained_full_horizon": True,
+                "plasticity_on": False,
+                "stimulus_mode": "cue_then_off",
+            }
+            for image, label, instance_id in zip(images, labels, instance_ids)
+            for s in cue_duration_values
+            for ell in retention_ell_values
+        ]
+
+    import experiment_suite.runners.mnist_ac_runner as runner
+
+    monkeypatch.setattr(runner, "build_mnist_network", fake_build_mnist_network)
+    monkeypatch.setattr(runner, "train_mnist_assemblies", fake_train_mnist_assemblies)
+    monkeypatch.setattr(runner, "evaluate_mnist_retention_sweep", fake_evaluate_mnist_retention_sweep)
+
+    rows = runner.run_mnist_ac_job(_mnist_retention_job(tmp_path))
+
+    assert [name for name, _ in calls] == ["build", "train", "retention"]
+    assert calls[1][1] == (10, list(range(10)), 1, 1, True, False)
+    assert calls[2][1] == (3, [0, 1, 2], [1, 2], [0, 3], [0, 1, 2])
+    assert len(rows) == 12
+    assert {row["model_name"] for row in rows} == {"Tiny-MNIST-AC-Retention"}
+    assert {row["stimulus_mode"] for row in rows} == {"cue_then_off"}
+    assert {row["k_test"] for row in rows} == {0, 3}
+    assert {row["normalization_on"] for row in rows} == {False}
+    assert {row["plasticity_train_on"] for row in rows} == {True}
+    assert {row["plasticity_eval_on"] for row in rows} == {False}
 
 
 def test_mnist_runner_fails_clearly_when_data_dir_is_missing(tmp_path: Path) -> None:
