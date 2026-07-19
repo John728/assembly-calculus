@@ -1,0 +1,41 @@
+{
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "train_images": 500,
+  "test_images": 50,
+  "n": 2000,
+  "k": 200,
+  "p": 0.1,
+  "beta": 0.5,
+  "raw_input_k": 200,
+  "class_organised": true,
+  "presentation_rounds": [
+    1,
+    10,
+    100
+  ],
+  "cue_durations": [
+    1,
+    2
+  ],
+  "retention_lags": [
+    0,
+    1,
+    2,
+    4,
+    8,
+    10,
+    20,
+    50
+  ],
+  "normalisation": "one incoming budget across sensory and recurrent fibres",
+  "plasticity_during_evaluation": false,
+  "held_removed_model": "R=1",
+  "software_revision": "43500a3d3437dd0d67387a8eaa766a11ff4074e0",
+  "software_worktree_dirty": true
+}

@@ -1,0 +1,41 @@
+{
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "nodes": 10,
+  "assembly_size": 16,
+  "controller_density": 0.35,
+  "memory_density": 0.35,
+  "plasticity": 0.3,
+  "controller_rounds": 12,
+  "write_rounds_values": [
+    1,
+    2,
+    4,
+    10
+  ],
+  "tables_per_seed": 20,
+  "maximum_depth": 8,
+  "controller_training_tables": 0,
+  "evaluation_tables": "unique new full-cycle permutations written after controller training",
+  "memory_fibre": "source -> destination",
+  "controller_fibres": [
+    "current -> control",
+    "control -> source",
+    "destination -> control",
+    "control -> current"
+  ],
+  "updates_per_hop": 2,
+  "phase_schedule": "fixed query/writeback alternation with inactive workspaces reset between phases",
+  "external_state_cues_during_rollout": 0,
+  "controller_weight_audit": "bitwise unchanged after every table/write-strength evaluation",
+  "memory_write_plasticity_on": true,
+  "plasticity_during_rollout": false,
+  "normalisation": "one incoming budget across all fibres to each area after every complete training or write round",
+  "software_revision": "43500a3d3437dd0d67387a8eaa766a11ff4074e0",
+  "software_worktree_dirty": true
+}

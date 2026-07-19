@@ -1,0 +1,14 @@
+{
+  "seeds": [42, 43, 44, 45, 46],
+  "pointer_tables_per_seed": 10,
+  "nodes_per_table": 10,
+  "training_depths": [1, 2, 3, 4],
+  "evaluation_depths": [1, 2, 3, 4, 5, 6, 7, 8],
+  "widths": [64, 128, 256, 512],
+  "input_dimension": 111,
+  "training_examples_per_seed": 400,
+  "optimiser": "full-batch Adam",
+  "updates": 600,
+  "learning_rate": 0.01,
+  "table_seed_protocol": "SeedSequence(seed).spawn(3)[0], matching the AC list seed"
+}
