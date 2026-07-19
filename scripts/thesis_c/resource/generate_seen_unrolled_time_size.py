@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -61,14 +62,21 @@ def full_normalise(network, area_name: str | None = None) -> None:
             matrix.data = matrix.data / total[matrix.indices]
 
 
-class ExactSeenPointerMLP:
-    """One exact table-specific ReLU layer per pointer hop."""
+class ExactUnrolledPointerMLP:
+    """An explicit untied stack of exact table-specific ReLU layers."""
 
-    def __init__(self, pointer: np.ndarray):
+    def __init__(self, pointer: np.ndarray, depth: int):
         self.pointer = np.asarray(pointer, dtype=np.int64)
         self.nodes = int(len(self.pointer))
-        self.weight = np.zeros((self.nodes, self.nodes), dtype=np.float64)
-        self.weight[np.arange(self.nodes), self.pointer] = 1.0
+        one_hop = np.zeros((self.nodes, self.nodes), dtype=np.float64)
+        one_hop[np.arange(self.nodes), self.pointer] = 1.0
+        self.weights = [one_hop.copy() for _ in range(depth)]
+        self.biases = [np.zeros(self.nodes, dtype=np.float64) for _ in range(depth)]
+        assert all(
+            not np.shares_memory(left, right)
+            for index, left in enumerate(self.weights)
+            for right in self.weights[index + 1 :]
+        )
 
     @property
     def dense_parameter_slots_per_hop(self) -> int:
@@ -76,12 +84,33 @@ class ExactSeenPointerMLP:
 
     @property
     def nonzero_coefficients_per_hop(self) -> int:
-        return int(np.count_nonzero(self.weight))
+        return int(np.count_nonzero(self.weights[0]))
 
     def apply(self, states: np.ndarray) -> np.ndarray:
         inputs = np.eye(self.nodes, dtype=np.float64)[states]
-        outputs = np.maximum(inputs @ self.weight, 0.0)
-        return outputs.argmax(axis=1).astype(np.int64)
+        for weight, bias in zip(self.weights, self.biases):
+            inputs = np.maximum(inputs @ weight + bias, 0.0)
+        return inputs.argmax(axis=1).astype(np.int64)
+
+    @property
+    def dense_parameter_slots(self) -> int:
+        return len(self.weights) * self.dense_parameter_slots_per_hop
+
+    @property
+    def nonzero_coefficients(self) -> int:
+        return sum(int(np.count_nonzero(weight)) for weight in self.weights)
+
+
+def git_state(root: Path) -> tuple[str, bool]:
+    revision = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=root, check=True,
+        capture_output=True, text=True,
+    ).stdout.strip()
+    status = subprocess.run(
+        ["git", "status", "--porcelain", "--", "scripts/thesis_c", "pyac/src/pyac"],
+        cwd=root, check=True, capture_output=True, text=True,
+    ).stdout
+    return revision, bool(status.strip())
 
 
 def import_pointer_model(ac_root: Path):
@@ -132,8 +161,6 @@ def run(ac_root: Path) -> tuple[pd.DataFrame, dict[str, object]]:
         )
 
         starts = np.arange(NODES, dtype=np.int64)
-        mlp = ExactSeenPointerMLP(pointer)
-        mlp_states = starts.copy()
         mlp_prefix = np.ones(NODES, dtype=bool)
         ac_sequences = {
             start: rollout(
@@ -151,7 +178,8 @@ def run(ac_root: Path) -> tuple[pd.DataFrame, dict[str, object]]:
 
         for depth in range(1, MAX_DEPTH + 1):
             targets = pointer[targets]
-            mlp_states = mlp.apply(mlp_states)
+            mlp = ExactUnrolledPointerMLP(pointer, depth)
+            mlp_states = mlp.apply(starts)
             mlp_correct = mlp_states == targets
             mlp_prefix &= mlp_correct
             for index, start in enumerate(starts):
@@ -173,10 +201,8 @@ def run(ac_root: Path) -> tuple[pd.DataFrame, dict[str, object]]:
                         "mlp_correct": int(mlp_correct[index]),
                         "mlp_path_correct": int(mlp_prefix[index]),
                         "mlp_blocks": depth,
-                        "mlp_dense_parameter_slots": depth
-                        * mlp.dense_parameter_slots_per_hop,
-                        "mlp_nonzero_coefficients": depth
-                        * mlp.nonzero_coefficients_per_hop,
+                        "mlp_dense_parameter_slots": mlp.dense_parameter_slots,
+                        "mlp_nonzero_coefficients": mlp.nonzero_coefficients,
                         "ac_prediction": ac_prediction,
                         "ac_correct": int(ac_prediction == targets[index]),
                         "ac_path_correct": int(ac_prefix_correct),
@@ -194,6 +220,7 @@ def run(ac_root: Path) -> tuple[pd.DataFrame, dict[str, object]]:
             f"Seen-map AC failed {len(failures)} matched rows; tune only from training evidence"
         )
 
+    revision, relevant_paths_dirty = git_state(ac_root)
     metadata: dict[str, object] = {
         "protocol": "matched seen-table one-hop composition",
         "seeds": list(SEEDS),
@@ -208,14 +235,19 @@ def run(ac_root: Path) -> tuple[pd.DataFrame, dict[str, object]]:
             "transition_training_rounds": 12,
             "association_steps": 3,
             "updates_per_hop": 1,
+            "recurrent_self_synapses": False,
+            "expected_structural_synapses": 447720,
         },
         "mlp": {
             "construction": "table-specific N-wide ReLU transition layer, untied by hop",
+            "execution": "a fresh depth-L model with L independently allocated weight and bias arrays",
             "dense_parameter_slots_per_hop": NODES * NODES + NODES,
             "nonzero_coefficients_per_hop": NODES,
             "precomputed_power_shortcuts": False,
         },
         "plasticity_during_evaluation": False,
+        "software_revision": revision,
+        "software_relevant_paths_dirty": relevant_paths_dirty,
     }
     return frame, metadata
 

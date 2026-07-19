@@ -175,41 +175,7 @@ def plot_trace(trace_path: Path, output: Path) -> None:
     save(fig, output, "pointer_unseen_trace")
 
 
-def budget_frame(frame: pd.DataFrame, write_rounds: int) -> pd.DataFrame:
-    locked = frame[frame["write_rounds"] == write_rounds].copy()
-    keys = ["seed", "table_index", "start_node"]
-    rows: list[dict[str, int | float]] = []
-    for key, group in locked.groupby(keys):
-        group = group.sort_values("L")
-        predictions = {0: int(group.iloc[0]["start_node"])}
-        targets = {}
-        for row in group.itertuples():
-            predictions[int(row.L)] = int(row.prediction)
-            targets[int(row.L)] = int(row.target)
-        maximum = max(targets)
-        for depth in range(1, maximum + 1):
-            for budget in range(0, 2 * maximum + 1):
-                executed = min(budget // 2, depth)
-                prediction = predictions[executed]
-                rows.append(
-                    {
-                        "seed": int(key[0]),
-                        "table_index": int(key[1]),
-                        "start_node": int(key[2]),
-                        "L": depth,
-                        "t": budget,
-                        "executed_hops": executed,
-                        "target": targets[depth],
-                        "prediction": prediction,
-                        "accuracy": float(prediction == targets[depth]),
-                    }
-                )
-    return pd.DataFrame(rows)
-
-
-def plot_reach(frame: pd.DataFrame, output: Path, write_rounds: int = 4) -> None:
-    budget = budget_frame(frame, write_rounds)
-    budget.to_csv(output / "pointer_unseen_budget_raw.csv", index=False)
+def plot_reach(budget: pd.DataFrame, output: Path) -> None:
     summary = budget.groupby(["L", "t"], as_index=False).agg(accuracy=("accuracy", "mean"))
     depths = sorted(summary["L"].unique())
     budgets = sorted(summary["t"].unique())
@@ -220,7 +186,9 @@ def plot_reach(frame: pd.DataFrame, output: Path, write_rounds: int = 4) -> None
             matrix[row_index, column_index] = float(value.iloc[0])
 
     fig, axis = plt.subplots(figsize=(6.4, 3.35))
-    image = axis.imshow(matrix, origin="lower", aspect="auto", cmap="cividis", vmin=0, vmax=1)
+    cmap = plt.get_cmap("cividis").copy()
+    cmap.set_bad("#F2F2F2")
+    image = axis.imshow(matrix, origin="lower", aspect="auto", cmap=cmap, vmin=0, vmax=1)
     axis.set_xticks(range(len(budgets)), labels=[str(value) for value in budgets])
     axis.set_yticks(range(len(depths)), labels=[str(value) for value in depths])
     axis.set(xlabel="Internal update budget $t$", ylabel="Pointer depth $L$")
@@ -237,16 +205,18 @@ def plot_reach(frame: pd.DataFrame, output: Path, write_rounds: int = 4) -> None
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--raw", type=Path, required=True)
+    parser.add_argument("--budget-raw", type=Path, required=True)
     parser.add_argument("--trace", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parent)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     configure()
     frame = pd.read_csv(args.raw)
+    budget = pd.read_csv(args.budget_raw)
     plot_architecture(args.output)
     plot_write_strength(frame, args.output)
     plot_trace(args.trace, args.output)
-    plot_reach(frame[frame["L"] <= 8].copy(), args.output)
+    plot_reach(budget, args.output)
 
 
 if __name__ == "__main__":

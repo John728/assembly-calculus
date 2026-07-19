@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -15,6 +16,24 @@ EXPOSURES = (1, 10, 100)
 CUE_DURATIONS = (1, 2)
 RETENTION_LAGS = (0, 1, 2, 4, 8, 10, 20, 50)
 TIME_VALUES = (0, 1, 2, 4, 8, 10, 20, 40, 60, 80, 100)
+
+
+def git_state(root: Path) -> tuple[str, bool]:
+    revision = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    status = subprocess.run(
+        ["git", "status", "--porcelain", "--", "scripts/thesis_c", "pyac/src/pyac"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    return revision, bool(status.strip())
 
 
 def full_normalise(network, area_name: str | None = None) -> None:
@@ -93,6 +112,9 @@ def main() -> None:
     test = load_mnist_split(data_dir, "test")
     train_images, train_labels = train.images[:500], train.labels[:500]
     test_images, test_labels = test.images[:50], test.labels[:50]
+    available_per_class = {
+        str(digit): int(np.sum(train_labels == digit)) for digit in range(10)
+    }
 
     retention_rows: list[dict[str, object]] = []
     held_rows: list[dict[str, object]] = []
@@ -106,6 +128,10 @@ def main() -> None:
                 n=2000, k=200, p=0.1, beta=0.5, rng=rng, encoder=encoder
             )
             task.seed = seed
+            coding_area = task.area_map["coding"]
+            recurrent = network.weights[(coding_area, coding_area)]
+            recurrent.setdiag(0.0)
+            recurrent.eliminate_zeros()
             full_normalise(network)
             network.normalize = types.MethodType(
                 lambda self, target=None: full_normalise(self, target), network
@@ -183,6 +209,7 @@ def main() -> None:
         json.dumps(trace, indent=2), encoding="utf-8"
     )
 
+    revision, relevant_paths_dirty = git_state(args.ac_root)
     metadata = {
         "seeds": list(SEEDS),
         "train_images": 500,
@@ -194,13 +221,23 @@ def main() -> None:
         "raw_input_k": 200,
         "class_organised": True,
         "presentation_rounds": list(EXPOSURES),
+        "presentation_rounds_semantics": "maximum distinct images used per class",
+        "available_train_images_per_class": available_per_class,
+        "used_train_images_per_class": {
+            str(exposure): {
+                digit: min(exposure, available)
+                for digit, available in available_per_class.items()
+            }
+            for exposure in EXPOSURES
+        },
         "cue_durations": list(CUE_DURATIONS),
         "retention_lags": list(RETENTION_LAGS),
         "normalisation": "one incoming budget across sensory and recurrent fibres",
         "plasticity_during_evaluation": False,
+        "recurrent_self_synapses": False,
         "held_removed_model": "R=1",
-        "software_revision": "43500a3d3437dd0d67387a8eaa766a11ff4074e0",
-        "software_worktree_dirty": True,
+        "software_revision": revision,
+        "software_relevant_paths_dirty": relevant_paths_dirty,
     }
     (args.output / "mnist_full_metadata.json").write_text(
         json.dumps(metadata, indent=2), encoding="utf-8"

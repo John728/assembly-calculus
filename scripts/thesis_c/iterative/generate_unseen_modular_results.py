@@ -315,6 +315,53 @@ def rollout(
     }
 
 
+def rollout_budget_rows(
+    network,
+    task: ModularPointerTask,
+    pointer: np.ndarray,
+    *,
+    start: int,
+    maximum_depth: int,
+) -> list[dict[str, int | float | bool]]:
+    rows: list[dict[str, int | float | bool]] = []
+    for depth in range(1, maximum_depth + 1):
+        target = int(start)
+        for _ in range(depth):
+            target = int(pointer[target])
+
+        clear(network)
+        network.activations["current"] = task.node_assemblies["current"][start].copy()
+        prediction = int(start)
+        rows.append(
+            {
+                "L": depth,
+                "t": 0,
+                "completed_hops": 0,
+                "target": target,
+                "prediction": prediction,
+                "accuracy": float(prediction == target),
+                "direct_execution": True,
+            }
+        )
+        for budget in range(1, 2 * depth + 1):
+            if budget % 2 == 1:
+                query_phase(network, task)
+            else:
+                prediction, _ = writeback_phase(network, task)
+            rows.append(
+                {
+                    "L": depth,
+                    "t": budget,
+                    "completed_hops": budget // 2,
+                    "target": target,
+                    "prediction": prediction,
+                    "accuracy": float(prediction == target),
+                    "direct_execution": True,
+                }
+            )
+    return rows
+
+
 def cycle_table(rng: np.random.Generator, nodes: int) -> np.ndarray:
     order = rng.permutation(nodes)
     pointer = np.empty(nodes, dtype=np.int64)
@@ -361,6 +408,7 @@ def main() -> None:
     args.output.mkdir(parents=True, exist_ok=True)
 
     rows: list[dict[str, object]] = []
+    budget_rows: list[dict[str, object]] = []
     trace: dict[str, object] | None = None
     for seed in args.seeds:
         seed_sequence = np.random.SeedSequence(seed)
@@ -402,6 +450,24 @@ def main() -> None:
                         start=start,
                         hops=args.max_depth,
                     )
+                    if write_rounds == 4:
+                        for budget_row in rollout_budget_rows(
+                            network,
+                            task,
+                            pointer,
+                            start=start,
+                            maximum_depth=min(args.max_depth, 8),
+                        ):
+                            budget_rows.append(
+                                {
+                                    "seed": seed,
+                                    "table_index": table_index,
+                                    "start_node": start,
+                                    "write_rounds": write_rounds,
+                                    **budget_row,
+                                    "rollout_plasticity_on": False,
+                                }
+                            )
                     true_path = result["true_path"]
                     decoded_path = result["decoded_path"]
                     for depth in range(1, args.max_depth + 1):
@@ -453,6 +519,8 @@ def main() -> None:
 
     frame = pd.DataFrame(rows)
     frame.to_csv(args.output / "pointer_unseen_modular_raw.csv", index=False)
+    budget_frame = pd.DataFrame(budget_rows)
+    budget_frame.to_csv(args.output / "pointer_unseen_budget_raw.csv", index=False)
     assert trace is not None
     (args.output / "pointer_unseen_modular_trace.json").write_text(
         json.dumps(trace, indent=2), encoding="utf-8"
@@ -480,6 +548,8 @@ def main() -> None:
             "control -> current",
         ],
         "updates_per_hop": 2,
+        "budget_test": "direct fresh execution for every (path, L), recorded from t=0 through first completion at t=2L",
+        "budget_test_maximum_depth": min(args.max_depth, 8),
         "phase_schedule": "fixed query/writeback alternation with inactive workspaces reset between phases",
         "external_state_cues_during_rollout": 0,
         "controller_weight_audit": "bitwise unchanged after every table/write-strength evaluation",
