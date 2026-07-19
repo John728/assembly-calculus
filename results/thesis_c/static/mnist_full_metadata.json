@@ -19,6 +19,57 @@
     10,
     100
   ],
+  "presentation_rounds_semantics": "maximum distinct images used per class",
+  "available_train_images_per_class": {
+    "0": 50,
+    "1": 66,
+    "2": 52,
+    "3": 50,
+    "4": 52,
+    "5": 39,
+    "6": 45,
+    "7": 52,
+    "8": 39,
+    "9": 55
+  },
+  "used_train_images_per_class": {
+    "1": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+      "3": 1,
+      "4": 1,
+      "5": 1,
+      "6": 1,
+      "7": 1,
+      "8": 1,
+      "9": 1
+    },
+    "10": {
+      "0": 10,
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 10,
+      "8": 10,
+      "9": 10
+    },
+    "100": {
+      "0": 50,
+      "1": 66,
+      "2": 52,
+      "3": 50,
+      "4": 52,
+      "5": 39,
+      "6": 45,
+      "7": 52,
+      "8": 39,
+      "9": 55
+    }
+  },
   "cue_durations": [
     1,
     2
@@ -35,7 +86,8 @@
   ],
   "normalisation": "one incoming budget across sensory and recurrent fibres",
   "plasticity_during_evaluation": false,
+  "recurrent_self_synapses": false,
   "held_removed_model": "R=1",
-  "software_revision": "43500a3d3437dd0d67387a8eaa766a11ff4074e0",
-  "software_worktree_dirty": true
+  "software_revision": "13341ce257a8ceebc31bee559670e6177af8ced3",
+  "software_relevant_paths_dirty": true
 }

@@ -73,13 +73,18 @@
     "node_training_rounds": 4,
     "transition_training_rounds": 12,
     "association_steps": 3,
-    "updates_per_hop": 1
+    "updates_per_hop": 1,
+    "recurrent_self_synapses": false,
+    "expected_structural_synapses": 447720
   },
   "mlp": {
     "construction": "table-specific N-wide ReLU transition layer, untied by hop",
+    "execution": "a fresh depth-L model with L independently allocated weight and bias arrays",
     "dense_parameter_slots_per_hop": 2550,
     "nonzero_coefficients_per_hop": 50,
     "precomputed_power_shortcuts": false
   },
-  "plasticity_during_evaluation": false
+  "plasticity_during_evaluation": false,
+  "software_revision": "13341ce257a8ceebc31bee559670e6177af8ced3",
+  "software_relevant_paths_dirty": true
 }

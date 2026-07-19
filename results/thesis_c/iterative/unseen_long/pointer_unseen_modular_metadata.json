@@ -31,12 +31,14 @@
     "control -> current"
   ],
   "updates_per_hop": 2,
+  "budget_test": "direct fresh execution for every (path, L), recorded from t=0 through first completion at t=2L",
+  "budget_test_maximum_depth": 8,
   "phase_schedule": "fixed query/writeback alternation with inactive workspaces reset between phases",
   "external_state_cues_during_rollout": 0,
   "controller_weight_audit": "bitwise unchanged after every table/write-strength evaluation",
   "memory_write_plasticity_on": true,
   "plasticity_during_rollout": false,
   "normalisation": "one incoming budget across all fibres to each area after every complete training or write round",
-  "software_revision": "43500a3d3437dd0d67387a8eaa766a11ff4074e0",
+  "software_revision": "13341ce257a8ceebc31bee559670e6177af8ced3",
   "software_worktree_dirty": true
 }
