@@ -1,0 +1,81 @@
+diff --git a/pyac/src/pyac/core/network.py b/pyac/src/pyac/core/network.py
+index ae8e7ad..679f5ba 100644
+--- a/pyac/src/pyac/core/network.py
++++ b/pyac/src/pyac/core/network.py
+@@ -125,10 +125,10 @@ class Network:
+             if plasticity_on:
+                 for src_name in self.incoming_fibers[area_name]:
+                     hebbian_update(
+-                        self.weights[(src_name, area_name)],
++                        weights=self.weights[(src_name, area_name)],
+                         pre_firing=self.activations[src_name],
+                         post_firing=new_activations,
+-                        beta=beta,
++                        beta=self.spec.beta,
+                     )
+ 
+                 self.strategies[area_name].update_state(
+diff --git a/pyac/src/pyac/core/types.py b/pyac/src/pyac/core/types.py
+index 1735909..c050c92 100644
+--- a/pyac/src/pyac/core/types.py
++++ b/pyac/src/pyac/core/types.py
+@@ -59,6 +59,7 @@ class NetworkSpec:
+     fibers: list
+     beta: float = 0.1
+     homeostasis: bool = True
++    norm_type: str = "l1"
+     step_order: str = "synchronous"
+ 
+     def __post_init__(self):
+diff --git a/pyac/src/pyac/core/weights.py b/pyac/src/pyac/core/weights.py
+index 05e35f9..1fa5ca5 100644
+--- a/pyac/src/pyac/core/weights.py
++++ b/pyac/src/pyac/core/weights.py
+@@ -69,6 +69,10 @@ def normalize_weights(
+         area_name: Target area name to normalize incoming weights for.
+         network_spec: NetworkSpec describing the network topology.
+     """
++    norm_type = getattr(network_spec, 'norm_type', 'l1')
++    if norm_type == 'none':
++        return
++
+     incoming_keys = [k for k in weights.keys() if k[1] == area_name]
+     
+     if not incoming_keys:
+@@ -76,6 +80,33 @@ def normalize_weights(
+     
+     for key in incoming_keys:
+         mat = weights[key]
+-        col_sums = np.asarray(mat.sum(axis=0)).ravel()
+-        col_sums_safe = np.where(col_sums == 0.0, 1.0, col_sums)
+-        weights[key].data = mat.data / col_sums_safe[mat.indices]
++        if norm_type == 'l1':
++            col_sums = np.asarray(mat.sum(axis=0)).ravel()
++            col_sums_safe = np.where(col_sums == 0.0, 1.0, col_sums)
++            weights[key].data = mat.data / col_sums_safe[mat.indices]
++        elif norm_type == 'l2':
++            # Oja's rule inspired L2 normalization
++            mat_sq = mat.copy()
++            mat_sq.data = mat_sq.data ** 2
++            col_norms = np.sqrt(np.asarray(mat_sq.sum(axis=0)).ravel())
++            col_norms_safe = np.where(col_norms == 0.0, 1.0, col_norms)
++            weights[key].data = mat.data / col_norms_safe[mat.indices]
++        elif norm_type == 'max':
++            # Max normalization
++            col_max = np.asarray(mat.max(axis=0).todense()).ravel()
++            col_max_safe = np.where(col_max == 0.0, 1.0, col_max)
++            weights[key].data = mat.data / col_max_safe[mat.indices]
++        elif norm_type == 'softmax':
++            # Softmax-like normalization across columns (approximate)
++            # Find max per column for stability
++            col_max = np.asarray(mat.max(axis=0).todense()).ravel()
++            shifted_data = mat.data - col_max[mat.indices]
++            exp_data = np.exp(shifted_data)
++            
++            exp_mat = csr_matrix((exp_data, mat.indices, mat.indptr), shape=mat.shape)
++            col_sums = np.asarray(exp_mat.sum(axis=0)).ravel()
++            col_sums_safe = np.where(col_sums == 0.0, 1.0, col_sums)
++            
++            weights[key].data = exp_data / col_sums_safe[mat.indices]
++        else:
++            raise ValueError(f"Unknown norm_type: {norm_type}")
