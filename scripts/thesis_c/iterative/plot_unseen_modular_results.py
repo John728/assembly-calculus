@@ -183,7 +183,8 @@ def plot_reach(budget: pd.DataFrame, output: Path) -> None:
     for row_index, depth in enumerate(depths):
         for column_index, time in enumerate(budgets):
             value = summary.loc[(summary["L"] == depth) & (summary["t"] == time), "accuracy"]
-            matrix[row_index, column_index] = float(value.iloc[0])
+            if not value.empty:
+                matrix[row_index, column_index] = float(value.iloc[0])
 
     fig, axis = plt.subplots(figsize=(6.4, 3.35))
     cmap = plt.get_cmap("cividis").copy()
