@@ -1,0 +1,40 @@
+\section{Introduction}
+Language is a distinguishing human function involving the creation, articulation, comprehension, and maintenance of hierarchically structured information about the world. It is beyond doubt that language is achieved through the activity of neurons and synapses --- but how?  
+There has been extensive previous work in cognitive experiments --- psycholinguistics, computational psycholinguistics, and brain imaging --- that has led to many insights into how the brain processes language (see section \ref{related} for an overview).
+However, no concrete narrative emerges yet from these advances about the precise way in which the activity of individual neurons can result in language.  In particular, {\em we are not aware of an experiment in which a reasonably complex linguistic phenomenon is reproduced through simulated neurons and synapses.} This is the direction pursued here. 
+
+Developing an overarching computational understanding of the way neurons in the human brain can make language is hindered by the state of neuroscience, which (a) predominantly studies sensory and motor brain functions of animals other than humans; and (b) with respect to computational modeling, focuses on the level of neurons and neuronal circuits, and lacks the kind of high-level computational model that seems to be needed for understanding how high-level cognitive functions can emerge from neuronal activity.
+
+Very recently, a computational model of brain function, the Assembly Calculus (AC), has been proposed \cite{PNAS}.  The AC describes a dynamical system involving the following parts and properties, well attested in the neuroscience literature: a) brain areas with random connections between neurons; b) a simple linear model of neuronal inputs; c) inhibition within each area such that the top $k$ most activated neurons fire; d) a simple model of Hebbian plasticity, whereby the strength of synapses increase as neurons fire. 
+An important object emerges from these properties: the {\em assembly}, a large set of highly interconnected excitatory neurons, all residing in the same brain area. 
+
+Assemblies have been hypothesized by Hebb seven decades ago \cite{Hebb}, and were identified in the brain of experimental animals two decades ago \cite{Harris}. 
+There is a growing consensus that assemblies play a central role in the way brains work \cite{Eichenbaum}, and were recently called ``the alphabet of the brain'' \cite{buzsakibook}. Assemblies can, through their near-simultaneous excitation, represent an object, episode, word or idea. It is shown in \citet{PNAS} that assemblies are an emergent property of the dynamical system under conditions (a) -- (d) above, both in theory and in simulations.   
+
+In the AC (reviewed in more detail in Section 3), the dynamical system also makes it possible to create and manipulate assemblies through {\em operations} like projection, reciprocal projection, association, pattern completion, and merge. 
+These operations are {\em realistic} in two orthogonal senses: first, they correspond to behaviors of assemblies that were either observed in experiments, or are helpful in explaining other experiments. Second, they provably correspond (they ``compile down'') to the activity of individual neurons and synapses; in \citet{PNAS}, this correspondence is proven both mathematically and through simulations. It is hypothesized in \citet{PNAS} that the AC may underlie high-level cognitive functions.  In particular, in the discussion section it is proposed that one particular operation of the AC called {\em merge} may play a role in the generation of sentences.
+
+Note that, regarding the soundness of the AC, what has been established through mathematical proof is that AC operations work correctly {\em with high probability,} where the underlying probabilistic event is the creation of the random connectome.  So far, the simulation experiments conducted with the AC have demonstrated that individual commands of the AC, or short sequences thereof, can be successfully and reliably implemented in a simulator \cite{PNAS}.  Do such simulations scale?  For example, {\em can one implement in the AC a computationally demanding cognitive function, such as the parsing of sentences, and will the resulting dynamical system be stable and reliable?}  This is nature of the experiment we describe below.
+
+%On a different but intimately related front, over the past five years there has been fantastic progress in NLP, most notably through powerful word representations learned in a largely unsupervised way (for example see \cite{transformers}). The extent to which such structures reflect the way the brain comprehends language is debated; see \cite{Schrimpf} for a surprising insight suggesting a certain affinity between the two.
+
+{\em In this paper we present a Parser powered by the AC}.  In other words, we design and simulate a biologically realistic dynamical system involving stylized neurons, synapses, and brain areas. We start by encoding each word in the language as a different {\em assembly of neurons} in the brain area we call {\sc Lex}. Next, we feed this dynamical system with a sequence of words (signals that excite the corresponding sequence of word-coding assemblies in {\sc Lex}).  
+
+The important questions are: {\em Will the dynamical system parse sentences correctly?  And how will we know?}
+
+To answer the last question first, our dynamical system has a Readout procedure which, after the processing of the sequence, revisits all areas of the system and recovers a linked structure. We require that this structure be a parse of the input sentence.  Our experiments show that our Parser can indeed parse correctly, in the above sense, reasonably nontrivial sentences, and in fact do so at a speed  (i.e., number of cycles of neuron firings) commensurate with that of the language organ. 
+% changed readout module -> procedure. Better to avoid "module" since it sounds like we're including additional primitives for readout
+
+Our design of this device engages several brain areas, as well as fibers of synapses connecting these areas, and uses the operations of the AC, enhanced in small ways explained in Section 3. It would in principle be possible to use the original set of AC operations in \citet{PNAS}, but this would complicate its operation and entail the introduction of more brain areas\footnote{``Brain areas'' is used here in the sense of the AC explained in Section 3, and does not necessarily correspond to significant accepted parts of the brain, such as the Brodmann Areas.}.  The resulting device relies on powerful word representations, and is essentially a lexicalized 
+%shift-reduce 
+parser, producing something akin to a dependency graph.  
+
+While our experiments entail the parsing of rather simple sentences in English, in Section \ref{extensions} we argue that our Parser can potentially be extended in many diverse directions such as error detection and recovery, polysemy and ambiguity, recursion, and languages beyond English. We also build a toy Russian parser, as well as a universal device that takes as its input a description of the language in the form of word representations, syntactic actions and connected brain areas. 
+
+\paragraph{Goals.}  This research seeks to explore the two questions already highlighted above:
+\begin{enumerate}
+\item {Can a reasonably complex linguistic phenomenon, such as the parsing of sentences, be implemented through simulated neurons and synapses?}
+\item {Can a computationally demanding cognitive function be implemented by the AC, and will the resulting dynamical system be stable and reliable?}
+\end{enumerate}
+In particular, we are not claiming that our implementation of the Parser necessarily resembles the way in which the brain actually implements language, or that it can predict experimental data. Rather, we see the parser as an existence proof of a nontrivial linguistic device built entirely out of simulated neuron dynamics.  
+

@@ -1,0 +1,198 @@
+\begin{thebibliography}{38}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Bellmund et~al.(2020)Bellmund, Polti, and Doeller]{bellmund2020sequence}
+Jacob~LS Bellmund, Ignacio Polti, and Christian~F Doeller.
+\newblock Sequence memory in the hippocampal--entorhinal region.
+\newblock \emph{Journal of Cognitive Neuroscience}, 32\penalty0 (11):\penalty0 2056--2070, 2020.
+
+\bibitem[Buzs{\'a}ki(2010)]{buzsaki2010neural}
+Gy{\"o}rgy Buzs{\'a}ki.
+\newblock Neural syntax: cell assemblies, synapsembles, and readers.
+\newblock \emph{Neuron}, 68\penalty0 (3):\penalty0 362--385, 2010.
+
+\bibitem[Buzs{\'a}ki(2019)]{buzsaki2019brain}
+Gy{\"o}rgy Buzs{\'a}ki.
+\newblock \emph{The Brain from Inside Out}.
+\newblock Oxford University Press, 2019.
+
+\bibitem[Cruikshank et~al.(2007)Cruikshank, Lewis, and Connors]{cruikshank2007synaptic}
+Scott~J Cruikshank, Timothy~J Lewis, and Barry~W Connors.
+\newblock Synaptic basis for intense thalamocortical activation of feedforward inhibitory cells in neocortex.
+\newblock \emph{Nature neuroscience}, 10\penalty0 (4):\penalty0 462--468, 2007.
+
+\bibitem[Cui et~al.(2016)Cui, Ahmad, and Hawkins]{cui2016continuous}
+Yuwei Cui, Subutai Ahmad, and Jeff Hawkins.
+\newblock Continuous online sequence learning with an unsupervised neural network model.
+\newblock \emph{Neural computation}, 28\penalty0 (11):\penalty0 2474--2504, 2016.
+
+\bibitem[Dabagia et~al.(2022)Dabagia, Vempala, and Papadimitriou]{dabagia2022assemblies}
+Max Dabagia, Santosh~S Vempala, and Christos Papadimitriou.
+\newblock Assemblies of neurons learn to classify well-separated distributions.
+\newblock In \emph{Conference on Learning Theory}, pages 3685--3717. PMLR, 2022.
+
+\bibitem[Dragoi and Buzs\'aki(2006)]{dragoi2006temporal}
+George Dragoi and Gy{\"o}rgy Buzs\'aki.
+\newblock Temporal encoding of place sequences by hippocampal cell assemblies.
+\newblock \emph{Neuron}, 50\penalty0 (1):\penalty0 145--157, 2006.
+
+\bibitem[Dragoi and Tonegawa(2011)]{dragoi2011preplay}
+George Dragoi and Susumu Tonegawa.
+\newblock Preplay of future place cell sequences by hippocampal cellular assemblies.
+\newblock \emph{Nature}, 469\penalty0 (7330):\penalty0 397--401, 2011.
+
+\bibitem[Eichenbaum(2018)]{eichenbaum2018barlow}
+Howard Eichenbaum.
+\newblock Barlow versus hebb: When is it time to abandon the notion of feature detectors and adopt the cell assembly as the unit of cognition?
+\newblock \emph{Neuroscience letters}, 680:\penalty0 88--93, 2018.
+
+\bibitem[Eliasmith et~al.(2012)Eliasmith, Stewart, Choo, Bekolay, DeWolf, Tang, and Rasmussen]{eliasmith2012large}
+Chris Eliasmith, Terrence~C Stewart, Xuan Choo, Trevor Bekolay, Travis DeWolf, Yichuan Tang, and Daniel Rasmussen.
+\newblock A large-scale model of the functioning brain.
+\newblock \emph{science}, 338\penalty0 (6111):\penalty0 1202--1205, 2012.
+
+\bibitem[Feldman and Valiant(2009)]{feldman2009experience}
+Vitaly Feldman and Leslie~G Valiant.
+\newblock Experience-induced neural circuits that achieve high capacity.
+\newblock \emph{Neural computation}, 21\penalty0 (10):\penalty0 2715--2754, 2009.
+
+\bibitem[Guerguiev et~al.(2017)Guerguiev, Lillicrap, and Richards]{guerguiev2017towards}
+Jordan Guerguiev, Timothy~P Lillicrap, and Blake~A Richards.
+\newblock Towards deep learning with segregated dendrites.
+\newblock \emph{Elife}, 6:\penalty0 e22901, 2017.
+
+\bibitem[Harris et~al.(2003)Harris, Csicsvari, Hirase, Dragoi, and Buzs{\'a}ki]{harris2003organization}
+Kenneth~D Harris, Jozsef Csicsvari, Hajime Hirase, George Dragoi, and Gy{\"o}rgy Buzs{\'a}ki.
+\newblock Organization of cell assemblies in the hippocampus.
+\newblock \emph{Nature}, 424\penalty0 (6948):\penalty0 552--556, 2003.
+
+\bibitem[Hebb(1949)]{hebb1949organization}
+Donald~Olding Hebb.
+\newblock \emph{The organization of behavior. A neuropsychological theory}.
+\newblock John Wiley, 1949.
+
+\bibitem[Huyck and Passmore(2013)]{huyck2013review}
+Christian~R Huyck and Peter~J Passmore.
+\newblock A review of cell assemblies.
+\newblock \emph{Biological cybernetics}, 107:\penalty0 263--288, 2013.
+
+\bibitem[Ikegaya et~al.(2004)Ikegaya, Aaron, Cossart, Aronov, Lampl, Ferster, and Yuste]{ikegaya2004synfire}
+Yuji Ikegaya, Gloster Aaron, Rosa Cossart, Dmitriy Aronov, Ilan Lampl, David Ferster, and Rafael Yuste.
+\newblock Synfire chains and cortical songs: temporal modules of cortical activity.
+\newblock \emph{Science}, 304\penalty0 (5670):\penalty0 559--564, 2004.
+
+\bibitem[Jinno et~al.(2007)Jinno, Klausberger, Marton, Dalezios, Roberts, Fuentealba, Bushong, Henze, Buzs{\'a}ki, and Somogyi]{jinno2007neuronal}
+Shozo Jinno, Thomas Klausberger, Laszlo~F Marton, Yannis Dalezios, J~David~B Roberts, Pablo Fuentealba, Eric~A Bushong, Darrell Henze, Gy{\"o}rgy Buzs{\'a}ki, and Peter Somogyi.
+\newblock Neuronal diversity in gabaergic long-range projections from the hippocampus.
+\newblock \emph{Journal of Neuroscience}, 27\penalty0 (33):\penalty0 8790--8804, 2007.
+
+\bibitem[Lillicrap et~al.(2016)Lillicrap, Cownden, Tweed, and Akerman]{lillicrap2016random}
+Timothy~P Lillicrap, Daniel Cownden, Douglas~B Tweed, and Colin~J Akerman.
+\newblock Random synaptic feedback weights support error backpropagation for deep learning.
+\newblock \emph{Nature communications}, 7\penalty0 (1):\penalty0 13276, 2016.
+
+\bibitem[Lillicrap et~al.(2020)Lillicrap, Santoro, Marris, Akerman, and Hinton]{lillicrap2020backpropagation}
+Timothy~P Lillicrap, Adam Santoro, Luke Marris, Colin~J Akerman, and Geoffrey Hinton.
+\newblock Backpropagation and the brain.
+\newblock \emph{Nature Reviews Neuroscience}, 21\penalty0 (6):\penalty0 335--346, 2020.
+
+\bibitem[Maguire et~al.(2003)Maguire, Valentine, Wilding, and Kapur]{maguire2003routes}
+Eleanor~A Maguire, Elizabeth~R Valentine, John~M Wilding, and Narinder Kapur.
+\newblock Routes to remembering: the brains behind superior memory.
+\newblock \emph{Nature neuroscience}, 6\penalty0 (1):\penalty0 90--95, 2003.
+
+\bibitem[Mitropolsky et~al.(2021)Mitropolsky, Collins, and Papadimitriou]{mitropolsky2021biologically}
+Daniel Mitropolsky, Michael~J Collins, and Christos~H Papadimitriou.
+\newblock A biologically plausible parser.
+\newblock \emph{Transactions of the Association for Computational Linguistics}, 9:\penalty0 1374--1388, 2021.
+
+\bibitem[Mitropolsky et~al.(2022)Mitropolsky, Ejaz, Shi, Yannakakis, and Papadimitriou]{mitropolsky2022center}
+Daniel Mitropolsky, Adiba Ejaz, Mirah Shi, Mihalis Yannakakis, and Christos~H Papadimitriou.
+\newblock Center-embedding and constituency in the brain and a new characterization of context-free languages.
+\newblock \emph{arXiv preprint arXiv:2206.13217}, 2022.
+
+\bibitem[Papadimitriou and Vempala(2019)]{papadimitriou2019random}
+Christos~H Papadimitriou and Santosh~S Vempala.
+\newblock Random projection in the brain and computation with assemblies of neurons.
+\newblock In \emph{10th Innovations in Theoretical Computer Science Conference}, 2019.
+
+\bibitem[Papadimitriou et~al.(2020)Papadimitriou, Vempala, Mitropolsky, Collins, and Maass]{papadimitriou2020brain}
+Christos~H Papadimitriou, Santosh~S Vempala, Daniel Mitropolsky, Michael Collins, and Wolfgang Maass.
+\newblock Brain computation by assemblies of neurons.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 117\penalty0 (25):\penalty0 14464--14472, 2020.
+
+\bibitem[Pastalkova et~al.(2008)Pastalkova, Itskov, Amarasingham, and Buzsaki]{pastalkova2008internally}
+Eva Pastalkova, Vladimir Itskov, Asohan Amarasingham, and Gyorgy Buzsaki.
+\newblock Internally generated cell assembly sequences in the rat hippocampus.
+\newblock \emph{Science}, 321\penalty0 (5894):\penalty0 1322--1327, 2008.
+
+\bibitem[Roux and Buzs{\'a}ki(2015)]{roux2015tasks}
+Lisa Roux and Gy{\"o}rgy Buzs{\'a}ki.
+\newblock Tasks for inhibitory interneurons in intact brain circuits.
+\newblock \emph{Neuropharmacology}, 88:\penalty0 10--23, 2015.
+
+\bibitem[Sacramento et~al.(2017)Sacramento, Costa, Bengio, and Senn]{sacramento2017dendritic}
+Joao Sacramento, Rui~Ponte Costa, Yoshua Bengio, and Walter Senn.
+\newblock Dendritic error backpropagation in deep cortical microcircuits.
+\newblock \emph{arXiv preprint arXiv:1801.00062}, 2017.
+
+\bibitem[Sacramento et~al.(2018)Sacramento, Ponte~Costa, Bengio, and Senn]{sacramento2018dendritic}
+Jo{\~a}o Sacramento, Rui Ponte~Costa, Yoshua Bengio, and Walter Senn.
+\newblock Dendritic cortical microcircuits approximate the backpropagation algorithm.
+\newblock \emph{Advances in neural information processing systems}, 31, 2018.
+
+\bibitem[Sik et~al.(1995)Sik, Penttonen, Ylinen, and Buzs{\'a}ki]{sik1995hippocampal}
+A~Sik, M~Penttonen, A~Ylinen, and Gy~Buzs{\'a}ki.
+\newblock Hippocampal ca1 interneurons: an in vivo intracellular labeling study.
+\newblock \emph{Journal of Neuroscience}, 15\penalty0 (10):\penalty0 6651--6665, 1995.
+
+\bibitem[Sipser(1996)]{sipser1996introduction}
+Michael Sipser.
+\newblock Introduction to the theory of computation.
+\newblock \emph{ACM Sigact News}, 27\penalty0 (1):\penalty0 27--29, 1996.
+
+\bibitem[Sugar and Moser(2019)]{sugar2019episodic}
+J{\o}rgen Sugar and May-Britt Moser.
+\newblock Episodic memory: Neuronal codes for what, where, and when.
+\newblock \emph{Hippocampus}, 29\penalty0 (12):\penalty0 1190--1205, 2019.
+
+\bibitem[Valiant(2000{\natexlab{a}})]{valiant2000circuits}
+Leslie~G Valiant.
+\newblock \emph{Circuits of the Mind}.
+\newblock Oxford University Press on Demand, 2000{\natexlab{a}}.
+
+\bibitem[Valiant(2000{\natexlab{b}})]{valiant2000neuroidal}
+Leslie~G Valiant.
+\newblock A neuroidal architecture for cognitive computation.
+\newblock \emph{Journal of the ACM (JACM)}, 47\penalty0 (5):\penalty0 854--882, 2000{\natexlab{b}}.
+
+\bibitem[Whittington and Bogacz(2019)]{whittington2019theories}
+James~CR Whittington and Rafal Bogacz.
+\newblock Theories of error back-propagation in the brain.
+\newblock \emph{Trends in cognitive sciences}, 23\penalty0 (3):\penalty0 235--250, 2019.
+
+\bibitem[Whittington et~al.(2020)Whittington, Muller, Mark, Chen, Barry, Burgess, and Behrens]{whittington2020tolman}
+James~CR Whittington, Timothy~H Muller, Shirley Mark, Guifen Chen, Caswell Barry, Neil Burgess, and Timothy~EJ Behrens.
+\newblock The tolman-eichenbaum machine: unifying space and relational memory through generalization in the hippocampal formation.
+\newblock \emph{Cell}, 183\penalty0 (5):\penalty0 1249--1263, 2020.
+
+\bibitem[Yuste(2015)]{yuste2015neuron}
+Rafael Yuste.
+\newblock From the neuron doctrine to neural networks.
+\newblock \emph{Nature reviews neuroscience}, 16\penalty0 (8):\penalty0 487--497, 2015.
+
+\bibitem[Zhang et~al.(2014)Zhang, Xu, Kamigaki, Hoang~Do, Chang, Jenvay, Miyamichi, Luo, and Dan]{zhang2014long}
+Siyu Zhang, Min Xu, Tsukasa Kamigaki, Johnny~Phong Hoang~Do, Wei-Cheng Chang, Sean Jenvay, Kazunari Miyamichi, Liqun Luo, and Yang Dan.
+\newblock Long-range and local circuits for top-down modulation of visual cortex processing.
+\newblock \emph{Science}, 345\penalty0 (6197):\penalty0 660--665, 2014.
+
+\bibitem[Zhou and Hablitz(1998)]{zhou1998ampa}
+Fu-Ming Zhou and John~J Hablitz.
+\newblock Ampa receptor-mediated epscs in rat neocortical layer ii/iii interneurons have rapid kinetics.
+\newblock \emph{Brain research}, 780\penalty0 (1):\penalty0 166--169, 1998.
+
+\end{thebibliography}

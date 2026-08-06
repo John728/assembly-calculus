@@ -1,0 +1,109 @@
+{
+  "experiment_version": 2,
+  "nodes": 50,
+  "depth_bits": 6,
+  "horizons": [
+    1,
+    5,
+    10,
+    20,
+    30,
+    40
+  ],
+  "widths": [
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    24,
+    32
+  ],
+  "success_threshold": 0.95,
+  "maximum_epochs": 2500,
+  "evaluation_interval": 25,
+  "patience": 600,
+  "holdout_per_depth": 10,
+  "evaluated_table_seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+  ],
+  "holdout_restarts_evaluated": [
+    0
+  ],
+  "protocol": "table-specific one-hidden-layer MLP jointly supports every start/depth query up to each horizon",
+  "input": "50-way one-hot start node plus fixed six-bit signed depth code",
+  "target": "final node M^L(i)",
+  "training_supervision": "all 50 start/depth answers at every supported depth",
+  "frontier_rule": "smallest registered width for which at least two of three restarts achieve >=0.95 accuracy at every depth in the prefix",
+  "explicit_unrolling_reference": {
+    "dense_slots_per_hop": 2550,
+    "depth_40_slots": 102000,
+    "validated_results": {
+      "path": "/home/johnh/Documents/assembly-calculus/results/thesis_c/resource/seen_time_size_raw.csv",
+      "sha256": "7a0c7a5f4ced91af011c77fa0f7477159c3cb227fa5ff87fa8cc54dcb8fae7d3",
+      "rows": 40000,
+      "all_ac_paths_exact": true,
+      "all_unrolled_paths_exact": true
+    }
+  },
+  "holdout_diagnostic": {
+    "selected_width": "per-table robust width selected by the fully supervised depth-40 frontier",
+    "depth_one_queries": "all retained for table exposure",
+    "held_out_queries": "10 of 50 start nodes independently held out at each depth 2-40",
+    "training_mean": 0.995776397515528,
+    "training_95_t_half_width": 0.005556678531956109,
+    "holdout_mean": 0.6276923076923078,
+    "holdout_95_t_half_width": 0.06733243872970979
+  },
+  "limitations": [
+    "The learned frontier is for the registered one-hidden-layer MLP family, not all feedforward networks.",
+    "The main frontier measures fitted seen-table support and uses direct supervision at every supported depth.",
+    "MLP parameters, AC synapses, and AC internal updates are not interchangeable physical units."
+  ],
+  "software": {
+    "revision": "68d14e97345aa9ea7a4c8f96088723d349d799ef",
+    "relevant_paths_dirty": true
+  },
+  "candidate_table_seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61
+  ],
+  "frontier_restarts": [
+    0,
+    1,
+    2
+  ],
+  "fit_configuration_sha256": "658664ee408e722132bba18659a77c89f676fc8661c18608933d915414b20f61"
+}

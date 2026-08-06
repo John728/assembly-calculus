@@ -1,0 +1,147 @@
+{
+  "source": "/home/johnh/Documents/assembly-calculus/results/thesis_c/static/training_dynamics/mnist_static_overlap_trajectories.csv",
+  "condition": "distinct_50",
+  "cohort": "wrong at update 1 and correct at the final readout",
+  "networks": 10,
+  "trajectories": 89,
+  "all_gain_advantages_positive": true,
+  "all_switch_once": true,
+  "correction_counts": {
+    "2": 52,
+    "3": 22,
+    "4": 6,
+    "5": 5,
+    "6": 2,
+    "7": 2
+  },
+  "difficulty_definition": "initial winner-to-target overlap gap divided by the target's recurrent-gain advantage",
+  "difficulty_bins": {
+    "low": {
+      "definition": "Low ($\\chi<0.25$)",
+      "trajectories": 46,
+      "mean_correction_readout": 2.217391304347826,
+      "median_correction_readout": 2.0,
+      "cumulative_fraction": {
+        "1": 0.0,
+        "2": 0.8913043478260869,
+        "3": 0.9347826086956522,
+        "4": 0.9565217391304348,
+        "5": 1.0,
+        "6": 1.0,
+        "7": 1.0
+      }
+    },
+    "medium": {
+      "definition": "Medium ($0.25\\leq\\chi<0.5$)",
+      "trajectories": 21,
+      "mean_correction_readout": 2.6666666666666665,
+      "median_correction_readout": 3.0,
+      "cumulative_fraction": {
+        "1": 0.0,
+        "2": 0.47619047619047616,
+        "3": 0.9047619047619048,
+        "4": 0.9523809523809523,
+        "5": 1.0,
+        "6": 1.0,
+        "7": 1.0
+      }
+    },
+    "high": {
+      "definition": "High ($\\chi\\geq0.5$)",
+      "trajectories": 22,
+      "mean_correction_readout": 3.9545454545454546,
+      "median_correction_readout": 3.0,
+      "cumulative_fraction": {
+        "1": 0.0,
+        "2": 0.045454545454545456,
+        "3": 0.5454545454545454,
+        "4": 0.7272727272727273,
+        "5": 0.8181818181818182,
+        "6": 0.9090909090909091,
+        "7": 1.0
+      }
+    }
+  },
+  "pooled_spearman": {
+    "difficulty_vs_correction_readout": 0.5894509051567713,
+    "initial_gap_vs_correction_readout": 0.515295295303961,
+    "gain_advantage_vs_correction_readout": -0.36907030209384856
+  },
+  "per_network_spearman": [
+    {
+      "seed": 42,
+      "trajectories": 10,
+      "difficulty_time_spearman": 0.8059403683279635,
+      "gap_time_spearman": 0.825922366946089,
+      "gain_time_spearman": -0.40236411116857895
+    },
+    {
+      "seed": 43,
+      "trajectories": 7,
+      "difficulty_time_spearman": -0.381107966983353,
+      "gap_time_spearman": -0.39215686274509803,
+      "gain_time_spearman": -0.6669389422208677
+    },
+    {
+      "seed": 44,
+      "trajectories": 5,
+      "difficulty_time_spearman": 0.7071067811865475,
+      "gap_time_spearman": 0.7071067811865475,
+      "gain_time_spearman": -0.5590169943749473
+    },
+    {
+      "seed": 45,
+      "trajectories": 10,
+      "difficulty_time_spearman": 0.6374499938933152,
+      "gap_time_spearman": 0.5321156692606099,
+      "gain_time_spearman": -0.30607501892727046
+    },
+    {
+      "seed": 46,
+      "trajectories": 12,
+      "difficulty_time_spearman": 0.5880822446203774,
+      "gap_time_spearman": 0.7186343764561549,
+      "gain_time_spearman": -0.36168410070851653
+    },
+    {
+      "seed": 47,
+      "trajectories": 9,
+      "difficulty_time_spearman": 0.10350983390135314,
+      "gap_time_spearman": 0.0,
+      "gain_time_spearman": -0.3214285714285714
+    },
+    {
+      "seed": 48,
+      "trajectories": 4,
+      "difficulty_time_spearman": 0.7999999999999999,
+      "gap_time_spearman": 1.0,
+      "gain_time_spearman": -0.6000000000000001
+    },
+    {
+      "seed": 49,
+      "trajectories": 11,
+      "difficulty_time_spearman": 0.860760762877288,
+      "gap_time_spearman": 0.7727647875975541,
+      "gain_time_spearman": -0.35513767355241177
+    },
+    {
+      "seed": 50,
+      "trajectories": 13,
+      "difficulty_time_spearman": 0.46064539986458847,
+      "gap_time_spearman": 0.4895660177338932,
+      "gain_time_spearman": -0.12117227871881034
+    },
+    {
+      "seed": 51,
+      "trajectories": 8,
+      "difficulty_time_spearman": 0.912870929175277,
+      "gap_time_spearman": 0.7563787698880865,
+      "gain_time_spearman": -0.022587697572631283
+    }
+  ],
+  "mean_network_difficulty_spearman": {
+    "mean": 0.5495258346863356,
+    "lower_95": 0.2609758040473129,
+    "upper_95": 0.8380758653253584
+  }
+}

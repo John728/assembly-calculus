@@ -1,0 +1,95 @@
+\begin{thebibliography}{14}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{A(2018)}]{Axel}
+Q~\& A. 2018.
+\newblock Richard {A}xel.
+\newblock \emph{Neuron}, 99:1110--1112.
+
+\bibitem[{Awh et~al.(2006)Awh, Vogel, and Oh}]{neuro}
+E.~Awh, E.K. Vogel, and S.-H. Oh. 2006.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1016/j.neuroscience.2005.08.023}
+  {Interactions between attention and working memory}.
+\newblock \emph{Neuroscience}, 139(1):201--208.
+
+\bibitem[{Chomsky(1962)}]{ChomskyCFG}
+N.~Chomsky. 1962.
+\newblock \emph{Context-free Grammars and Pushdown Storage}.
+
+\bibitem[{Chomsky and Schützenberger(1963)}]{chomsky_shutz}
+N.~Chomsky and M.P. Schützenberger. 1963.
+\newblock \href {https://doi.org/https://doi.org/10.1016/S0049-237X(08)72023-8}
+  {The algebraic theory of context-free languages*}.
+\newblock In P.~Braffort and D.~Hirschberg, editors, \emph{Computer Programming
+  and Formal Systems}, volume~35 of \emph{Studies in Logic and the Foundations
+  of Mathematics}, pages 118--161. Elsevier.
+
+\bibitem[{Ding et~al.(2016)Ding, Melloni, Zhang, Tian, and Poeppel}]{Poeppel}
+Nai Ding, Lucia Melloni, Hang Zhang, Xing Tian, and David Poeppel. 2016.
+\newblock Cortical tracking of hierarchical linguistic structures in connected
+  speech.
+\newblock \emph{Nature neuroscience}, 19(1):158.
+
+\bibitem[{Eichenbaum(2018)}]{Eichenbaum}
+Howard Eichenbaum. 2018.
+\newblock Barlow versus hebb: When is it time to abandon the notion of feature
+  detectors and adopt the cell assembly as the unit of cognition?
+\newblock \emph{Neuroscience letters}, 680:88--93.
+
+\bibitem[{Evey(1963)}]{Evey}
+R.~James Evey. 1963.
+\newblock \href {https://doi.org/10.1145/1463822.1463848} {Application of
+  pushdown-store machines}.
+\newblock In \emph{Proceedings of the November 12-14, 1963, Fall Joint Computer
+  Conference}, AFIPS '63 (Fall), page 215–227, New York, NY, USA. Association
+  for Computing Machinery.
+
+\bibitem[{Friederici(2017)}]{Friederici}
+Angela~D Friederici. 2017.
+\newblock \emph{Language in our brain: The origins of a uniquely human
+  capacity}.
+\newblock MIT Press.
+
+\bibitem[{Harris(2005)}]{Harris}
+Kenneth~D Harris. 2005.
+\newblock Neural signatures of cell assembly organization.
+\newblock \emph{Nature Reviews Neuroscience}, 6(5):399.
+
+\bibitem[{Kandel et~al.(1991)Kandel, Schwartz, and Jessell}]{NeuralScience}
+Eric~R. Kandel, James~H. Schwartz, and Thomas~M. Jessell, editors. 1991.
+\newblock \emph{Principles of Neural Science}, fifth edition.
+\newblock Elsevier, New York.
+
+\bibitem[{Mitropolsky et~al.(2021)Mitropolsky, Collins, and
+  Papadimitriou}]{Parser}
+Daniel Mitropolsky, Michael~J. Collins, and Christos~H. Papadimitriou. 2021.
+\newblock \href {http://arxiv.org/abs/2108.02189} {A {Biologically} {Plausible}
+  {Parser}}.
+\newblock In \emph{Transactions of the {Association} for {Computational}
+  {Linguistics}}.
+\newblock ArXiv: 2108.02189.
+
+\bibitem[{Papadimitriou et~al.(2020)Papadimitriou, Vempala, Mitropolsky,
+  Collins, and Maass}]{PNAS}
+Christos~H. Papadimitriou, Santosh~S. Vempala, Daniel Mitropolsky, Michael
+  Collins, and Wolfgang Maass. 2020.
+\newblock \href {https://doi.org/10.1073/pnas.2001893117} {Brain computation by
+  assemblies of neurons}.
+\newblock \emph{Proceedings of the National Academy of Sciences},
+  117(25):14464--14472.
+
+\bibitem[{Schützenberger(1963)}]{SchutzenbergerCFG}
+M.P. Schützenberger. 1963.
+\newblock \href {https://doi.org/https://doi.org/10.1016/S0019-9958(63)90306-1}
+  {On context-free languages and push-down automata}.
+\newblock \emph{Information and Control}, 6(3):246--264.
+
+\bibitem[{Zaccarella and Friederici(2015)}]{ZF}
+Emiliano Zaccarella and Angela~D. Friederici. 2015.
+\newblock \href {https://doi.org/10.3389/fpsyg.2015.01818} {Merge in the human
+  brain: A sub-region based functional investigation in the left pars
+  opercularis}.
+\newblock \emph{Frontiers in Psychology}, 6:1818.
+
+\end{thebibliography}

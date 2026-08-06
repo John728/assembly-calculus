@@ -1,0 +1,177 @@
+{
+  "protocol": {
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "train_per_class": 50,
+    "test_per_class": 20,
+    "horizon": 20,
+    "training_condition": "50 distinct images per class, class organised",
+    "input": "held",
+    "plasticity_during_evaluation": false,
+    "balanced_intervention": "only within-class recurrent blocks scaled to the seed-level mean class gain; no renormalisation"
+  },
+  "intervention_audit": {
+    "all_first_caps_identical": true,
+    "all_first_predictions_identical": true,
+    "maximum_balanced_gain_error": 2.220446049250313e-16,
+    "maximum_off_diagonal_weight_change": 0.0
+  },
+  "conditions": [
+    {
+      "condition": "learned recurrence",
+      "initial_accuracy": 0.346,
+      "initial_accuracy_ci_low": 0.3296699339706906,
+      "initial_accuracy_ci_high": 0.36233006602930934,
+      "final_accuracy": 0.39,
+      "final_accuracy_ci_low": 0.38123870298197876,
+      "final_accuracy_ci_high": 0.39876129701802127,
+      "accuracy_change": 0.04400000000000002,
+      "accuracy_change_ci_low": 0.03405336586756516,
+      "accuracy_change_ci_high": 0.053946634132434876,
+      "any_revision": 0.0915,
+      "any_revision_ci_low": 0.07910391998949717,
+      "any_revision_ci_high": 0.10389608001050282,
+      "final_revision": 0.089,
+      "final_revision_ci_low": 0.07674809888807003,
+      "final_revision_ci_high": 0.10125190111192996,
+      "corrections": 0.0445,
+      "corrections_ci_low": 0.034044743457297286,
+      "corrections_ci_high": 0.05495525654270271,
+      "corruptions": 0.0005,
+      "corruptions_ci_low": 0.0,
+      "corruptions_ci_high": 0.0016310785813991025,
+      "wrong_to_wrong": 0.044,
+      "wrong_to_wrong_ci_low": 0.037297835778175505,
+      "wrong_to_wrong_ci_high": 0.05070216422182449,
+      "trajectories": 2000,
+      "revised_trajectories": 183,
+      "final_revisions": 178,
+      "correction_count": 89,
+      "corruption_count": 1,
+      "wrong_to_wrong_count": 88,
+      "maximum_settling_readout": 7
+    },
+    {
+      "condition": "mean-balanced recurrence",
+      "initial_accuracy": 0.346,
+      "initial_accuracy_ci_low": 0.3296699339706906,
+      "initial_accuracy_ci_high": 0.36233006602930934,
+      "final_accuracy": 0.34750000000000003,
+      "final_accuracy_ci_low": 0.3323015882386343,
+      "final_accuracy_ci_high": 0.36269841176136575,
+      "accuracy_change": 0.0015000000000000013,
+      "accuracy_change_ci_low": -0.004591044570654054,
+      "accuracy_change_ci_high": 0.007591044570654057,
+      "any_revision": 0.028500000000000004,
+      "any_revision_ci_low": 0.022646979502387463,
+      "any_revision_ci_high": 0.034353020497612546,
+      "final_revision": 0.026000000000000002,
+      "final_revision_ci_low": 0.020208013709320686,
+      "final_revision_ci_high": 0.031791986290679315,
+      "corrections": 0.0055,
+      "corrections_ci_low": 0.0008978087967955583,
+      "corrections_ci_high": 0.010102191203204441,
+      "corruptions": 0.004,
+      "corruptions_ci_low": 0.0007131618443186462,
+      "corruptions_ci_high": 0.007286838155681354,
+      "wrong_to_wrong": 0.0165,
+      "wrong_to_wrong_ci_low": 0.010408955429345935,
+      "wrong_to_wrong_ci_high": 0.022591044570654067,
+      "trajectories": 2000,
+      "revised_trajectories": 57,
+      "final_revisions": 52,
+      "correction_count": 11,
+      "corruption_count": 8,
+      "wrong_to_wrong_count": 33,
+      "maximum_settling_readout": 4
+    },
+    {
+      "condition": "no recurrence",
+      "initial_accuracy": 0.346,
+      "initial_accuracy_ci_low": 0.3296699339706906,
+      "initial_accuracy_ci_high": 0.36233006602930934,
+      "final_accuracy": 0.346,
+      "final_accuracy_ci_low": 0.3296699339706906,
+      "final_accuracy_ci_high": 0.36233006602930934,
+      "accuracy_change": 0.0,
+      "accuracy_change_ci_low": 0.0,
+      "accuracy_change_ci_high": 0.0,
+      "any_revision": 0.0,
+      "any_revision_ci_low": 0.0,
+      "any_revision_ci_high": 0.0,
+      "final_revision": 0.0,
+      "final_revision_ci_low": 0.0,
+      "final_revision_ci_high": 0.0,
+      "corrections": 0.0,
+      "corrections_ci_low": 0.0,
+      "corrections_ci_high": 0.0,
+      "corruptions": 0.0,
+      "corruptions_ci_low": 0.0,
+      "corruptions_ci_high": 0.0,
+      "wrong_to_wrong": 0.0,
+      "wrong_to_wrong_ci_low": 0.0,
+      "wrong_to_wrong_ci_high": 0.0,
+      "trajectories": 2000,
+      "revised_trajectories": 0,
+      "final_revisions": 0,
+      "correction_count": 0,
+      "corruption_count": 0,
+      "wrong_to_wrong_count": 0,
+      "maximum_settling_readout": 1
+    }
+  ],
+  "paired_seed_differences": {
+    "balanced_minus_learned_accuracy_change": {
+      "mean": -0.04250000000000002,
+      "ci_low": -0.051773618184975556,
+      "ci_high": -0.03322638181502448
+    },
+    "balanced_minus_learned_any_revision": {
+      "mean": -0.06299999999999999,
+      "ci_low": -0.07702618519493264,
+      "ci_high": -0.04897381480506734
+    },
+    "balanced_minus_learned_final_revision": {
+      "mean": -0.06299999999999999,
+      "ci_low": -0.07712716695373738,
+      "ci_high": -0.048872833046262595
+    },
+    "balanced_minus_learned_corrections": {
+      "mean": -0.039,
+      "ci_low": -0.04820438240640888,
+      "ci_high": -0.029795617593591117
+    },
+    "balanced_minus_learned_corruptions": {
+      "mean": 0.0035000000000000005,
+      "ci_low": 0.00010676425580269377,
+      "ci_high": 0.006893235744197307
+    },
+    "balanced_minus_learned_wrong_to_wrong": {
+      "mean": -0.027500000000000004,
+      "ci_low": -0.03508750578770727,
+      "ci_high": -0.01991249421229274
+    }
+  },
+  "software": {
+    "base_revision": "68d14e97345aa9ea7a4c8f96088723d349d799ef",
+    "pyac_source_tree_sha256": "706593f6a069a6a39923d298cf6e64d48d1ab1fc58ef6fea608394ccff63678c",
+    "experiment_script_sha256": "dd5e0630354c063c3d81eee0966dae9edbcceca7539f468cff3930a71650346b",
+    "training_helper_sha256": "c5e8325fa27a6bf0cc11eeb63caeef16d2de0decfe96abd0baa53997d753814f"
+  },
+  "data": {
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6",
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
+  }
+}

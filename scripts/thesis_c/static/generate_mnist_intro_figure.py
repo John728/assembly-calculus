@@ -10,7 +10,7 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 import pandas as pd
 
 
-FULL_POOL = 100
+FULL_POOL = "distinct_50"
 SEED = 42
 
 
@@ -29,39 +29,40 @@ def configure_plotting() -> None:
 def select_examples(frame: pd.DataFrame) -> list[dict[str, int | str]]:
     condition = frame[
         (frame["seed"] == SEED)
-        & (frame["presentation_rounds"] == FULL_POOL)
-        & (frame["readout_r"].isin([1, 100]))
+        & (frame["condition"] == FULL_POOL)
     ]
-    endpoints = condition.pivot(
-        index=["instance_id", "target"],
-        columns="readout_r",
-        values="prediction",
-    ).reset_index()
-    endpoints = endpoints.rename(columns={1: "first", 100: "settled"})
-
-    stable = endpoints[
-        (endpoints["first"] == endpoints["target"])
-        & (endpoints["settled"] == endpoints["target"])
-    ]
-    stable_distinct = stable.drop_duplicates(subset="target").head(2)
-    corrected = endpoints[
-        (endpoints["first"] != endpoints["target"])
-        & (endpoints["settled"] == endpoints["target"])
-    ].head(2)
-    selected = pd.concat([stable_distinct, corrected], ignore_index=True)
-
-    if len(selected) != 4 or len(corrected) != 2:
-        raise RuntimeError("Could not select two stable and two corrected examples")
+    priorities = ("stable correct", "corrected", "corrupted", "stable wrong")
+    selected: list[pd.Series] = []
+    used_targets: set[int] = set()
+    for transition_type in priorities:
+        candidates = condition[
+            condition["transition_type"] == transition_type
+        ].sort_values("instance_id")
+        distinct = candidates[~candidates["target"].isin(used_targets)]
+        if len(distinct):
+            choice = distinct.iloc[0]
+        elif len(candidates):
+            choice = candidates.iloc[0]
+        else:
+            continue
+        selected.append(choice)
+        used_targets.add(int(choice["target"]))
+    if len(selected) < 4:
+        used_ids = {int(row["instance_id"]) for row in selected}
+        remaining = condition[
+            ~condition["instance_id"].isin(used_ids)
+        ].sort_values("instance_id")
+        selected.extend(row for _, row in remaining.head(4 - len(selected)).iterrows())
 
     records: list[dict[str, int | str]] = []
-    for position, row in selected.iterrows():
+    for row in selected[:4]:
         records.append(
             {
                 "instance_id": int(row["instance_id"]),
                 "target": int(row["target"]),
-                "first": int(row["first"]),
-                "settled": int(row["settled"]),
-                "kind": "stable" if position < 2 else "corrected",
+                "first": int(row["initial_prediction"]),
+                "settled": int(row["final_prediction"]),
+                "kind": str(row["transition_type"]),
             }
         )
     return records
@@ -154,6 +155,7 @@ def draw_architecture(axis: plt.Axes) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ac-root", type=Path, required=True)
+    parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--raw", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -165,7 +167,7 @@ def main() -> None:
     configure_plotting()
     frame = pd.read_csv(args.raw)
     examples = select_examples(frame)
-    test = load_mnist_split(args.ac_root / "data" / "mnist", "test")
+    test = load_mnist_split(args.data_dir, "test")
 
     fig = plt.figure(figsize=(7.15, 3.6))
     outer = fig.add_gridspec(
@@ -194,7 +196,11 @@ def main() -> None:
         first = int(example["first"])
         settled = int(example["settled"])
         axis.set_title(f"True digit: {target}", pad=4, fontsize=9)
-        result_colour = "#117733"
+        result_colour = {
+            "corrected": "#117733",
+            "corrupted": "#CC3311",
+            "stable correct": "#117733",
+        }.get(str(example["kind"]), "#555555")
         axis.text(
             0.5,
             -0.13,
@@ -245,10 +251,11 @@ def main() -> None:
 
     metadata = {
         "source_results": str(args.raw),
-        "condition": {"seed": SEED, "presentation_rounds": FULL_POOL},
+        "condition": {"seed": SEED, "condition": FULL_POOL},
         "selection_rule": (
-            "First two distinct-label examples correct at both readouts, followed "
-            "by the first two examples incorrect at readout 1 and correct at 100."
+            "Lowest source-index example in each available transition category: "
+            "stable correct, corrected, corrupted, and stable wrong; distinct "
+            "targets are preferred."
         ),
         "examples": examples,
     }

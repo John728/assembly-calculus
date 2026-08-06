@@ -1,0 +1,190 @@
+{
+  "visual_system": {
+    "size_inches": [
+      6.4,
+      6.4
+    ],
+    "raster_pixels": [
+      2560,
+      2560
+    ],
+    "colours": {
+      "recurrent_teal": "#008F7A",
+      "spatial_or_reversed_coral": "#E45756",
+      "balanced_or_symbol_one_indigo": "#3D4FA3",
+      "charcoal": "#202A33"
+    }
+  },
+  "source_sha256": {
+    "/home/johnh/Documents/assembly-calculus/results/thesis_c/static/training_dynamics/mnist_static_overlap_time_series.csv": "9a0c4624311e8dea1a9d1b9bb108c2a98f69b08337d093afaa957b7cdb8dd170",
+    "/home/johnh/Documents/assembly-calculus/results/thesis_c/iterative/dfa_trace.json": "579e14905ba562ca40acd196d339ce48838bf72f48b918233d4b292c06557045",
+    "/home/johnh/Documents/assembly-calculus/results/thesis_c/resource/seen_time_size_raw.csv": "7a0c7a5f4ced91af011c77fa0f7477159c3cb227fa5ff87fa8cc54dcb8fae7d3"
+  },
+  "static": {
+    "source": "/home/johnh/Documents/assembly-calculus/results/thesis_c/static/training_dynamics/mnist_static_overlap_time_series.csv",
+    "condition": "distinct_50",
+    "cohort": "final_correct",
+    "cohort_definition": "fixed subset classified correctly at the final readout",
+    "networks": 10,
+    "trajectories": 780,
+    "maximum_update": 15,
+    "series": {
+      "correct_class_overlap": {
+        "update_1_mean": 0.4982891021597878,
+        "update_15_mean": 0.9999556653588965
+      },
+      "strongest_rival_overlap": {
+        "update_1_mean": 0.20577390055625489,
+        "update_15_mean": 4.4334641103453365e-05
+      }
+    },
+    "aggregation": "mean of per-network means",
+    "uncertainty": "95% t-interval across per-network means",
+    "uncertainty_shown": true
+  },
+  "static_range_preview": {
+    "source": "/home/johnh/Documents/assembly-calculus/results/thesis_c/static/training_dynamics/mnist_static_overlap_time_series.csv",
+    "condition": "distinct_50",
+    "cohort": "final_correct",
+    "cohort_definition": "fixed subset classified correctly at the final readout",
+    "networks": 10,
+    "trajectories": 780,
+    "maximum_update": 15,
+    "series": {
+      "correct_class_overlap": {
+        "update_1_mean": 0.4982891021597878,
+        "update_15_mean": 0.9999556653588965
+      },
+      "strongest_rival_overlap": {
+        "update_1_mean": 0.20577390055625489,
+        "update_15_mean": 4.4334641103453365e-05
+      }
+    },
+    "aggregation": "mean of per-network means",
+    "uncertainty": "minimum to maximum of per-network means",
+    "uncertainty_shown": true
+  },
+  "static_correction": {
+    "source": "/home/johnh/Documents/assembly-calculus/results/thesis_c/static/training_dynamics/mnist_static_overlap_time_series.csv",
+    "condition": "distinct_50",
+    "cohort": "corrected",
+    "cohort_definition": "wrong at update 1 and correct at the final readout",
+    "networks": 10,
+    "trajectories": 89,
+    "maximum_update": 10,
+    "crossing_update": 2,
+    "series": {
+      "correct_class_overlap": {
+        "update_1_mean": 0.2702173368298368,
+        "update_2_mean": 0.4258832153957154,
+        "update_10_mean": 0.9995
+      },
+      "initial_winner_overlap": {
+        "update_1_mean": 0.3068683469308469,
+        "update_2_mean": 0.39694804223554225,
+        "update_10_mean": 0.00025
+      }
+    },
+    "aggregation": "mean of per-network means",
+    "uncertainty": "minimum to maximum of per-network means",
+    "uncertainty_shown": true
+  },
+  "static_combined": {
+    "source": "/home/johnh/Documents/assembly-calculus/results/thesis_c/static/training_dynamics/mnist_static_overlap_time_series.csv",
+    "condition": "distinct_50",
+    "maximum_update": 15,
+    "panels": {
+      "final_correct": {
+        "networks": 10,
+        "trajectories": 780,
+        "series": {
+          "correct_class_overlap": {
+            "update_1_mean": 0.4982891021597878,
+            "update_2_mean": 0.8024072177369271,
+            "update_15_mean": 0.9999556653588965
+          },
+          "strongest_rival_overlap": {
+            "update_1_mean": 0.20577390055625489,
+            "update_2_mean": 0.13931809574880968,
+            "update_15_mean": 4.4334641103453365e-05
+          }
+        }
+      },
+      "corrected": {
+        "networks": 10,
+        "trajectories": 89,
+        "series": {
+          "correct_class_overlap": {
+            "update_1_mean": 0.2702173368298368,
+            "update_2_mean": 0.4258832153957154,
+            "update_15_mean": 0.99975
+          },
+          "initial_winner_overlap": {
+            "update_1_mean": 0.3068683469308469,
+            "update_2_mean": 0.39694804223554225,
+            "update_15_mean": 0.0
+          }
+        }
+      }
+    },
+    "aggregation": "mean of per-network means",
+    "uncertainty": "minimum to maximum of per-network means",
+    "uncertainty_shown": true
+  },
+  "iterative": {
+    "source": "/home/johnh/Documents/assembly-calculus/results/thesis_c/iterative/dfa_trace.json",
+    "sequence": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1
+    ],
+    "states": [
+      0,
+      2,
+      4,
+      2,
+      4,
+      2,
+      3,
+      1,
+      4,
+      2,
+      4,
+      2,
+      3
+    ],
+    "transitions": {
+      "0,0": 2,
+      "0,1": 2,
+      "1,0": 4,
+      "1,1": 1,
+      "2,0": 4,
+      "2,1": 3,
+      "3,0": 1,
+      "3,1": 1,
+      "4,0": 1,
+      "4,1": 2
+    },
+    "checkpoints": 13,
+    "all_checkpoints_exact": true
+  },
+  "time_size": {
+    "source": "/home/johnh/Documents/assembly-calculus/results/thesis_c/resource/seen_time_size_raw.csv",
+    "tables": 20,
+    "starts_per_table": 50,
+    "maximum_depth": 40,
+    "dense_slots_per_hop": 2550,
+    "nonzero_coefficients_per_hop": 50,
+    "relation": "P = 2550 t",
+    "all_complete_paths_exact": true
+  }
+}

@@ -125,10 +125,10 @@ class Network:
             if plasticity_on:
                 for src_name in self.incoming_fibers[area_name]:
                     hebbian_update(
-                        self.weights[(src_name, area_name)],
+                        weights=self.weights[(src_name, area_name)],
                         pre_firing=self.activations[src_name],
                         post_firing=new_activations,
-                        beta=beta,
+                        beta=self.spec.beta,
                     )
 
                 self.strategies[area_name].update_state(

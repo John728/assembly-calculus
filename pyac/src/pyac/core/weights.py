@@ -69,6 +69,10 @@ def normalize_weights(
         area_name: Target area name to normalize incoming weights for.
         network_spec: NetworkSpec describing the network topology.
     """
+    norm_type = getattr(network_spec, 'norm_type', 'l1')
+    if norm_type == 'none':
+        return
+
     incoming_keys = [k for k in weights.keys() if k[1] == area_name]
     
     if not incoming_keys:
@@ -76,6 +80,33 @@ def normalize_weights(
     
     for key in incoming_keys:
         mat = weights[key]
-        col_sums = np.asarray(mat.sum(axis=0)).ravel()
-        col_sums_safe = np.where(col_sums == 0.0, 1.0, col_sums)
-        weights[key].data = mat.data / col_sums_safe[mat.indices]
+        if norm_type == 'l1':
+            col_sums = np.asarray(mat.sum(axis=0)).ravel()
+            col_sums_safe = np.where(col_sums == 0.0, 1.0, col_sums)
+            weights[key].data = mat.data / col_sums_safe[mat.indices]
+        elif norm_type == 'l2':
+            # Oja's rule inspired L2 normalization
+            mat_sq = mat.copy()
+            mat_sq.data = mat_sq.data ** 2
+            col_norms = np.sqrt(np.asarray(mat_sq.sum(axis=0)).ravel())
+            col_norms_safe = np.where(col_norms == 0.0, 1.0, col_norms)
+            weights[key].data = mat.data / col_norms_safe[mat.indices]
+        elif norm_type == 'max':
+            # Max normalization
+            col_max = np.asarray(mat.max(axis=0).todense()).ravel()
+            col_max_safe = np.where(col_max == 0.0, 1.0, col_max)
+            weights[key].data = mat.data / col_max_safe[mat.indices]
+        elif norm_type == 'softmax':
+            # Softmax-like normalization across columns (approximate)
+            # Find max per column for stability
+            col_max = np.asarray(mat.max(axis=0).todense()).ravel()
+            shifted_data = mat.data - col_max[mat.indices]
+            exp_data = np.exp(shifted_data)
+            
+            exp_mat = csr_matrix((exp_data, mat.indices, mat.indptr), shape=mat.shape)
+            col_sums = np.asarray(exp_mat.sum(axis=0)).ravel()
+            col_sums_safe = np.where(col_sums == 0.0, 1.0, col_sums)
+            
+            weights[key].data = exp_data / col_sums_safe[mat.indices]
+        else:
+            raise ValueError(f"Unknown norm_type: {norm_type}")

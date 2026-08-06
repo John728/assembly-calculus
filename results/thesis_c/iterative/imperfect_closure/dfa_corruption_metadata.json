@@ -1,0 +1,38 @@
+{
+  "protocol": {
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "paths_per_seed_condition": 200,
+    "horizon": 80,
+    "replacements": [
+      0,
+      4,
+      8,
+      12,
+      14,
+      16,
+      18
+    ],
+    "states": 5,
+    "symbols": 2,
+    "assembly_size": 24,
+    "density": 1.0,
+    "plasticity": 0.25,
+    "training_rounds": 12,
+    "evaluation_plasticity": false,
+    "intervention": "before every transition, replace m canonical current-state neurons with m neurons sampled without replacement from other state assemblies; reject and resample any cap that does not still decode as the required source state",
+    "paired_sequences": true
+  },
+  "source": {
+    "repository_revision": "68d14e97345aa9ea7a4c8f96088723d349d799ef",
+    "repository_dirty": true,
+    "source_script": "/home/johnh/Documents/assembly-calculus/scripts/thesis_c/iterative/generate_iterative_results.py",
+    "source_script_sha256": "4cbb7999403ae737f5e62457546abd8efb9b76d1df0172f6d296f9380bc690d6",
+    "runner_sha256": "55dae3b718fbca6c1fcb3ce22b92916fe7c7ffc276feff7127930c3ff8048734"
+  }
+}

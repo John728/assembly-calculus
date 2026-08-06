@@ -1,0 +1,245 @@
+\begin{thebibliography}{35}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{Blank and Fedorenko(2020)}]{Fedorenko2020}
+Idan~A. Blank and Evelina Fedorenko. 2020.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1016/j.neuroimage.2020.116925} {No
+  evidence for differences among language regions in their temporal receptive
+  windows}.
+\newblock \emph{NeuroImage}, 219:116925.
+
+\bibitem[{Buzsaki(2019)}]{buzsakibook}
+Gyorgy Buzsaki. 2019.
+\newblock \emph{The brain from inside out}.
+\newblock Oxford University Press, USA.
+
+\bibitem[{Carrillo-Reid et~al.(2018)Carrillo-Reid, Han, Yang, Akrouh, and
+  Yuste}]{carrillo2018triggering}
+Luis Carrillo-Reid, Shuting Han, Weijian Yang, Alejandro Akrouh, and Rafael
+  Yuste. 2018.
+\newblock Triggering visually-guided behavior by holographic activation of
+  pattern completion neurons in cortical ensembles.
+\newblock \emph{Biorxiv}, page 394999.
+
+\bibitem[{Demberg and Keller(2008{\natexlab{a}})}]{DembergKeller2008a}
+Vera Demberg and Frank Keller. 2008{\natexlab{a}}.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1016/j.cognition.2008.07.008} {Data from
+  eye-tracking corpora as evidence for theories of syntactic processing
+  complexity}.
+\newblock \emph{Cognition}, 109(2):193--210.
+
+\bibitem[{Demberg and Keller(2008{\natexlab{b}})}]{DembergKeller2008b}
+Vera Demberg and Frank Keller. 2008{\natexlab{b}}.
+\newblock \href {https://www.aclweb.org/anthology/W08-2304} {A
+  psycholinguistically motivated version of {TAG}}.
+\newblock In \emph{Proceedings of the Ninth International Workshop on Tree
+  Adjoining Grammar and Related Frameworks ({TAG}+9)}, pages 25--32,
+  T{\"u}bingen, Germany. Association for Computational Linguistics.
+
+\bibitem[{Demberg and Keller(2009)}]{DembergKeller2009}
+Vera Demberg and Frank Keller. 2009.
+\newblock A computational model of prediction in human parsing: Unifying
+  locality and surprisal effects.
+\newblock pages 1888--1893.
+
+\bibitem[{Demberg et~al.(2013)Demberg, Keller, and Koller}]{DembergPLTAG}
+Vera Demberg, Frank Keller, and Alexander Koller. 2013.
+\newblock \href {https://doi.org/10.1162/COLI_a_00160} {Incremental, predictive
+  parsing with psycholinguistically motivated {T}ree-{A}djoining {G}rammar}.
+\newblock \emph{Computational Linguistics}, 39(4):1025--1066.
+
+\bibitem[{Ding et~al.(2016)Ding, Melloni, Zhang, Tian, and Poeppel}]{Poeppel}
+Nai Ding, Lucia Melloni, Hang Zhang, Xing Tian, and David Poeppel. 2016.
+\newblock Cortical tracking of hierarchical linguistic structures in connected
+  speech.
+\newblock \emph{Nature neuroscience}, 19(1):158.
+
+\bibitem[{Eichenbaum(2018)}]{Eichenbaum}
+Howard Eichenbaum. 2018.
+\newblock Barlow versus hebb: When is it time to abandon the notion of feature
+  detectors and adopt the cell assembly as the unit of cognition?
+\newblock \emph{Neuroscience letters}, 680:88--93.
+
+\bibitem[{Fedorenko and Thompson-Schill(2014)}]{FedorenkoNetworks}
+Evelina Fedorenko and Sharon~L. Thompson-Schill. 2014.
+\newblock \href {https://doi.org/https://doi.org/10.1016/j.tics.2013.12.006}
+  {Reworking the language network}.
+\newblock \emph{Trends in Cognitive Sciences}, 18(3):120--126.
+
+\bibitem[{Frank et~al.(2019)Frank, Monaghan, and Tsoukala}]{FrankSurvey}
+S.~Frank, P.~Monaghan, and C.~Tsoukala. 2019.
+\newblock Neural network models of language acquisition and processing.
+\newblock In \emph{P. Hagoort (Ed.), Human Language: from Genes and Brains to
+  Behavior}, pages 277--291. MIT Press.
+
+\bibitem[{Frank and Hoeks(2019)}]{FrankRNNReading}
+Stefan~L Frank and John Hoeks. 2019.
+\newblock \href {https://doi.org/10.31234/osf.io/mks5y} {The interaction
+  between structure and meaning in sentence comprehension: Recurrent neural
+  networks and reading times}.
+
+\bibitem[{Frankland and Greene(2015)}]{Frankland}
+S.~M. Frankland and J.~D. Greene. 2015.
+\newblock An architecture for encoding sentence meaning in left mid-superior
+  temporal cortex.
+\newblock \emph{Proceedings of the National Academy of Sciences},
+  112(37):11732--11737.
+
+\bibitem[{Friederici(2017)}]{friederici}
+Angela~D Friederici. 2017.
+\newblock \emph{Language in our brain: The origins of a uniquely human
+  capacity}.
+\newblock MIT Press.
+
+\bibitem[{Grodner and Gibson(2005)}]{GibsonEdward}
+Daniel Grodner and Edward Gibson. 2005.
+\newblock \href {https://doi.org/10.1207/s15516709cog0000_7} {Consequences of
+  the serial nature of linguistic input for sentenial complexity}.
+\newblock \emph{Cognitive science}, 29:261--90.
+
+\bibitem[{Hale(2001)}]{Hale2001}
+John Hale. 2001.
+\newblock \href {https://www.aclweb.org/anthology/N01-1021} {A probabilistic
+  {E}arley parser as a psycholinguistic model}.
+\newblock In \emph{Second Meeting of the North {A}merican Chapter of the
+  Association for Computational Linguistics}.
+
+\bibitem[{Hale et~al.(2018)Hale, Dyer, Kuncoro, and Brennan}]{findingsyntax}
+John Hale, Chris Dyer, Adhiguna Kuncoro, and Jonathan Brennan. 2018.
+\newblock \href {https://doi.org/10.18653/v1/P18-1254} {Finding syntax in human
+  encephalography with beam search}.
+\newblock In \emph{Proceedings of the 56th Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers)}, pages 2727--2736,
+  Melbourne, Australia. Association for Computational Linguistics.
+
+\bibitem[{Harris(2005)}]{Harris}
+Kenneth~D Harris. 2005.
+\newblock Neural signatures of cell assembly organization.
+\newblock \emph{Nature Reviews Neuroscience}, 6(5):399.
+
+\bibitem[{Hebb(1949)}]{Hebb}
+Donald~Olding Hebb. 1949.
+\newblock \emph{The organization of behavior: A neuropsychological theory}.
+\newblock Wiley, New York.
+
+\bibitem[{Hinaut and Dominey(2013)}]{Hinaut}
+Xavier Hinaut and Peter~Ford Dominey. 2013.
+\newblock \href {https://doi.org/10.1371/journal.pone.0052946} {Real-time
+  parallel processing of grammatical structure in the fronto-striatal system: A
+  recurrent network simulation study using reservoir computing}.
+\newblock \emph{PLOS ONE}, 8(2):1--18.
+
+\bibitem[{Jurafsky(1996)}]{jurafsky}
+Daniel Jurafsky. 1996.
+\newblock \href {https://doi.org/https://doi.org/10.1207/s15516709cog2002\_1}
+  {A probabilistic model of lexical and syntactic access and disambiguation}.
+\newblock \emph{Cognitive Science}, 20(2):137--194.
+
+\bibitem[{Kandel et~al.(1991)Kandel, Schwartz, and Jessell}]{NeuralScience}
+Eric~R. Kandel, James~H. Schwartz, and Thomas~M. Jessell, editors. 1991.
+\newblock \emph{Principles of Neural Science}, fifth edition.
+\newblock Elsevier, New York.
+
+\bibitem[{Karlsson(2007)}]{karlsson}
+Fred Karlsson. 2007.
+\newblock \href {https://doi.org/10.1017/S0022226707004616} {Constraints on
+  multiple center-embedding of clauses}.
+\newblock \emph{Journal of Linguistics}, 43(2):365–392.
+
+\bibitem[{Keller(2010)}]{keller-survey}
+Frank Keller. 2010.
+\newblock \href {https://www.aclweb.org/anthology/P10-2012} {Cognitively
+  plausible models of human language processing}.
+\newblock In \emph{Proceedings of the {ACL} 2010 Conference Short Papers},
+  pages 60--67, Uppsala, Sweden. Association for Computational Linguistics.
+
+\bibitem[{Levy(2008)}]{Levy2008}
+Roger Levy. 2008.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1016/j.cognition.2007.05.006}
+  {Expectation-based syntactic comprehension}.
+\newblock \emph{Cognition}, 106(3):1126--1177.
+
+\bibitem[{Lewis and Vasishth(2005)}]{VasisthLewis}
+Richard~L. Lewis and Shravan Vasishth. 2005.
+\newblock \href {https://doi.org/https://doi.org/10.1207/s15516709cog0000\_25}
+  {An activation-based model of sentence processing as skilled memory
+  retrieval}.
+\newblock \emph{Cognitive Science}, 29(3):375--419.
+
+\bibitem[{Merkx and Frank(2020)}]{FrankRNNTransformer}
+Danny Merkx and Stefan~L. Frank. 2020.
+\newblock \href {http://arxiv.org/abs/2005.09471} {Comparing transformers and
+  rnns on predicting human sentence processing data}.
+
+\bibitem[{Miller et~al.(2014)Miller, Ayzenshtat, Carrillo-Reid, and
+  Yuste}]{MillerETAL:14}
+Jae-eun~Kang Miller, Inbal Ayzenshtat, Luis Carrillo-Reid, and Rafael Yuste.
+  2014.
+\newblock Visual stimuli recruit intrinsically generated cortical ensembles.
+\newblock \emph{Proceedings of the National Academy of Sciences},
+  111(38):E4053--E4061.
+
+\bibitem[{Papadimitriou et~al.(2020)Papadimitriou, Vempala, Mitropolsky,
+  Collins, and Maass}]{PNAS}
+Christos~H. Papadimitriou, Santosh~S. Vempala, Daniel Mitropolsky, Michael
+  Collins, and Wolfgang Maass. 2020.
+\newblock \href {https://doi.org/10.1073/pnas.2001893117} {Brain computation by
+  assemblies of neurons}.
+\newblock \emph{Proceedings of the National Academy of Sciences},
+  117(25):14464--14472.
+
+\bibitem[{Pylkk{\"a}nen(2020)}]{Pylkkanen}
+Liina Pylkk{\"a}nen. 2020.
+\newblock \href {https://doi.org/10.1098/rstb.2019.0299} {Neural basis of basic
+  composition: What we have learned from the red-boat studies and their
+  extensions}.
+\newblock \emph{Philosophical Transactions of the Royal Society B: Biological
+  Sciences}, 375(1791).
+\newblock Publisher Copyright: {\textcopyright} 2019 The Author(s) Published by
+  the Royal Society.
+
+\bibitem[{Rolls and Deco(2015)}]{Rolls2015}
+Edmund~T. Rolls and Gustavo Deco. 2015.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1016/j.brainres.2014.09.021} {Networks
+  for memory, perception, and decision-making, and beyond to how the syntax for
+  language might be implemented in the brain}.
+\newblock \emph{Brain Research}, 1621:316 -- 334.
+\newblock Brain and Memory: Old Arguments and New Perspectives.
+
+\bibitem[{Schomers et~al.(2017)Schomers, Garagnani, and
+  Pulverm{\"u}ller}]{Schomers}
+Malte~R. Schomers, Max Garagnani, and Friedemann Pulverm{\"u}ller. 2017.
+\newblock \href {https://doi.org/10.1523/JNEUROSCI.2693-16.2017}
+  {Neurocomputational consequences of evolutionary connectivity changes in
+  perisylvian language cortex}.
+\newblock \emph{Journal of Neuroscience}, 37(11):3045--3055.
+
+\bibitem[{Schrimpf et~al.(2020)Schrimpf, Blank, Tuckute, Kauf, Hosseini,
+  Kanwisher, Tenenbaum, and Fedorenko}]{Schrimpf}
+Martin Schrimpf, Idan Blank, Greta Tuckute, Carina Kauf, Eghbal~A. Hosseini,
+  Nancy Kanwisher, Joshua Tenenbaum, and Evelina Fedorenko. 2020.
+\newblock \href {https://doi.org/10.1101/2020.06.26.174482} {The neural
+  architecture of language: Integrative reverse-engineering converges on a
+  model for predictive processing}.
+\newblock \emph{bioRxiv}.
+
+\bibitem[{Wang et~al.(2012)Wang, Bastiaansen, Yang, and
+  Hagoort}]{chomsky-illusion}
+Lin Wang, Marcel Bastiaansen, Yufang Yang, and Peter Hagoort. 2012.
+\newblock \href {https://doi.org/10.1371/journal.pone.0047917} {Information
+  structure influences depth of syntactic processing: Event-related potential
+  evidence for the chomsky illusion}.
+\newblock \emph{PloS one}, 7:e47917.
+
+\bibitem[{Zaccarella and Friederici(2015)}]{ZaccarellaF}
+Emiliano Zaccarella and Angela~D. Friederici. 2015.
+\newblock \href {https://doi.org/10.3389/fpsyg.2015.01818} {Merge in the human
+  brain: A sub-region based functional investigation in the left pars
+  opercularis}.
+\newblock \emph{Frontiers in Psychology}, 6:1818.
+
+\end{thebibliography}

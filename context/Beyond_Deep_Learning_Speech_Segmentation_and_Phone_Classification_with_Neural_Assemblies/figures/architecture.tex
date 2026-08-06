@@ -1,0 +1,95 @@
+\begin{figure}[t]
+\centering
+
+\tikzset{
+  area/.style={draw, rounded corners=2pt, minimum height=0.50cm, minimum width=1.3cm,
+               font=\scriptsize, inner sep=2pt, align=center, fill=blue!12, thick},
+  output/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=1.1cm,
+               font=\scriptsize, inner sep=2pt, align=center, fill=green!15},
+  proc/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=0.5cm,
+               font=\scriptsize, inner sep=2pt, align=center},
+  input/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=1.1cm,
+               font=\scriptsize, inner sep=2pt, align=center, fill=orange!12},
+  score/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=0.45cm,
+               font=\scriptsize, inner sep=2pt, align=center, fill=red!10},
+  arr/.style={-{Stealth[length=3pt]}, thick},
+}
+
+\begin{tikzpicture}[x=1cm, y=1cm]
+
+\node[font=\footnotesize\bfseries, anchor=west] at (-0.2, 1.15) {(a) Hierarchical Boundary Detection};
+
+\node[input] (audio) at (0.4, 0.0) {Audio};
+
+\node[input] (bin) at (2.1, 0.0) {Prob.\ mel\\[-1pt]binarisation};
+
+\node[area] (l1) at (4.0, 0.0) {Level\,1\\[-1pt]\scriptsize Refract.\ Area};
+
+\node[proc] (cs1) at (5.5, 0.0) {$c^{(t)}$};
+
+\node[output] (phn) at (7.0, 0.0) {Phoneme\\[-1pt]boundaries};
+
+\node[area] (l2) at (4.0, -1.0) {Level\,2\\[-1pt]\scriptsize Refract.\ Area};
+
+\node[proc] (cs2) at (5.5, -1.0) {$c^{(t)}$};
+
+\node[output] (wrd) at (7.0, -1.0) {Word\\[-1pt]boundaries};
+
+\draw[arr] (audio) -- (bin);
+\draw[arr] (bin) -- (l1);
+\draw[arr] (l1) -- (cs1);
+\draw[arr] (cs1) -- (phn);
+\draw[arr] (l1.south) -- (l2.north) node[font=\tiny, right, xshift=1pt, midway] {$\mathbf{a}^{(t)}$};
+\draw[arr] (l2) -- (cs2);
+\draw[arr] (cs2) -- (wrd);
+
+\node[font=\tiny\itshape, text=black!50] at (4.0, -1.55) {no learned weights ($\beta=0$)};
+
+\end{tikzpicture}
+
+\vspace{0.3cm}
+
+\begin{tikzpicture}[x=1cm, y=1cm]
+
+\node[font=\footnotesize\bfseries, anchor=west] at (-0.2, 1.95) {(b) Per-Class Phoneme Classification};
+
+\node[input] (audio) at (0.4, 0.0) {Audio};
+
+\node[input] (mfcc) at (2.1, 0.0) {Pop-coded\\[-1pt]MFCCs};
+
+\coordinate (fanout) at (2.9, 0.0);
+
+\node[area] (a1) at (4.2, 1.0) {RecurrentArea$_1$\\[-1pt]\scriptsize class: \textit{aa}};
+\node[area] (a2) at (4.2, 0.0) {RecurrentArea$_2$\\[-1pt]\scriptsize class: \textit{ae}};
+\node[font=\scriptsize] at (4.2, -0.55) {$\vdots$};
+\node[area] (aC) at (4.2, -1.1) {RecurrentArea$_C$\\[-1pt]\scriptsize class: \textit{z}};
+
+\node[score] (r1) at (5.9, 1.0) {$R_1$};
+\node[score] (r2) at (5.9, 0.0) {$R_2$};
+\node[score] (rC) at (5.9, -1.1) {$R_C$};
+
+\node[output] (argmax) at (6.8, 0.0) {$\hat{c}$};
+
+\draw[arr] (audio) -- (mfcc);
+\draw[arr] (mfcc) -- (fanout);
+
+\draw[arr] (fanout) |- (a1.west);
+\draw[arr] (fanout) -- (a2.west);
+\draw[arr] (fanout) |- (aC.west);
+
+\draw[arr] (a1) -- (r1);
+\draw[arr] (a2) -- (r2);
+\draw[arr] (aC) -- (rC);
+
+\draw[arr] (r1.east) -- ++(0.1,0) |- (argmax.north);
+\draw[arr] (r2) -- (argmax);
+\draw[arr] (rC.east) -- ++(0.1,0) |- (argmax.south);
+
+\node[font=\tiny\itshape, text=black!50] at (4.2, -1.65) {Plasticity ($\beta>0$)};
+
+\end{tikzpicture}
+
+\caption{Architecture overview. \textbf{(a)}~Boundary detection: probabilistically binarised mel frames are processed by two cascaded refractory areas; the assembly change signal $c^{(t)}$ marks phoneme and word boundaries without any learned weights. \textbf{(b)}~Classification: population-coded MFCC frames are fed in parallel to $C$ independent per-class RecurrentAreas trained with Hebbian plasticity; the resonance score $R_c$ (Eq.~\ref{eq:resonance}) determines the predicted class $\hat{c} = \arg\max_c R_c$.}
+\vspace{-15pt}
+\label{fig:architecture}
+\end{figure}

@@ -59,6 +59,7 @@ class NetworkSpec:
     fibers: list
     beta: float = 0.1
     homeostasis: bool = True
+    norm_type: str = "l1"
     step_order: str = "synchronous"
 
     def __post_init__(self):

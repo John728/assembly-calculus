@@ -1,0 +1,65 @@
+\begin{figure}[t]
+\centering
+\tikzset{
+  encode/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=1.0cm,
+               font=\tiny, inner sep=2pt, align=center, fill=orange!18, thick},
+  area/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=1.0cm,
+               font=\tiny, inner sep=2pt, align=center, fill=blue!15, thick},
+  readout/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=0.9cm,
+               font=\tiny, inner sep=2pt, align=center, fill=red!12, thick},
+  task/.style={draw, rounded corners=2pt, minimum height=0.45cm, minimum width=0.9cm,
+               font=\tiny, inner sep=2pt, align=center, fill=green!15},
+  arr/.style={-{Stealth[length=2.5pt]}, semithick},
+  clabel/.style={font=\tiny\bfseries, text=black!70},
+}
+
+\begin{tikzpicture}[x=0.85cm, y=1cm]
+
+\begin{scope}[shift={(0,0)}]
+  \draw[thick, rounded corners=2pt] (-0.55,-0.35) rectangle (0.55,0.35);
+  \draw[gray!70, semithick] plot[domain=-0.4:0.4, samples=40, smooth]
+    (\x, {0.2*sin(1800*\x)*exp(-4*\x*\x)});
+  \node[font=\tiny, below] at (0, -0.38) {Speech};
+\end{scope}
+
+\coordinate (fork) at (0.75, 0);
+\draw[arr] (0.55, 0) -- (fork);
+
+\node[encode] (mel) at (2.2, 0.85) {Prob.\ mel\\[-1pt]binarisation};
+\node[area] (refr) at (3.9, 0.85) {Refractory\\[-1pt]hierarchy};
+\node[readout] (change) at (5.5, 0.85) {$c^{(t)}$};
+\node[task] (bd) at (6.8, 0.85) {Boundary\\[-1pt]detection};
+
+\draw[arr] (fork) |- (mel);
+\draw[arr] (mel) -- (refr);
+\draw[arr] (refr) -- (change);
+\draw[arr] (change) -- (bd);
+
+\node[encode] (mfcc) at (2.2, -0.85) {Pop-coded\\[-1pt]MFCCs};
+\node[area] (perclass) at (3.9, -0.85) {Per-class\\[-1pt]Recurrent};
+\node[readout] (res) at (5.5, -0.85) {$R_c$};
+\node[task] (cl) at (6.8, -0.85) {Segment\\[-1pt]classif.};
+
+\draw[arr] (fork) |- (mfcc);
+\draw[arr] (mfcc) -- (perclass);
+\draw[arr] (perclass) -- (res);
+\draw[arr] (res) -- (cl);
+
+\node[clabel] at (2.2, 1.7) {(i) Encoding};
+\node[clabel] at (3.9, 1.7) {(ii) Architecture};
+\node[clabel] at (5.5, 1.7) {(iii) Read-out};
+
+\draw[densely dashed, gray!40] (1.2, 1.5) -- (1.2, -1.4);
+\draw[densely dashed, gray!40] (3.05, 1.5) -- (3.05, -1.4);
+\draw[densely dashed, gray!40] (4.75, 1.5) -- (4.75, -1.4);
+\draw[densely dashed, gray!40] (6.1, 1.5) -- (6.1, -1.4);
+
+\node[font=\tiny\itshape, text=black!45] at (5.5, 1.2) {$\beta{=}0$};
+\node[font=\tiny\itshape, text=black!45] at (5.5, -1.2) {$\beta{>}0$};
+
+\end{tikzpicture}
+
+\caption{Conceptual overview. Speech is processed by two separate AC pipelines. \textbf{Top:} binarised mel frames drive a frozen-weight refractory hierarchy; the change signal $c^{(t)}$ marks boundaries ($\beta{=}0$). \textbf{Bottom:} population-coded MFCCs drive per-class RecurrentAreas; resonance scoring $R_c$ identifies the class ($\beta{>}0$). Columns mark the three contributions: (i)~neural encoding, (ii)~area architecture, (iii)~task read-out.}
+\vspace{-10pt}
+\label{fig:conceptual_overview}
+\end{figure}

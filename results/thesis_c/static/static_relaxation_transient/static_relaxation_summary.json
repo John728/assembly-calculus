@@ -1,0 +1,87 @@
+{
+  "protocol": {
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "train_per_class": 50,
+    "test_per_class": 20,
+    "horizon": 20,
+    "training_condition": "50 distinct images per class, class organised",
+    "input": "held",
+    "plasticity_during_evaluation": false,
+    "control": "coding-area recurrent weights set to zero after training",
+    "first_predictions_paired_identically": true
+  },
+  "conditions": [
+    {
+      "condition": "learned recurrence",
+      "initial_accuracy": 0.346,
+      "initial_accuracy_ci_low": 0.3296699339706906,
+      "initial_accuracy_ci_high": 0.36233006602930934,
+      "final_accuracy": 0.39,
+      "final_accuracy_ci_low": 0.38123870298197876,
+      "final_accuracy_ci_high": 0.39876129701802127,
+      "revision_rate": 0.0915,
+      "revision_rate_ci_low": 0.07910391998949717,
+      "revision_rate_ci_high": 0.10389608001050282,
+      "cap_revision_rate": 1.0,
+      "cap_revision_rate_ci_low": 1.0,
+      "cap_revision_rate_ci_high": 1.0,
+      "final_difference_rate": 0.089,
+      "final_difference_rate_ci_low": 0.07674809888807003,
+      "final_difference_rate_ci_high": 0.10125190111192996,
+      "maximum_settling_readout": 7,
+      "trajectories": 2000,
+      "revised_trajectories": 183,
+      "cap_changed_trajectories": 2000,
+      "minimum_consecutive_cap_overlap": 0.495
+    },
+    {
+      "condition": "no recurrence",
+      "initial_accuracy": 0.346,
+      "initial_accuracy_ci_low": 0.3296699339706906,
+      "initial_accuracy_ci_high": 0.36233006602930934,
+      "final_accuracy": 0.346,
+      "final_accuracy_ci_low": 0.3296699339706906,
+      "final_accuracy_ci_high": 0.36233006602930934,
+      "revision_rate": 0.0,
+      "revision_rate_ci_low": 0.0,
+      "revision_rate_ci_high": 0.0,
+      "cap_revision_rate": 0.0,
+      "cap_revision_rate_ci_low": 0.0,
+      "cap_revision_rate_ci_high": 0.0,
+      "final_difference_rate": 0.0,
+      "final_difference_rate_ci_low": 0.0,
+      "final_difference_rate_ci_high": 0.0,
+      "maximum_settling_readout": 1,
+      "trajectories": 2000,
+      "revised_trajectories": 0,
+      "cap_changed_trajectories": 0,
+      "minimum_consecutive_cap_overlap": 1.0
+    }
+  ],
+  "trajectories_with_decoded_changes_at_readouts_16_to_20": 0,
+  "microscopic_cap_change_events_at_readouts_16_to_20": 100,
+  "trajectories_with_microscopic_cap_changes_at_readouts_16_to_20": 20,
+  "software": {
+    "base_revision": "68d14e97345aa9ea7a4c8f96088723d349d799ef",
+    "pyac_source_tree_sha256": "706593f6a069a6a39923d298cf6e64d48d1ab1fc58ef6fea608394ccff63678c",
+    "experiment_script_sha256": "6ed2833a744a3d2f4138151cd61f86a294863120fa6046ffe5d3a8d558ad084a",
+    "training_helper_sha256": "c5e8325fa27a6bf0cc11eeb63caeef16d2de0decfe96abd0baa53997d753814f"
+  },
+  "data": {
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6",
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
+  }
+}

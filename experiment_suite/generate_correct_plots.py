@@ -287,35 +287,7 @@ def generate_pointer_plots():
             plt.savefig(OUT_DIR / "pointer_first_error_histogram.png", dpi=150)
             plt.close()
             
-    # 6. pointer_shortcut_ablation.png & pointer_shortcuts.png
-    # Only generate this figure from an explicit shortcut/operator experiment.
-    label_column = None
-    for candidate in ("shortcut_operator", "shortcut_label", "operator"):
-        if candidate in df.columns:
-            label_column = candidate
-            break
-    if label_column is not None:
-        shortcut_df = df[df[label_column].notna()].copy()
-    else:
-        shortcut_df = pd.DataFrame()
-    if not shortcut_df.empty:
-        shortcut_grouped = shortcut_df.groupby([label_column, "t"])["accuracy"].mean().reset_index()
-        plt.figure(figsize=(8, 6))
-        for label in sorted(shortcut_grouped[label_column].astype(str).unique()):
-            sub = shortcut_grouped[shortcut_grouped[label_column].astype(str) == label].sort_values("t")
-            plt.plot(sub["t"], sub["accuracy"], marker="s", label=label)
-        plt.axhline(0.95, color="gray", linestyle="--", alpha=0.7)
-        plt.title("Time-Size Tradeoff: Explicit Shortcuts vs Execution Time")
-        plt.xlabel("Execution Time Budget (t)")
-        plt.ylabel("Accuracy")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig(OUT_DIR / "pointer_shortcut_ablation.png", dpi=150)
-        plt.savefig(OUT_DIR / "pointer_shortcuts.png", dpi=150)
-        plt.close()
-
-    # 7. Fit-Then-Predict Protocol plot (pointer_fit_predict.png)
+    # 6. Fit-Then-Predict Protocol plot (pointer_fit_predict.png)
     df_fit = df[df["L"].isin([1, 2, 3])].copy()
     if not df_fit.empty:
         obs_stats = df_fit.groupby(["L", "c"])["path_accuracy"].agg(["mean", "sem"]).reset_index()

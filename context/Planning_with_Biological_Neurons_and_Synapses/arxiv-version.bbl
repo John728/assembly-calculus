@@ -1,0 +1,144 @@
+\begin{thebibliography}{10}
+
+\bibitem{Axel2018}
+R.~Axel.
+\newblock Q\&{A}.
+\newblock {\em Neuron}, 99(6):1110--1112, Sept. 2018.
+\newblock {doi: 10.1016/j.neuron.2018.09.003}.
+
+\bibitem{basanisi2020}
+R.~Basanisi, A.~Brovelli, E.~Cartoni, and G.~Baldassarre.
+\newblock A generative spiking neural-network model of goal-directed behaviour
+  and one-step planning.
+\newblock {\em PLOS Computational Biology}, 16(12):1--32, 12 2020.
+
+\bibitem{bekolay2014}
+T.~Bekolay, J.~Bergstra, E.~Hunsberger, T.~DeWolf, T.~Stewart, D.~Rasmussen, X.~Choo, A.~Voelker, and C.~Eliasmith.
+\newblock Nengo: a Python tool for building large-scale functional brain models.
+\newblock {\em Frontiers in Neuroinformatics}, 7(48):1--13, 2014.
+
+\bibitem{bezanson2017julia}
+J.~Bezanson, A.~Edelman, S.~Karpinski, and V.~B. Shah.
+\newblock Julia: A fresh approach to numerical computing.
+\newblock {\em SIAM review}, 59(1):65--98, 2017.
+
+\bibitem{buzsaki_neural_2010}
+G.~Buzsáki.
+\newblock Neural {Syntax}: {Cell} {Assemblies}, {Synapsembles}, and {Readers}.
+\newblock {\em Neuron}, 68(3):362--385, Nov. 2010.
+
+\bibitem{buzsaki_brain_2021}
+G.~Buzsáki.
+\newblock {\em The {Brain} from {Inside} {Out}}.
+\newblock Oxford University Press, Oxford, reprint edition edition, Jan. 2021.
+
+\bibitem{aaaiChady99}
+M.~Chady.
+\newblock Modelling higher cognitive functions with hebbian cell assemblies.
+\newblock In J.~Hendler and D.~Subramanian, editors, {\em Proceedings of
+  AAAI/IAAI 1999, July 18-22, 1999, Orlando, Florida, {USA}}, page 943. {AAAI}
+  Press, 1999.
+
+\bibitem{dong2018neural}
+H.~Dong, J.~Mao, T.~Lin, C.~Wang, L.~Li, and D.~Zhou.
+\newblock Neural logic machines.
+\newblock In {\em International Conference on Learning Representations}, 2019.
+
+\bibitem{doursat_bridging_2013}
+R.~Doursat.
+\newblock Bridging the {Mind}-{Brain} {Gap} by {Morphogenetic} "{Neuron}
+  {Flocking}": {The} {Dynamic} {Self}-{Organization} of {Neural} {Activity}
+  into {Mental} {Shapes}.
+\newblock In {\em {AAAI} {Fall} {Symposia}}, 2013.
+
+\bibitem{graves2014neural}
+A.~Graves, G.~Wayne, and I.~Danihelka.
+\newblock Neural turing machines, 2014.
+
+\bibitem{gupta1991}
+N.~Gupta and D.~S. Nau.
+\newblock Complexity results for blocks-world planning.
+\newblock In {\em Proceedings of the Ninth National Conference on Artificial
+  Intelligence - Volume 2}, AAAI'91, page 629–633. AAAI Press, 1991.
+
+\bibitem{gupta1992}
+N.~Gupta and D.~S. Nau.
+\newblock On the complexity of blocks-world planning.
+\newblock {\em Artificial Intelligence}, 56(2):223--254, 1992.
+
+\bibitem{Hayashi2007}
+M.~Hayashi.
+\newblock Stacking of blocks by chimpanzees: developmental processes and
+  physical understanding.
+\newblock {\em Animal Cognition}, 10:89--103, 2007.
+
+\bibitem{jBrain}
+jBrain.
+\newblock \url{https://github.com/piluc/jBrain}, 12 2021.
+
+\bibitem{actr-soar-kennedy}
+W.~G. Kennedy and J.~G. Trafton.
+\newblock Long-term symbolic learning in soar and act-r.
+\newblock In {\em Proceedings of the Seventh International Conference on
+  Cognitive Modeling}, page 166–171, 2006.
+
+\bibitem{Koeman2020}
+V.~Koeman.
+\newblock The blocks world.
+\newblock \url{https://github.com/eishub/blocksworld#readme}, 2020.
+\newblock [Online; last access 08-September-2021].
+
+\bibitem{kurup-thesis}
+U.~Kurup.
+\newblock {\em Design and use of a bimodal cognitive architecture for
+  diagrammatic reasoning and cognitive modeling}.
+\newblock {Ph.D.} diss., Graduate School of the Ohio State University, 2008.
+
+\bibitem{mitropolsky_biologically_2021}
+D.~Mitropolsky, M.~J. Collins, and C.~H. Papadimitriou.
+\newblock A {Biologically} {Plausible} {Parser}.
+\newblock In {\em Transactions of the {Association} for {Computational}
+  {Linguistics}}, Aug. 2021.
+\newblock arXiv: 2108.02189.
+
+\bibitem{Panov2017}
+A.~I. Panov.
+\newblock Behavior planning of intelligent agent with sign world model.
+\newblock {\em Biologically Inspired Cognitive Architectures}, 19:21--31, 2017.
+
+\bibitem{papadimitriou2020}
+C.~H. Papadimitriou, S.~S. Vempala, D.~Mitropolsky, M.~Collins, and W.~Maass.
+\newblock Brain computation by assemblies of neurons.
+\newblock {\em Proceedings of the National Academy of Sciences},
+  117(25):14464--14472, 2020.
+
+\bibitem{rueckert2016}
+E.~Rueckert, D.~Kappel, D.~Tanneberg, D.~Pecevski, and J.~Peters.
+\newblock Recurrent spiking networks solve planning tasks.
+\newblock {\em Scientific Reports}, 6, 2016.
+
+\bibitem{slaney2001}
+J.~Slaney and S.~Thiébaux.
+\newblock Blocks world revisited.
+\newblock {\em Artificial Intelligence}, 125(1):119--153, 2001.
+
+\bibitem{Tian2020}
+M.~Tian, T.~Luo, and H.~Cheung.
+\newblock The development and measurement of block construction in early
+  childhood: A review.
+\newblock {\em Journal of Psychoeducational Assessment}, 38(6):767--782, 2020.
+
+\bibitem{wilkins-book}
+D.~E. Wilkins.
+\newblock {\em Practical Planning: Extending the Classical AI Planning
+  Paradigm}.
+\newblock Morgan Kaufmann Publishers Inc., San Francisco, CA, USA, 1988.
+
+\bibitem{winograd1971}
+T.~Winograd.
+\newblock Procedures as a representation for data in a computer program for
+  understanding natural language.
+\newblock Technical report, Massachusetts Inst Of Tech Cambridge Project Mac,
+  1971.
+
+\end{thebibliography}

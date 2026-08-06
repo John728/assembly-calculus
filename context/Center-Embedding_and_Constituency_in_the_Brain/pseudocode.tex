@@ -1,0 +1,118 @@
+
+
+\begin{algorithm}
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+\Input{a sentence $s$}
+\Output{representation of dependency parse of $s$, rooted in {\sc Verb}}
+\BlankLine
+ disinhibit({\sc Lex}, 0) \;
+ disinhibit({\sc Subj}, 0) \;
+ disinhibit({\sc Verb}, 0) \;
+ \ForEach{\upshape word $w$ in $s$}{
+  activate assembly $x_w$ in {\sc Lex} \;
+  \ForEach{\upshape pre-rule (Dis)inhibit($\square,i$) in $\alpha_w \rightarrow$ Pre-Commands}{
+    (Dis)inhibit($\square, i$) \;
+  }
+  }
+ {\em project}* \;  
+ \ForEach{\upshape post-rule (Dis)inhibit($\square,i$) in $\alpha_w \rightarrow$ Post-Commands}{
+    (Dis)inhibit($\square, i$)
+  }
+\BlankLine
+ \caption{Parser, main loop}
+\end{algorithm}
+
+\begin{algorithm}
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+\Input{$G$ after parsing, with active root assembly $v$ in {\sc Verb}}
+\Output{the parse tree stored implicitly in $G$}
+\BlankLine
+initialize stack $s$ as \{$(v,{\textsc Verb})$\} \;
+initialize dependencies $\mathcal{D} = \{\}$ \;
+ \While{\upshape $s$ not empty }{
+  ($x$,$A$) = $s$.pop() \;
+  {\em project}($x$, {\sc Lex}) \;
+  $w_A$ = {\em getWord}() \;
+  \ForEach{\upshape area $B \neq A$ s.t. $(A,B) \in \mathcal{F}$}{
+  $y$ = {\em try-project}$(x,B)$ \;
+  \If{$y$ not None}{
+  {\em project}($y$, {\sc Lex}) \;
+  $w_B$ = {\em getWord}() \;
+  add dependency $w_A \xrightarrow{B} w_B$ to $\mathcal{D}$ \;
+  s.insert($(y,B)$) \;
+  }
+  }
+ }
+ return $\mathcal{D}$ \;
+ \caption{Read out of parse tree in $G$}
+\end{algorithm}
+
+
+
+\begin{algorithm}
+\BlankLine
+\ForEach{\upshape area $A$}{
+    \If{\upshape there is active assembly $x$ in $A$}{
+    \ForEach{$i \in x$}{
+        $f_i^1 = 1$ \;
+    }
+    }
+}
+\BlankLine
+\For{$i=1,\ldots,20$}{
+all $A$, all $i\in A$, initialize $SI_i^t = 0$ \;
+\ForEach{\upshape uninhibited areas $A$, $B$}{
+    \If{\upshape fiber $(A,B)$ inhibited}{
+		skip \;
+	}
+	$x = \{i \in A : f_i^t = 1\}$ \;
+	\ForEach{\upshape $j \in B$}{
+		$SI_j^t$ += $\sum_{i \in x, (i,j)\in E} w_{ij}$ \;
+	}
+}
+\BlankLine
+\ForEach{\upshape uninhibited area $A$}{
+	\ForEach{\upshape $i \in A$}{
+	\eIf{\upshape $SI_i^t$ in top$-k_{j\in A}(SI_j^t)$ }{
+			$f_i^{t+1}$ = 1 \;
+	}{
+		$f_i^{t+1}$ = 0 \;
+	}
+	}
+}
+\ForEach{\upshape uninhibited areas $A$,$B$}{
+    \If{\upshape fiber $(A,B)$ inhibited}{
+		skip \;
+	}
+	\ForEach{\upshape $(i,j) \in (A\times B)\cap E$}{
+    \If{\upshape $f_i^t = 1$ and $f_j^{t+1}=1$}{
+        $w_{ij}$ = $w_{ij} \times (1+\beta)$
+    }
+	}
+}
+}
+\caption{AC code for project*}
+\end{algorithm}
+
+
+\begin{figure*} 
+  \includegraphics[scale=0.9, trim=50 70 0 0, clip]{parser_figure3.pdf}
+  \caption{Trace of the Parser for the sentence {\em ``the man saw a woman"}. The action $\alpha_i$ of each word is given beneath a figure showing the state of the Parser after the Pre-commands and project* have occurred for that word. Green areas and fiber arrows are disinhibited; red are inhibited. All assemblies active right after project* are shown (with the one in {\sc Lex} labeled $x_w$). Purple dotted arrows indicate assemblies that have been connected; one can fire to activate the other. Purple arrows to {\sc Lex} are shown only in the stage in which they are created. Green ($\color{green}{\bm{\ocircle}}$) and red ($\color{red}\bm{\oslash}$) circles indicate areas or fibers that will be disinhibited/inhibited by the Post-commands.}
+  \label{fig:big}
+\end{figure*}
+
+@article{neuro,
+title = {Interactions between attention and working memory},
+journal = {Neuroscience},
+volume = {139},
+number = {1},
+pages = {201-208},
+year = {2006},
+issn = {0306-4522},
+doi = {https://doi.org/10.1016/j.neuroscience.2005.08.023},
+url = {https://www.sciencedirect.com/science/article/pii/S0306452205008985},
+author = {E. Awh and E.K. Vogel and S.-H. Oh},
+keywords = {attention, working memory},
+}

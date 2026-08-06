@@ -1,0 +1,36 @@
+\section{Experimental Setup}
+
+\subsection{Dataset}
+
+We evaluate on two standard speech datasets. \textbf{TIMIT}~\cite{TIMIT92} is a corpus of continuous read speech with time-aligned phone and word transcriptions. We use the standard test partition (24~speakers) and 39 phone classes~\cite{Lee89}. %
+For boundary detection, we use 20 test utterances. For phone classification, we use 200 training and 50 test utterances. \textbf{Google Speech Commands}~\cite{Warden18} is a dataset of single-word utterances from thousands of speakers. We use the 10-word subset (\textit{yes}, \textit{no}, \textit{up}, \textit{down}, \textit{left}, \textit{right}, \textit{on}, \textit{off}, \textit{stop}, \textit{go}) with 200 training and 50 test samples per class. This evaluates whether per-class trajectory scoring generalises from phone-level segments to whole-word classification with greater speaker and duration variability. We intentionally use a limited dataset to demonstrate the advantages of AC in data-efficient modeling.
+
+\subsection{Feature Extraction}
+\textbf{Boundary detection.} Audio at 16\,kHz is represented as a 32-bin log-mel spectrogram (512-sample FFT, 320-sample hop / 20\,ms frames), normalised to $[0,1]$. Frames are binarised via probabilistic sampling: each mel bin value is raised to power $\gamma{=}0.5$ (compressing dynamic range) and rescaled so that 10\% of bins are active across the entire sequence. Each frame is independently Bernoulli-sampled, producing a 32-dimensional binary vector per frame. All binarisation hyperparameters were selected by Bayesian optimisation (Section~\ref{sec:tuning}).
+
+\noindent \textbf{Phone classification.} Audio is represented as $M{=}11$ MFCCs (FFT size 512, hop length 480). Each coefficient is encoded by $N_\mathrm{pop}{=}14$ Gaussian population neurons with ranges set to the 1st--99th percentile of training data, then binarised with threshold~0.044, producing a $154$-dimensional binary vector per frame.
+
+\noindent \textbf{Word classification.} Audio is encoded as $M{=}19$ MFCCs (FFT size 2048, hop length 640). Each coefficient is encoded by $N_\mathrm{pop}{=}9$ Gaussian population neurons and binarised with threshold~0.035, producing a $171$-dimensional binary vector per frame.
+
+\subsection{Architecture Parameters}
+
+\textbf{Level~1 (phone boundary detection):} Frozen-repeat refractory area with $n{=}1{,}531$ neurons, cap $k{=}135$ (8.8\% sparsity), in-degree $k_\mathrm{in}{=}32$, refractory rate $\rho{=}0.989$, similarity threshold $\tau{=}0.761$, minimum peak distance $d{=}3$ frames.
+
+\noindent\textbf{Level~2 (word boundary detection):} Frozen-repeat refractory area with $n{=}6{,}557$ neurons, cap $k{=}588$ (9.0\% sparsity), $k_\mathrm{in}{=}1{,}513$ (near-full connectivity to Level~1), refractory rate $\rho{=}0.092$, similarity threshold $\tau{=}0.745$, minimum peak distance $d{=}7$ frames. 
+No Hebbian weight updates are performed during boundary detection inference; all feedforward weights remain at their random initialisation. The change signal (Eq.~\ref{eq:change}) is normalised to $[0,1]$ per utterance.
+
+\noindent\textbf{Per-class RecurrentAreas (phone classification):} 39 independent RecurrentAreas (one per non-silence phone class), each with $n{=}2{,}250$ neurons, cap $k{=}732$ (32.5\% sparsity), in-degree $k_\mathrm{in}{=}87$, recurrent in-degree $k_\mathrm{in}^\mathrm{rec}{=}1{,}245$, learning rate $\beta{=}3.1{\times}10^{-4}$, plasticity rule: ABS (Eq.~\ref{eq:abs}), trained for 13 epochs on contiguous segments.
+
+\noindent\textbf{Per-class RecurrentAreas (word classification):} 10 independent RecurrentAreas (one per word class), each with $n{=}4{,}655$ neurons, cap $k{=}815$ (17.5\% sparsity), in-degree $k_\mathrm{in}{=}74$, recurrent in-degree $k_\mathrm{in}^\mathrm{rec}{=}1{,}237$ (independent mode), learning rate $\beta{=}3.6{\times}10^{-3}$, plasticity rule: ABS, trained for 2 epochs.
+
+\subsection{Hyperparameter Optimisation}
+\label{sec:tuning}
+
+All hyperparameters, including feature extraction, binarisation, and area parameters, are jointly optimised using Bayesian optimisation with the Tree-structured Parzen Estimator (TPE) sampler~\cite{Bergstra11} via Optuna~\cite{Akiba19}. For boundary detection, Level~1 parameters (9 hyperparameters spanning mel spectrogram settings, binarisation, and area configuration) are optimised first over 200 trials; Level~2 parameters (6 hyperparameters) are then optimised over 200 trials using the best Level~1 configuration. Classification hyperparameters (${\sim}$20 per task) are optimised analogously over 200 trials.
+
+\subsection{Evaluation}\label{sec:eval}
+
+We evaluate boundary detection using precision, recall, and F1 score. A detected boundary is a true positive if it falls within a tolerance window of a ground-truth boundary: $\pm 2$ frames (40\,ms) for phone boundaries and $\pm 5$ frames (100\,ms) for word boundaries. Boundaries are detected as peaks in the normalised change signal %
+with a prominence threshold swept over $\{0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.5\}$, selecting the threshold that maximises F1 per utterance. This oracle selection provides an upper bound; a globally fixed threshold reduces F1 by approximately 0.05--0.10. Results are averaged over 10 random seeds to account for the stochastic binarisation.
+
+For phone classification, each per-class RecurrentArea is trained on contiguous segments from 200 TIMIT training utterances (Section~\ref{sec:traj_scoring}). For word classification, each per-class RecurrentArea is trained on 200 whole-word utterances per class from Google Speech Commands. In both cases, segments are classified by highest resonance score $R_c$ (Eq.~\eqref{eq:resonance}) across the $C$ per-class areas.

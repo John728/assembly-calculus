@@ -1,0 +1,217 @@
+\begin{thebibliography}{34}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[{A}xel(2018)]{AxelNeuron2018}
+Richard {A}xel.
+\newblock {Q} \& {A}.
+\newblock \emph{Neuron}, 99:\penalty0 1110--1112, 2018.
+
+\bibitem[Binas et~al.(2014)Binas, Rutishauser, Indiveri, and
+  Pfeiffer]{binas2014learning}
+Jonathan Binas, Ueli Rutishauser, Giacomo Indiveri, and Michael Pfeiffer.
+\newblock Learning and stabilization of winner-take-all dynamics through
+  interacting excitatory and inhibitory plasticity.
+\newblock \emph{Frontiers in computational neuroscience}, 8:\penalty0 68, 2014.
+
+\bibitem[Buzs{\'a}ki(2010)]{Buzsaki:10}
+Gy{\"o}rgy Buzs{\'a}ki.
+\newblock Neural syntax: cell assemblies, synapsembles, and readers.
+\newblock \emph{Neuron}, 68\penalty0 (3), 2010.
+
+\bibitem[Buzs{\'a}ki(2019)]{buzsaki2019brain}
+Gy{\"o}rgy Buzs{\'a}ki.
+\newblock \emph{The Brain from Inside Out}.
+\newblock Oxford University Press, 2019.
+
+\bibitem[d'Amore et~al.(2021)d'Amore, Mitropolsky, Crescenzi, Natale, and
+  Papadimitriou]{damore2021planning}
+Francesco d'Amore, Daniel Mitropolsky, Pierluigi Crescenzi, Emanuele Natale,
+  and Christos~H Papadimitriou.
+\newblock Planning with biological neurons and synapses.
+\newblock \emph{arXiv preprint arXiv:2112.08186}, 2021.
+
+\bibitem[Davis(2006)]{davis2006homeostatic}
+Graeme~W Davis.
+\newblock Homeostatic control of neural activity: from phenomenology to
+  molecular design.
+\newblock \emph{Annu. Rev. Neurosci.}, 29:\penalty0 307--323, 2006.
+
+\bibitem[Erd{\H{o}}s and R{\'e}nyi(1960)]{erdHos1960evolution}
+Paul Erd{\H{o}}s and Alfr{\'e}d R{\'e}nyi.
+\newblock On the evolution of random graphs.
+\newblock \emph{Publ. Math. Inst. Hung. Acad. Sci}, 5\penalty0 (1):\penalty0
+  17--60, 1960.
+
+\bibitem[Feldman and Valiant(2009)]{FeldmanV09}
+Vitaly Feldman and Leslie~G. Valiant.
+\newblock Experience-induced neural circuits that achieve high capacity.
+\newblock \emph{Neural Computation}, 21\penalty0 (10):\penalty0 2715--2754,
+  2009.
+\newblock \doi{10.1162/neco.2009.08-08-851}.
+
+\bibitem[Guerguiev et~al.(2017)Guerguiev, Lillicrap, and
+  Richards]{guerguiev2017towards}
+Jordan Guerguiev, Timothy~P Lillicrap, and Blake~A Richards.
+\newblock Towards deep learning with segregated dendrites.
+\newblock \emph{ELife}, 6:\penalty0 e22901, 2017.
+
+\bibitem[Harris and Thiele(2011)]{harris2011cortical}
+Kenneth~D Harris and Alexander Thiele.
+\newblock Cortical state and attention.
+\newblock \emph{Nature reviews neuroscience}, 12\penalty0 (9):\penalty0
+  509--523, 2011.
+
+\bibitem[Hebb(1949)]{hebb1949}
+Donald~Olding Hebb.
+\newblock \emph{The organization of behavior: A neuropsychological theory}.
+\newblock Wiley, New York, 1949.
+
+\bibitem[Hopfield(1982)]{hopfield1982neural}
+John~J Hopfield.
+\newblock Neural networks and physical systems with emergent collective
+  computational abilities.
+\newblock \emph{Proceedings of the national academy of sciences}, 79\penalty0
+  (8):\penalty0 2554--2558, 1982.
+
+\bibitem[Jones(2003)]{jones2003arousal}
+Barbara~E Jones.
+\newblock Arousal systems.
+\newblock \emph{Front Biosci}, 8\penalty0 (5):\penalty0 438--51, 2003.
+
+\bibitem[Legenstein et~al.(2018)Legenstein, Maass, Papadimitriou, and
+  Vempala]{LMPV}
+R.~Legenstein, W.~Maass, C.~H. Papadimitriou, and S.~S. Vempala.
+\newblock Long-term memory and the densest k-subgraph problem.
+\newblock In \emph{Proc. of 9th Innovations in Theoretical Computer Science
+  (ITCS) conference, Cambridge, USA, Jan 11-14. 2018}, 2018.
+
+\bibitem[Legenstein(2018)]{legenstein2018long}
+Robert~A Legenstein.
+\newblock Long term memory and the densest k-subgraph problem.
+\newblock In \emph{9th Innovations in Theoretical Computer Science Conference},
+  2018.
+
+\bibitem[Lillicrap et~al.(2016)Lillicrap, Cownden, Tweed, and
+  Akerman]{Lillicrap2016RandomSF}
+Timothy~P. Lillicrap, Daniel Cownden, Douglas~Blair Tweed, and Colin~J.
+  Akerman.
+\newblock Random synaptic feedback weights support error backpropagation for
+  deep learning.
+\newblock In \emph{Nature communications}, 2016.
+
+\bibitem[Lillicrap et~al.(2020)Lillicrap, Santoro, Marris, Akerman, and
+  Hinton]{lillicrap2020}
+Timothy~P Lillicrap, Adam Santoro, Luke Marris, Colin~J Akerman, and Geoffrey
+  Hinton.
+\newblock Backpropagation and the brain.
+\newblock \emph{Nature Reviews Neuroscience}, pages 1--12, 2020.
+
+\bibitem[Magee and Grienberger(2020)]{magee2020synaptic}
+Jeffrey~C Magee and Christine Grienberger.
+\newblock Synaptic plasticity forms and functions.
+\newblock \emph{Annual review of neuroscience}, 43:\penalty0 95--117, 2020.
+
+\bibitem[Mitropolsky et~al.(2021)Mitropolsky, Collins, and
+  Papadimitriou]{mitropolsky2021biologically}
+Daniel Mitropolsky, Michael~J Collins, and Christos~H Papadimitriou.
+\newblock A biologically plausible parser.
+\newblock \emph{To appear in TACL}, 2021.
+
+\bibitem[Papadimitriou and Vempala(2019)]{papadimitriou2019random}
+Christos~H Papadimitriou and Santosh~S Vempala.
+\newblock Random projection in the brain and computation with assemblies of
+  neurons.
+\newblock In \emph{10th Innovations in Theoretical Computer Science
+  Conference}, 2019.
+
+\bibitem[Papadimitriou et~al.(2020)Papadimitriou, Vempala, Mitropolsky,
+  Collins, and Maass]{papadimitriou2020brain}
+Christos~H Papadimitriou, Santosh~S Vempala, Daniel Mitropolsky, Michael
+  Collins, and Wolfgang Maass.
+\newblock Brain computation by assemblies of neurons.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 117\penalty0
+  (25):\penalty0 14464--14472, 2020.
+
+\bibitem[Payeur et~al.(2021)Payeur, Guerguiev, Zenke, Richards, and
+  Naud]{payeur2021burst}
+Alexandre Payeur, Jordan Guerguiev, Friedemann Zenke, Blake~A Richards, and
+  Richard Naud.
+\newblock Burst-dependent synaptic plasticity can coordinate learning in
+  hierarchical circuits.
+\newblock \emph{Nature neuroscience}, pages 1--10, 2021.
+
+\bibitem[Piantadosi et~al.(2012)Piantadosi, Tenenbaum, and Goodman]{Josh2012}
+Steven~T Piantadosi, Joshua~B Tenenbaum, and Noah~D Goodman.
+\newblock Bootstrapping in a language of thought: A formal model of numerical
+  concept learning.
+\newblock \emph{Cognition}, 123\penalty0 (2):\penalty0 199--217, 2012.
+
+\bibitem[Piantadosi et~al.(2016)Piantadosi, Tenenbaum, and Goodman]{Josh2016}
+Steven~T Piantadosi, Joshua~B Tenenbaum, and Noah~D Goodman.
+\newblock The logical primitives of thought: Empirical foundations for
+  compositional cognitive models.
+\newblock \emph{Psychological review}, 123\penalty0 (4):\penalty0 392, 2016.
+
+\bibitem[Quiroga(2016)]{quiroga2016neuronal}
+Rodrigo~Quian Quiroga.
+\newblock Neuronal codes for visual perception and memory.
+\newblock \emph{Neuropsychologia}, 83:\penalty0 227--241, 2016.
+
+\bibitem[Rahimi and Recht(2007)]{rahimi2007random}
+Ali Rahimi and Benjamin Recht.
+\newblock Random features for large-scale kernel machines.
+\newblock \emph{Advances in neural information processing systems}, 20, 2007.
+
+\bibitem[Rangamani and Gandhi(2020)]{RangamaniGandhi2020}
+Akshay Rangamani and A~Gandhi.
+\newblock Supervised learning with brain assemblies.
+\newblock \emph{Preprint, private communication}, 2020.
+
+\bibitem[Sacramento et~al.(2017)Sacramento, Costa, Bengio, and
+  Senn]{sacramento2017dendritic}
+Joao Sacramento, Rui~Ponte Costa, Yoshua Bengio, and Walter Senn.
+\newblock Dendritic error backpropagation in deep cortical microcircuits.
+\newblock \emph{arXiv preprint arXiv:1801.00062}, 2017.
+
+\bibitem[Sacramento et~al.(2018)Sacramento, Ponte~Costa, Bengio, and
+  Senn]{sacramento2018dendritic}
+Jo{\~a}o Sacramento, Rui Ponte~Costa, Yoshua Bengio, and Walter Senn.
+\newblock Dendritic cortical microcircuits approximate the backpropagation
+  algorithm.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  31:\penalty0 8721--8732, 2018.
+
+\bibitem[Sherrington(1906)]{sherrington1906integrative}
+Charles~Scott Sherrington.
+\newblock \emph{The Integrative Action of the Nervous System}, volume~2.
+\newblock Yale University Press, 1906.
+
+\bibitem[Turrigiano(2011)]{turrigiano2011too}
+Gina Turrigiano.
+\newblock Too many cooks? intrinsic and synaptic homeostatic mechanisms in
+  cortical circuit refinement.
+\newblock \emph{Annual review of neuroscience}, 34:\penalty0 89--103, 2011.
+
+\bibitem[Valiant(1994)]{Valiant94}
+Leslie~G. Valiant.
+\newblock \emph{Circuits of the mind}.
+\newblock Oxford University Press, 1994.
+\newblock ISBN 978-0-19-508926-4.
+
+\bibitem[Valiant(2000)]{Valiant00}
+Leslie~G. Valiant.
+\newblock A neuroidal architecture for cognitive computation.
+\newblock \emph{J. {ACM}}, 47\penalty0 (5):\penalty0 854--882, 2000.
+\newblock \doi{10.1145/355483.355486}.
+
+\bibitem[Whittington and Bogacz(2019)]{whittington2019theories}
+James~CR Whittington and Rafal Bogacz.
+\newblock Theories of error back-propagation in the brain.
+\newblock \emph{Trends in cognitive sciences}, 23\penalty0 (3):\penalty0
+  235--250, 2019.
+
+\end{thebibliography}

@@ -195,20 +195,7 @@ $$\text{Acc}_{\text{path}}(K, c) = \left(1 - \epsilon(c)\right)^K$$
 
 ---
 
-### 3.5 The Space-Time Tradeoff (Shortcut Ablation)
-
-A core claim of the AC is the **Space-Time Tradeoff**: a network can pre-compile associative links ("shortcuts") to bypass sequential updates, trading spatial memory footprint (representation size) for physical execution speed (time).
-
-**Shortcut Ablation Plot (Nominal Depth $K = 4$):**
-![Shortcut Ablation](./assets/pointer_shortcuts.png)
-
-- **Standard (M):** Standard traversal requires $t = 4$ steps to resolve 4 hops.
-- **$M^2$ Shortcuts:** Memorizing 2-hop transitions (e.g., $0 \rightarrow 2$) reduces the step requirement to $t = 2$.
-- **$M^4$ Shortcuts:** Memorizing 4-hop transitions allows the network to resolve the path in a single step ($t = 1$).
-
-This result empirically demonstrates that spatial representation compilation directly substitutes for temporal execution, validating the space-time frontier of the AC.
-
-### 3.6 Transition to Perfect Generalization (The Optimized Controller)
+### 3.5 Transition to Perfect Generalization (The Optimized Controller)
 
 The low accuracy of the naive unseen pointer chasing model (Section 3.3) was driven by two key constraints identified by the theory:
 1. **Hebbian SNR Bound:** A single write round on a sparse random graph yields an SNR of $\beta \sqrt{\frac{kp}{1-p}} \approx 0.94$, which is too low to survive the competitive $k$-cap thresholding, causing retrieval to collapse to noise.
@@ -302,4 +289,3 @@ A review of the empirical data resolves the representational dynamics of the Ass
 This rapid collapse is driven by a lack of recurrent self-support to sustain the representation against competitive top-$k$ thresholding and the negative homeostatic class-separation bias.
 
 Consequently, static classification tasks in the AC do not benefit from extended execution times ($t > 2$); they either settle instantly into a stable attractor (if held) or collapse to noise (if transient). This contrasts sharply with sequential reasoning tasks, where physical execution time is a strict, linear requirement of the task's transition depth.
-

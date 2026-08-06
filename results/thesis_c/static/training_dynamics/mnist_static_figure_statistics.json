@@ -1,0 +1,225 @@
+{
+  "condition_seed_statistics": {
+    "blocked_10x5": {
+      "initial_accuracy": {
+        "mean": 0.414,
+        "lower_95": 0.406886284002805,
+        "upper_95": 0.42111371599719494
+      },
+      "final_accuracy": {
+        "mean": 0.44449999999999995,
+        "lower_95": 0.4383163106507374,
+        "upper_95": 0.4506836893492625
+      },
+      "accuracy_change": {
+        "mean": 0.03050000000000001,
+        "lower_95": 0.021828397542606896,
+        "upper_95": 0.03917160245739312
+      },
+      "switch_rate": {
+        "mean": 0.1295,
+        "lower_95": 0.11705813560460987,
+        "upper_95": 0.14194186439539014
+      },
+      "maximum_settling_readout": 10
+    },
+    "distinct_1": {
+      "initial_accuracy": {
+        "mean": 0.32,
+        "lower_95": 0.3098833256163903,
+        "upper_95": 0.3301166743836097
+      },
+      "final_accuracy": {
+        "mean": 0.32399999999999995,
+        "lower_95": 0.31377153576547473,
+        "upper_95": 0.3342284642345252
+      },
+      "accuracy_change": {
+        "mean": 0.0040000000000000036,
+        "lower_95": -0.0035027265258165486,
+        "upper_95": 0.011502726525816555
+      },
+      "switch_rate": {
+        "mean": 0.28700000000000003,
+        "lower_95": 0.26805842015440134,
+        "upper_95": 0.3059415798455987
+      },
+      "maximum_settling_readout": 100
+    },
+    "distinct_10": {
+      "initial_accuracy": {
+        "mean": 0.5534999999999999,
+        "lower_95": 0.5459500563528429,
+        "upper_95": 0.5610499436471569
+      },
+      "final_accuracy": {
+        "mean": 0.5765,
+        "lower_95": 0.5697450204285757,
+        "upper_95": 0.5832549795714244
+      },
+      "accuracy_change": {
+        "mean": 0.02299999999999993,
+        "lower_95": 0.017110662584135072,
+        "upper_95": 0.028889337415864788
+      },
+      "switch_rate": {
+        "mean": 0.12200000000000003,
+        "lower_95": 0.11091773846632463,
+        "upper_95": 0.13308226153367542
+      },
+      "maximum_settling_readout": 98
+    },
+    "distinct_50": {
+      "initial_accuracy": {
+        "mean": 0.346,
+        "lower_95": 0.3296699339706906,
+        "upper_95": 0.36233006602930934
+      },
+      "final_accuracy": {
+        "mean": 0.39,
+        "lower_95": 0.38123870298197876,
+        "upper_95": 0.39876129701802127
+      },
+      "accuracy_change": {
+        "mean": 0.04400000000000002,
+        "lower_95": 0.03405336586756516,
+        "upper_95": 0.053946634132434876
+      },
+      "switch_rate": {
+        "mean": 0.0915,
+        "lower_95": 0.07910391998949717,
+        "upper_95": 0.10389608001050282
+      },
+      "maximum_settling_readout": 7
+    },
+    "gain_balanced": {
+      "initial_accuracy": {
+        "mean": 0.346,
+        "lower_95": 0.3296699339706906,
+        "upper_95": 0.36233006602930934
+      },
+      "final_accuracy": {
+        "mean": 0.34750000000000003,
+        "lower_95": 0.3323015882386343,
+        "upper_95": 0.36269841176136575
+      },
+      "accuracy_change": {
+        "mean": 0.0015000000000000013,
+        "lower_95": -0.004591044570654054,
+        "upper_95": 0.007591044570654057
+      },
+      "switch_rate": {
+        "mean": 0.028500000000000004,
+        "lower_95": 0.022646979502387463,
+        "upper_95": 0.034353020497612546
+      },
+      "maximum_settling_readout": 4
+    },
+    "gain_reversed": {
+      "initial_accuracy": {
+        "mean": 0.346,
+        "lower_95": 0.3296699339706906,
+        "upper_95": 0.36233006602930934
+      },
+      "final_accuracy": {
+        "mean": 0.3035,
+        "lower_95": 0.292058015928301,
+        "upper_95": 0.314941984071699
+      },
+      "accuracy_change": {
+        "mean": -0.042499999999999996,
+        "lower_95": -0.05292802926590079,
+        "upper_95": -0.0320719707340992
+      },
+      "switch_rate": {
+        "mean": 0.0885,
+        "lower_95": 0.07138367517772418,
+        "upper_95": 0.10561632482227581
+      },
+      "maximum_settling_readout": 6
+    },
+    "interleaved_10x5": {
+      "initial_accuracy": {
+        "mean": 0.40049999999999997,
+        "lower_95": 0.39046090321168964,
+        "upper_95": 0.4105390967883103
+      },
+      "final_accuracy": {
+        "mean": 0.4535,
+        "lower_95": 0.4463365023178057,
+        "upper_95": 0.46066349768219433
+      },
+      "accuracy_change": {
+        "mean": 0.05300000000000001,
+        "lower_95": 0.04542186729281679,
+        "upper_95": 0.060578132707183235
+      },
+      "switch_rate": {
+        "mean": 0.17750000000000002,
+        "lower_95": 0.165909893463972,
+        "upper_95": 0.18909010653602804
+      },
+      "maximum_settling_readout": 15
+    },
+    "repeat_1x50": {
+      "initial_accuracy": {
+        "mean": 0.543,
+        "lower_95": 0.5328552626654394,
+        "upper_95": 0.5531447373345607
+      },
+      "final_accuracy": {
+        "mean": 0.5515000000000001,
+        "lower_95": 0.5445377644375833,
+        "upper_95": 0.5584622355624169
+      },
+      "accuracy_change": {
+        "mean": 0.008499999999999997,
+        "lower_95": -0.0005878173518861583,
+        "upper_95": 0.01758781735188615
+      },
+      "switch_rate": {
+        "mean": 0.08800000000000001,
+        "lower_95": 0.07243653408195667,
+        "upper_95": 0.10356346591804334
+      },
+      "maximum_settling_readout": 99
+    }
+  },
+  "baseline_class_correlations": {
+    "sensory_pair_overlap_vs_gain_pearson": -0.7048283679450142,
+    "sensory_pair_overlap_vs_gain_spearman": -0.5030303030303029,
+    "predicted_vs_measured_gain_pearson": 0.9185463723355671
+  },
+  "baseline_switch_directions": {
+    "total": 183,
+    "higher_gain": 174,
+    "lower_gain": 4,
+    "equal_gain": 5
+  },
+  "paired_intervention_differences": {
+    "gain_balanced": {
+      "final_accuracy_difference": {
+        "mean": -0.04250000000000002,
+        "lower_95": -0.051773618184975556,
+        "upper_95": -0.03322638181502448
+      },
+      "switch_rate_difference": {
+        "mean": -0.06299999999999999,
+        "lower_95": -0.07702618519493264,
+        "upper_95": -0.04897381480506734
+      }
+    },
+    "gain_reversed": {
+      "final_accuracy_difference": {
+        "mean": -0.08650000000000002,
+        "lower_95": -0.09526940557784848,
+        "upper_95": -0.07773059442215156
+      },
+      "switch_rate_difference": {
+        "mean": -0.002999999999999999,
+        "lower_95": -0.028637781178379656,
+        "upper_95": 0.022637781178379657
+      }
+    }
+  }
+}

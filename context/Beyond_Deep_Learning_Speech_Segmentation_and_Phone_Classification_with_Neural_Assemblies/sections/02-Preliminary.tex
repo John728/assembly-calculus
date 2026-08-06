@@ -1,0 +1,42 @@
+\section{Assembly Calculus}
+
+\subsection{Framework}
+
+In AC, the `brain' is modelled as a collection of \textit{areas}, each containing $n$ excitatory neurons of which at most $k \ll n$ may fire simultaneously. Areas are connected by sparse random bipartite graphs; we use a fixed in-degree $k_\mathrm{in}$ as a deterministic equivalent of the Erd\H{o}s–R\'{e}nyi model in the sparse limit. At each discrete time step, neuron $v$ computes its total synaptic input $s_v = \sum_{u \in \mathrm{src}(v)} w_{uv}\, x_u$, and $k$ neurons with the largest $s_v$ are selected (the \textit{$k$-cap} operation). The resulting binary activation pattern is the \textit{assembly}: a sparse, distributed code based on the current input (Figure~\ref{fig:ac_fundamentals}).
+
+\input{figures/AC_fundamentals}
+
+The key operations are: \textit{projection}, in which stimulating an area through feedforward connections forms a new assembly in a target area; \textit{association}, in which repeated co-activation strengthens shared connections; and \textit{reciprocal stabilisation}, in which bidirectional connections between areas cause assemblies to reinforce each other. Under Erd\H{o}s--R\'{e}nyi random graph assumptions, Papadimitriou et al.\cite{papadimitriouBrainComputationAssemblies2020} showed these operations can: simulate $\mathcal{O}(nk)$ space-bounded computations. Mitropolsky et al.\cite{mitropolskyBiologicallyPlausibleParser2021}
+demonstrated that hierarchical syntactic structure can emerge from assembly dynamics alone, implementing a parser for natural language using only AC operations (with pre-defined symbolic assemblies). The parser works by assigning each word a set of gate commands that control which brain areas (SUBJ, VERB, OBJ, etc.) are open for communication. As each word is read in, it projects its assembly into the appropriate open area, and the gating ensures that only grammatically valid connections form, e.g. "man" projects into SUBJ, "saw" projects into VERB while also absorbing the existing SUBJ assembly. The final parse tree is recovered by tracing which assemblies became linked through these projections.
+
+\input{figures/assembly_detail}
+
+\subsection{Temporal Dynamics}
+
+Extending AC to sequential processing, Dabagia et al.\cite{dabagiaComputationSequencesAssemblies2024}
+ showed that recurrent connections within an area naturally give rise to \textit{synfire chains}: when a sequence of stimuli is presented repeatedly, assemblies form at each position and forward recurrent weights strengthen, resulting in \textit{pattern completion}, i.e., sequence recall from partial input.
+
+A serious challenge for sequential computation is \textit{transition disambiguation}: when the same stimulus recurs at different positions in a sequence, the system must produce different successors depending on context. \textit{Refractory adaptation} \cite{dabagiaComputationSequencesAssemblies2024}
+solves this: neurons that fire accumulate an input-proportional negative bias that suppresses their future activation. Sequence learning with refractory adaptation create a discrete-time dynamical system, with the trajectory through assembly space depending on the full history of prior activations, not just the current input.
+
+
+\subsection{Plasticity Rules}
+
+Weights are updated after each $k$-cap step by a local plasticity rule. In this paper we use standard Hebbian learning~\cite{hebbOrganizationBehaviorNeuropsychological1949}: for each edge $e$ with weight $w_e$ where both pre- and post-synaptic neurons are active,
+\begin{equation}\label{eq:hebbian}
+    w_e \leftarrow w_e(1{+}\beta)
+\end{equation}
+where $\beta$ is the learning rate, followed by per-destination normalisation. All weight updates are purely local, depending only on pre- and post-synaptic activity per-edge.
+
+Standard Hebbian learning only strengthens co-active connections, relying entirely on renormalisation to implicitly weaken others. This can cause assemblies to merge over time, as inactive-presynaptic connections to winning neurons are never explicitly penalised. To address this, we additionally employ a variant of the ABS (Artola--Br\"ocher--Singer) plasticity rule ~\cite{Artola1990-gk}~\cite{garagnaniRecruitmentConsolidationCell2009}, which adds \textit{heterosynaptic long-term depression} (LTD): when a postsynaptic neuron fires but a presynaptic neuron did not contribute, that connection is weakened:
+\begin{equation}\label{eq:abs}
+    w_e \leftarrow \begin{cases}
+        w_e(1{+}\beta) & \text{if pre and post active (LTP)} \\
+        w_e(1{-}\beta) & \text{if pre inactive, post active (LTD)} \\
+        w_e & \text{otherwise}
+    \end{cases}
+\end{equation}
+followed by clamping $w_e \geq 0$ and per-destination normalisation. This competitive mechanism ensures that winning neurons strengthen only the connections that actually drove them, while explicitly weakening irrelevant inputs.
+
+
+Within AC models, information is encoded in sparse neuronal assemblies that can be created, re-used, and combined into sequences~\cite{dabagiaComputationSequencesAssemblies2024}. This provides a natural route to compositionality: assemblies can stand in for phone- or word-like units, and their flexible recombination can in principle support an open vocabulary. Finally, the core operations of AC, such as projection between areas, association through co-activation, and stabilisation via recurrent feedback, give rise to rich temporal dynamics and sequence completion~\cite{dabagiaComputationSequencesAssemblies2024}. These properties make AC-based models an interesting framework for constructing speech processing systems.

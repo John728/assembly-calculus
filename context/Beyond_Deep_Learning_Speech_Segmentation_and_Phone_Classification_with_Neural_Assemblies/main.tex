@@ -1,0 +1,52 @@
+\documentclass[cameraready]{Interspeech}
+
+
+
+\title{Beyond Deep Learning: Speech Segmentation and Phone Classification with Neural Assemblies}
+
+\author[affiliation={}, orcid=0009-0002-5763-3311]{Trevor}{Adelson}
+\author[affiliation={2}, orcid=0000-0001-8492-1787]{Vidhyasaharan}{Sethu}
+\author[affiliation={1}, orcid=0000-0003-3806-1493]{Ting}{Dang}
+
+
+\address{
+    $^1$ The University of Melbourne, Australia \\
+    $^2$ The University of New South Wales, Australia
+}
+
+\email{xtrevad@proton.me, v.sethu@unsw.edu.au, Ting.Dang@unimelb.edu.au}
+
+\keywords{assembly calculus, speech processing, boundary detection, classification, dynamical systems}
+
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\usepackage{comment}
+\usepackage{soul, xcolor}
+\newcommand{\td}[1]{\sethlcolor{pink}\hl{[Ting: #1]}}
+\newcommand{\ta}[1]{\sethlcolor{green}\hl{[Trevor: #1]}}
+\usepackage{tikz}
+\usepackage{amsmath} 
+\usepackage{amssymb} 
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, decorations.pathreplacing}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Deep learning dominates speech processing but relies on massive datasets, backpropagation, and produces dense representations. Assembly Calculus (AC), which models sparse neuronal assemblies with Hebbian plasticity and winner-take-all competition, offers a biologically grounded alternative. We introduce an AC-based speech processing framework that operates directly on continuous speech by combining three key contributions: (i) neural encoding that converts speech into assembly-compatible spike patterns; (ii) a multi-area architecture organising assemblies across hierarchical timescales and classes; and (iii) cross-area update schemes. Applied to two tasks of boundary detection and segment classification, our framework detects phone (F1=0.69) and word (F1=0.61) boundaries without weight training and achieves 47.5\% and 45.1\% accuracy on phone and command recognition. These results show that AC-based dynamical systems are a promising alternative to deep learning for speech.
+\end{abstract}
+
+\input{sections/01-Intro}
+
+\input{sections/02-Preliminary}
+
+\input{sections/03-Methods}
+
+\input{sections/04-Experimental-Setup}
+
+\input{sections/05-Discussion}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{mybib}
+
+\end{document}

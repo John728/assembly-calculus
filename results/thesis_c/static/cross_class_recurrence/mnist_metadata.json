@@ -1,0 +1,50 @@
+{
+  "protocol": {
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "exposures": [
+      1,
+      10,
+      50
+    ],
+    "train_pool_per_class": 50,
+    "test_per_class": 20,
+    "readouts": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "n": 2000,
+    "k": 200,
+    "p": 0.1,
+    "beta": 0.5,
+    "input_k": 200,
+    "training": "class organised; nested first-N images per class",
+    "evaluation": "held input; plasticity disabled",
+    "prediction_models": {
+      "diagonal": "diag(Lambda) * overlap",
+      "full_matrix": "Lambda @ overlap"
+    }
+  },
+  "source": {
+    "repository_revision": "68d14e97345aa9ea7a4c8f96088723d349d799ef",
+    "repository_dirty": true,
+    "source_script": "/home/johnh/Documents/assembly-calculus/scripts/thesis_c/static/test_class_level_approximation.py",
+    "source_script_sha256": "c5e8325fa27a6bf0cc11eeb63caeef16d2de0decfe96abd0baa53997d753814f",
+    "runner_sha256": "dacfc5d2bc4e8919799306b75c2b0ace4e6b0a45cf72dc75a1d58e7c91f81bb1",
+    "train_ids_sha256": "25ed95cadfacd00cbb0295ca748cf5db5a16cd169c85c29da6134e348d392d62",
+    "test_ids_sha256": "7709e84f6fe18afeee52d3c0b717a3a06f68941a119d986ab266c63c38ae2427"
+  }
+}

@@ -1,0 +1,274 @@
+\begin{thebibliography}{37}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{A(2018)}]{AxelNeuron2018}
+Q~\& A. 2018.
+\newblock Axel, richard.
+\newblock \emph{Neuron}, 99:1110--1112.
+
+\bibitem[{Brennan(2022)}]{brennan2022language}
+J.R. Brennan. 2022.
+\newblock \href {https://books.google.com/books?id=LCNsEAAAQBAJ}
+  {\emph{Language and the Brain: A Slim Guide to Neurolinguistics}}.
+\newblock Oxford linguistics. Oxford University Press.
+
+\bibitem[{Buzsaki(2010)}]{Buzsaki:10}
+G~Buzsaki. 2010.
+\newblock Neural syntax: cell assemblies, synapsembles, and readers.
+\newblock \emph{Neuron}, 68(3).
+
+\bibitem[{Constantinides and Nassar(2021)}]{constantinides2021effects}
+Christodoulos Constantinides and Kareem Nassar. 2021.
+\newblock \href {http://arxiv.org/abs/2112.14853} {Effects of plasticity
+  functions on neural assemblies}.
+
+\bibitem[{Dabagia et~al.(2022)Dabagia, Vempala, and Papadimitriou}]{Dabagia}
+Max Dabagia, Santosh~S Vempala, and Christos Papadimitriou. 2022.
+\newblock \href {https://proceedings.mlr.press/v178/dabagia22a.html}
+  {Assemblies of neurons learn to classify well-separated distributions}.
+\newblock In \emph{Proceedings of Thirty Fifth Conference on Learning Theory},
+  volume 178 of \emph{Proceedings of Machine Learning Research}, pages
+  3685--3717. PMLR.
+
+\bibitem[{Dye et~al.(2018)Dye, Kedar, and Lust}]{lust}
+Cristina~D. Dye, Yarden Kedar, and Barbara Lust. 2018.
+\newblock From lexical to functional categories: New foundations for the study
+  of language development.
+\newblock \emph{First Language}, 39:32 -- 9.
+
+\bibitem[{d’Amore et~al.(2022)d’Amore, Mitropolsky, Crescenzi, Natale, and
+  Papadimitriou}]{Planning}
+Francesco d’Amore, Daniel Mitropolsky, Pierluigi Crescenzi, Emanuele Natale,
+  and Christos~H. Papadimitriou. 2022.
+\newblock \href {https://doi.org/10.1609/aaai.v36i1.19875} {Planning with
+  biological neurons and synapses}.
+\newblock \emph{Proceedings of the AAAI Conference on Artificial Intelligence},
+  36(1):21--28.
+
+\bibitem[{Erd{\H o}s and Renyi(1960)}]{Erdos60}
+Paul Erd{\H o}s and Alfred Renyi. 1960.
+\newblock On the evolution of random graphs.
+\newblock \emph{Publ. Math. Inst. Hungary. Acad. Sci.}, 5:17--61.
+
+\bibitem[{Fernandino and Iacoboni(2010)}]{Fernandino2010}
+Leonardo Fernandino and Marco Iacoboni. 2010.
+\newblock \href {https://doi.org/https://doi.org/10.1016/j.bandl.2009.02.003}
+  {Are cortical motor maps based on body parts or coordinated actions?
+  implications for embodied semantics}.
+\newblock \emph{Brain and Language}, 112(1):44--53.
+\newblock Mirror Neurons: Prospects and Problems for the Neurobiology of
+  Language.
+
+\bibitem[{Friederici(2017)}]{friederici}
+Angela~D Friederici. 2017.
+\newblock \emph{Language in our brain: The origins of a uniquely human
+  capacity}.
+\newblock MIT Press.
+
+\bibitem[{Gennari(2012)}]{Gennari2012}
+Silvia Gennari. 2012.
+\newblock \href {https://doi.org/10.1002/lnc3.317} {Representing motion in
+  language comprehension: Lessons from neuroimaging}.
+\newblock \emph{Language and Linguistics Compass}, 6:67--84.
+
+\bibitem[{Hambly et~al.(2013)Hambly, Wren, McLeod, and
+  Roulstone}]{bilingualism}
+Helen Hambly, Yvonne Wren, Sharynne McLeod, and Sue Roulstone. 2013.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1111/j.1460-6984.2012.00178.x} {The
+  influence of bilingualism on speech production: A systematic review}.
+\newblock \emph{International Journal of Language \& Communication Disorders},
+  48(1):1--24.
+
+\bibitem[{Hickok et~al.(2003)Hickok, Buchsbaum, Humphries, and
+  Muftuler}]{Hicock2003}
+Gregory Hickok, Bradley Buchsbaum, Colin Humphries, and Tugan Muftuler. 2003.
+\newblock \href {https://doi.org/10.1162/089892903322307393} {Auditory–motor
+  interaction revealed by fmri: Speech, music, and working memory in area spt}.
+\newblock \emph{J. Cognitive Neuroscience}, 15(5):673–682.
+
+\bibitem[{Hickok and Poeppel(2007)}]{HickockPoeppel}
+Gregory Hickok and David Poeppel. 2007.
+\newblock \href {https://doi.org/10.1038/nrn2113} {The cortical organization of
+  speech processing}.
+\newblock \emph{Nature reviews. Neuroscience}, 8:393--402.
+
+\bibitem[{Indefrey and Levelt(2004)}]{Indefrey2004}
+P~Indefrey and W.J.M Levelt. 2004.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1016/j.cognition.2002.06.001} {The
+  spatial and temporal signatures of word production components}.
+\newblock \emph{Cognition}, 92(1):101--144.
+\newblock Towards a New Functional Anatomy of Language.
+
+\bibitem[{Jinno et~al.(2007)Jinno, Klausberger, Marton, Dalezios, Roberts,
+  Fuentealba, Bushong, Henze, Buzs{\'a}ki, and Somogyi}]{JinnoLRI}
+Shozo Jinno, Thomas Klausberger, Laszlo~F. Marton, Yannis Dalezios, J.~David~B.
+  Roberts, Pablo Fuentealba, Eric~A. Bushong, Darrell Henze, Gy{\"o}rgy
+  Buzs{\'a}ki, and Peter Somogyi. 2007.
+\newblock \href {https://doi.org/10.1523/JNEUROSCI.1847-07.2007} {Neuronal
+  diversity in gabaergic long-range projections from the hippocampus}.
+\newblock \emph{Journal of Neuroscience}, 27(33):8790--8804.
+
+\bibitem[{Kandel et~al.(1991)Kandel, Schwartz, and Jessell}]{Kandel}
+Eric~R. Kandel, James~H. Schwartz, and Thomas~M. Jessell, editors. 1991.
+\newblock \emph{Principles of Neural Science}, fifth edition.
+\newblock Elsevier, New York.
+
+\bibitem[{Kemmerer and Gonzalez-Castillo(2010)}]{KemmererGonzalez2010}
+David Kemmerer and Javier Gonzalez-Castillo. 2010.
+\newblock \href {https://doi.org/10.1016/j.bandl.2008.09.010} {The two-level
+  theory of verb meaning: An approach to integrating the semantics of action
+  with the mirror neuron system}.
+\newblock \emph{Brain and Language}, 112:54--76.
+
+\bibitem[{Kemmerer et~al.(2012)Kemmerer, Rudrauf, Manzel, and
+  Tranel}]{Kemmerer2012}
+David Kemmerer, David Rudrauf, Kenneth Manzel, and Daniel Tranel. 2012.
+\newblock \href {https://doi.org/10.1016/j.cortex.2010.11.001} {Behavioral
+  patterns and lesion sites associated with impaired processing of lexical and
+  conceptual knowledge of actions}.
+\newblock \emph{Cortex; a journal devoted to the study of the nervous system
+  and behavior}, 48:826--48.
+
+\bibitem[{Kemmerer(2015)}]{kemmerer}
+D.L. Kemmerer. 2015.
+\newblock \href {https://books.google.com/books?id=dXPloAEACAAJ}
+  {\emph{Cognitive Neuroscience of Language}}.
+\newblock Psychology Press.
+
+\bibitem[{Kiefer and Pulvermüller(2012)}]{Kiefer2012}
+Markus Kiefer and Friedemann Pulvermüller. 2012.
+\newblock \href {https://doi.org/https://doi.org/10.1016/j.cortex.2011.04.006}
+  {Conceptual representations in mind and brain: Theoretical developments,
+  current evidence and future directions}.
+\newblock \emph{Cortex}, 48(7):805--825.
+\newblock Language and the Motor System.
+
+\bibitem[{Levelt et~al.(1999)Levelt, Roelofs, and Meyer}]{LeveltLemma}
+Willem J.~M. Levelt, Ardi Roelofs, and Antje~S. Meyer. 1999.
+\newblock \href {https://doi.org/10.1017/S0140525X99001776} {A theory of
+  lexical access in speech production}.
+\newblock \emph{Behavioral and Brain Sciences}, 22(1):1–38.
+
+\bibitem[{Martin(2007)}]{Martin2007}
+Alex Martin. 2007.
+\newblock \href {https://doi.org/10.1146/annurev.psych.57.102904.190143} {The
+  representation of object concepts in the brain}.
+\newblock \emph{Annual Review of Psychology}, 58(1):25--45.
+\newblock PMID: 16968210.
+
+\bibitem[{Melzer et~al.(2012)Melzer, Michael, Caputi, Eliava, Fuchs,
+  Whittington, and Monyer}]{MelzerLRI}
+Sarah Melzer, Magdalena Michael, Antonio Caputi, Marina Eliava, Elke~C Fuchs,
+  Miles~A Whittington, and Hannah Monyer. 2012.
+\newblock \href {https://doi.org/10.1126/science.1217139}
+  {Long-range-projecting gabaergic neurons modulate inhibition in hippocampus
+  and entorhinal cortex}.
+\newblock \emph{Science (New York, N.Y.)}, 335(6075):1506—1510.
+
+\bibitem[{Mitropolsky et~al.(2021)Mitropolsky, Collins, and
+  Papadimitriou}]{Parser}
+Daniel Mitropolsky, Michael~J. Collins, and Christos~H. Papadimitriou. 2021.
+\newblock \href {http://arxiv.org/abs/2108.02189} {A {Biologically} {Plausible}
+  {Parser}}.
+\newblock In \emph{Transactions of the {Association} for {Computational}
+  {Linguistics}}.
+\newblock ArXiv: 2108.02189.
+
+\bibitem[{Mitropolsky et~al.(2022)Mitropolsky, Ejaz, Shi, Papadimitriou, and
+  Yannakakis}]{CenterEmbedding}
+Daniel Mitropolsky, Adiba Ejaz, Mirah Shi, Christos Papadimitriou, and Mihalis
+  Yannakakis. 2022.
+\newblock \href {https://aclanthology.org/2022.naloma-1.4} {Center-embedding
+  and constituency in the brain and a new characterization of context-free
+  languages}.
+\newblock In \emph{Proceedings of the 3rd Natural Logic Meets Machine Learning
+  Workshop (NALOMA III)}, pages 26--37, Galway, Ireland. Association for
+  Computational Linguistics.
+
+\bibitem[{Mätzig et~al.(2009)Mätzig, Druks, Masterson, and
+  Vigliocco}]{Matzig2009}
+Simone Mätzig, Judit Druks, Jackie Masterson, and Gabriella Vigliocco. 2009.
+\newblock \href {https://doi.org/https://doi.org/10.1016/j.cortex.2008.10.003}
+  {Noun and verb differences in picture naming: Past studies and new evidence}.
+\newblock \emph{Cortex}, 45(6):738--758.
+
+\bibitem[{Okada and Hickok(2006)}]{OKADA2006112}
+Kayoko Okada and Gregory Hickok. 2006.
+\newblock \href {https://doi.org/https://doi.org/10.1016/j.bandl.2006.04.006}
+  {Left posterior auditory-related cortices participate both in speech
+  perception and speech production: Neural overlap revealed by fmri}.
+\newblock \emph{Brain and Language}, 98(1):112--117.
+
+\bibitem[{Papadimitriou and Friederici(2022)}]{PapadimitriouFriederici}
+Christos~H. Papadimitriou and Angela~D. Friederici. 2022.
+\newblock \href {https://doi.org/10.1162/neco_a_01463} {{Bridging the Gap
+  Between Neurons and Cognition Through Assemblies of Neurons}}.
+\newblock \emph{Neural Computation}, 34(2):291--306.
+
+\bibitem[{Papadimitriou et~al.(2020)Papadimitriou, Vempala, Mitropolsky,
+  Collins, and Maass}]{PNAS}
+Christos~H. Papadimitriou, Santosh~S. Vempala, Daniel Mitropolsky, Michael
+  Collins, and Wolfgang Maass. 2020.
+\newblock \href {https://doi.org/10.1073/pnas.2001893117} {Brain computation by
+  assemblies of neurons}.
+\newblock \emph{Proceedings of the National Academy of Sciences},
+  117(25):14464--14472.
+
+\bibitem[{Pokorny et~al.(2019)Pokorny, Ison, Rao, Legenstein, Papadimitriou,
+  and Maass}]{IsonMaassPap}
+Christoph Pokorny, Matias~J Ison, Arjun Rao, Robert Legenstein, Christos
+  Papadimitriou, and Wolfgang Maass. 2019.
+\newblock \href {https://doi.org/10.1093/cercor/bhz140} {{STDP Forms
+  Associations between Memory Traces in Networks of Spiking Neurons}}.
+\newblock \emph{Cerebral Cortex}, 30(3):952--968.
+
+\bibitem[{Popham et~al.(2021)Popham, Huth, Bilenko, Deniz, Gao, Nunez-Elizalde,
+  and Gallant}]{GallantSemantics}
+Sara Popham, Alexander Huth, Natalia Bilenko, Fatma Deniz, James Gao, Anwar
+  Nunez-Elizalde, and Jack Gallant. 2021.
+\newblock \href {https://doi.org/10.1038/s41593-021-00921-6} {Visual and
+  linguistic semantic representations are aligned at the border of human visual
+  cortex}.
+\newblock \emph{Nature Neuroscience}, 24:1628--1636.
+
+\bibitem[{Ralph(2014)}]{RalphHubSpoke}
+Matthew Ralph. 2014.
+\newblock \href {https://doi.org/10.1098/rstb.2012.0392} {Neurocognitive
+  insights on conceptual knowledge and its breakdown}.
+\newblock \emph{Philosophical transactions of the Royal Society of London.
+  Series B, Biological sciences}, 369:20120392.
+
+\bibitem[{Roux et~al.(2017)Roux, Hu, Eichler, Stark, and
+  Buzsáki}]{RouxBuzsaki}
+Lisa Roux, Bo~Hu, Ronny Eichler, Eran Stark, and Gyorgy Buzsáki. 2017.
+\newblock \href {https://doi.org/10.1038/nn.4543} {Sharp wave ripples during
+  learning stabilize the hippocampal spatial map}.
+\newblock \emph{Nature neuroscience}, 20.
+
+\bibitem[{Song et~al.(2005)Song, Sj\"ostr\"om, Reigl, Nelson, and
+  Chklovskii}]{nonrandom}
+S.~Song, P.~J. Sj\"ostr\"om, M.~Reigl, S.~Nelson, and D.~B. Chklovskii. 2005.
+\newblock Highly nonrandom features of synaptic connectivity in local cortical
+  circuits.
+\newblock \emph{PLoS Biology}, 3(3):e68.
+
+\bibitem[{Vigliocco et~al.(2011)Vigliocco, Vinson, Druks, Barber, and
+  Cappa}]{Vigliocco2011}
+Gabriella Vigliocco, David~P. Vinson, Judit Druks, Horacio Barber, and
+  Stefano~F. Cappa. 2011.
+\newblock \href
+  {https://doi.org/https://doi.org/10.1016/j.neubiorev.2010.04.007} {Nouns and
+  verbs in the brain: A review of behavioural, electrophysiological,
+  neuropsychological and imaging studies}.
+\newblock \emph{Neuroscience \& Biobehavioral Reviews}, 35(3):407--426.
+
+\bibitem[{Watson et~al.(2013)Watson, Cardillo, Ianni, and
+  Chatterjee}]{Watson2013}
+Christine Watson, Eileen Cardillo, Geena Ianni, and Anjan Chatterjee. 2013.
+\newblock \href {https://doi.org/10.1162/jocn_a_00401} {Action concepts in the
+  brain: An activation likelihood estimation meta-analysis}.
+\newblock \emph{Journal of cognitive neuroscience}, 25.
+
+\end{thebibliography}

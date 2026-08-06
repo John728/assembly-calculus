@@ -1,0 +1,74 @@
+\tikzstyle{area} = [rectangle,draw,minimum height=3cm,minimum width=2cm]
+\tikzstyle{assembly} = [rectangle,draw,minimum height=0.75cm,minimum width=0.5cm]
+\tikzstyle{every node}=[font=\LARGE]
+\begin{tikzpicture}[x=0.25cm,y=0.25cm]
+    \begin{scope}[xshift=1.5cm]
+	\node[area] (B) at (3.5,5.5) {};
+	\node at (0,-1.5) {\textsc{Blocks}};
+	\node[assembly,fill=gray!50] (b1) at (1.5,1) {};
+	\node[align=right] (b1t) at (-5.5,0.75) {Block $4$};
+	\node[assembly,fill=gray!50] (b2) at (1.5,5) {};
+	\node[align=right] (b2t) at (-5.5,5) {Block $5$};
+	\node[assembly,fill=gray!50] (b3) at (5.5,1) {};
+	\node[align=left] (b3t) at (12.5,1) {Block $3$};
+	\node[assembly,fill=gray!50] (b4) at (5.5,5) {};
+	\node[align=left] (b4t) at (12.5,5) {Block $1$};
+	\node[assembly,fill=gray!50] (b5) at (5.5,9) {};
+	\node[align=left] (b5t) at (12.5,9) {Block $2$};
+	\foreach \x in {0,...,7}
+	\foreach \y in {0,...,11}
+	{\fill (\x,\y) circle (2pt);}
+	\draw (b1) -- (b1t);
+	\draw (b2) -- (b2t);
+	\draw (b3) -- (b3t);
+	\draw (b4) -- (b4t);
+	\draw (b5) -- (b5t);
+	\end{scope}
+	\begin{scope}[xshift=-3.25cm,yshift=4.25cm]
+		\node[area] (N1) at (3.5,5.5) {};
+		\node at (0,-1.5) {\mbox{\textsc{Node}$_0$}};
+		\node[assembly,fill=gray!50] (b1n) at (5.5,3) {};
+		\node[assembly,fill=gray!50] (b4n) at (5.5,9) {};
+		\foreach \x in {0,...,7}
+		\foreach \y in {0,...,11}
+		{\fill (\x,\y) circle (2pt);}
+		\draw[<->,ultra thick,dotted] (b1) -- (b1n);
+		\draw[<->,ultra thick,dotted] (b4) -- (b4n);
+	\end{scope}
+	\begin{scope}[xshift=0cm,yshift=4.25cm]
+		\node[area] (N2) at (3.5,5.5) {};
+		\node at (6.5,-1.5) {\mbox{\textsc{Node}$_1$}};
+		\node[assembly,fill=gray!50] (b2n) at (1.5,3) {};
+		\node[assembly,fill=gray!50] (b5n) at (5.5,9) {};
+		\foreach \x in {0,...,7}
+		\foreach \y in {0,...,11}
+		{\fill (\x,\y) circle (2pt);}
+		\draw[<->,ultra thick] (B) -- (N2);
+		\draw[<->,ultra thick] (N1) -- (N2);
+		\draw[<->,ultra thick,dotted] (b1n) -- (b2n);
+		\draw[<->,ultra thick,dotted] (b2) -- (b2n);
+		\draw[<->,ultra thick,color=red,dashed] (b5) -- (b5n);
+		\draw[<->,ultra thick,color=red,dashed] (b4n) -- (b5n);
+	\end{scope}
+	\begin{scope}[xshift=3.25cm,yshift=4.25cm]
+		\node[area] (N3) at (3.5,5.5) {};
+		\node at (6.5,-1.5) {\mbox{\textsc{Node}$_2$}};
+		\node[assembly,fill=gray!50] (b3n) at (5.5,6) {};
+		\foreach \x in {0,...,7}
+		\foreach \y in {0,...,11}
+		{\fill (\x,\y) circle (2pt);}
+		\draw[<->,ultra thick,dotted] (b2n) -- (b3n);
+		\draw[<->,ultra thick,dotted] (b3) -- (b3n);
+		\draw[<->,ultra thick,dotted] (b3n) -- (b4n);
+	\end{scope}
+	\begin{scope}[xshift=-3.25cm,yshift=0cm]
+		\node[area] (H) at (3.5,5.5) {};
+		\node at (0,-1.5) {\textsc{Heads}};
+		\node[assembly,fill=gray!50] (b1h) at (5.5,3) {};
+		\foreach \x in {0,...,7}
+		\foreach \y in {0,...,11}
+		{\fill (\x,\y) circle (2pt);}
+		\draw[<->,ultra thick,dotted] (b1n) -- (b1h);
+	\end{scope}
+	\node at (-15,31) {\LARGE C5};
+\end{tikzpicture}
